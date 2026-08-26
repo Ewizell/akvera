@@ -50,6 +50,7 @@ export async function createVariant(productId: string, formData: FormData) {
   const metaDescription = formData.get('metaDescription') as string
   const metaKeywords = formData.get('metaKeywords') as string
   const attributes = parseAttributes(formData)
+  const variantTagIds = formData.getAll('variantTagIds') as string[]
 
   try {
     await prisma.productVariant.create({
@@ -88,6 +89,7 @@ export async function updateVariant(id: string, formData: FormData) {
   const metaDescription = formData.get('metaDescription') as string
   const metaKeywords = formData.get('metaKeywords') as string
   const attributes = parseAttributes(formData)
+  const variantTagIds = formData.getAll('variantTagIds') as string[]
 
   try {
     await prisma.productVariant.update({
@@ -100,6 +102,7 @@ export async function updateVariant(id: string, formData: FormData) {
         stock: parseInt(stock, 10) || 0,
         metaTitle: metaTitle || null,
         metaDescription: metaDescription || null,
+        tags: { set: variantTagIds.map((tagId) => ({ id: tagId })) },
         metaKeywords: metaKeywords || null,
         attributes,
       },

@@ -6,10 +6,12 @@ export default async function ProductsPage() {
     orderBy: { name: 'asc' },
     include: {
       category: { include: { attributes: { orderBy: { sortOrder: 'asc' } } } },
+      tags: true,
       variants: {
         include: {
           images: { orderBy: { sortOrder: 'asc' } },
           documents: true,
+          tags: true,
         },
       },
     },
@@ -24,15 +26,24 @@ export default async function ProductsPage() {
     orderBy: { name: 'asc' },
   })
 
+  const tags = await prisma.tag.findMany({
+    orderBy: { name: 'asc' },
+  })
+
   const serializedProducts = products.map((p) => ({
     ...p,
-    variants: p.variants.map((v) => ({ ...v, price: Number(v.price) })),
+    tagIds: p.tags.map((t) => t.id),
+    variants: p.variants.map((v) => ({
+      ...v,
+      price: v.price ? Number(v.price) : null,
+      tagIds: v.tags.map((t) => t.id),
+    })),
   }))
 
   return (
     <div className="max-w-5xl mx-auto p-8">
       <h1 className="text-2xl font-bold mb-6">Товары</h1>
-      <ProductList products={serializedProducts} categories={categories} brands={brands} />
+      <ProductList products={serializedProducts} categories={categories} brands={brands} tags={tags} />
     </div>
   )
 }

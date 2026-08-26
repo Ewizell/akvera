@@ -18,6 +18,7 @@ type CatalogCard = {
   image: string | null
   price: number | null
   attrs: { label: string; value: string }[]
+  tags: { id: string; name: string; slug: string }[]
 }
 
 const STORAGE_KEY = 'akvera_catalog_view'
@@ -115,6 +116,18 @@ export default function CatalogGrid({
                 <h2 className="text-sm font-medium text-gray-900 line-clamp-2 min-h-[2.5rem]">
                   {product.name}
                 </h2>
+                {product.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {product.tags.map((tag) => (
+                      <span
+                        key={tag.id}
+                        className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded"
+                      >
+                        {tag.name}
+                      </span>
+                    ))}
+                  </div>
+                )}
                 {product.price ? (
                   <p className="mt-2 text-base font-semibold">
                     {product.price.toLocaleString('ru-RU')} ₽
@@ -163,6 +176,18 @@ export default function CatalogGrid({
                     <p className="text-xs text-gray-400 mb-1">{product.brandName}</p>
                   )}
                   <h2 className="text-base font-medium text-gray-900">{product.name}</h2>
+                  {product.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {product.tags.map((tag) => (
+                        <span
+                          key={tag.id}
+                          className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded"
+                        >
+                          {tag.name}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                   {product.shortDescription && (
                     <p className="text-sm text-gray-500 mt-1 line-clamp-2">{product.shortDescription}</p>
                   )}

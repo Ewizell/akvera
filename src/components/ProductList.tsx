@@ -22,10 +22,12 @@ type Product = {
   description: string | null
   category: { name: string }
   variants: Variant[]
+  tagIds: string[]
 }
 
 type Category = { id: string; name: string }
 type Brand = { id: string; name: string }
+type Tag = { id: string; name: string }
 
 function ProductRow({
   product,
@@ -99,10 +101,12 @@ export default function ProductList({
   products,
   categories,
   brands,
+  tags,
 }: {
   products: Product[]
   categories: Category[]
   brands: Brand[]
+  tags: Tag[]
 }) {
   const [creating, setCreating] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -137,7 +141,7 @@ export default function ProductList({
       </table>
 
       {creating && (
-        <ProductCreateModal categories={categories} brands={brands} onClose={() => setCreating(false)} />
+        <ProductCreateModal categories={categories} brands={brands} tags={tags} onClose={() => setCreating(false)} />
       )}
 
       {editingProduct && (
@@ -145,6 +149,7 @@ export default function ProductList({
           product={editingProduct}
           categories={categories}
           brands={brands}
+          tags={tags}
           onClose={() => setEditingId(null)}
         />
       )}

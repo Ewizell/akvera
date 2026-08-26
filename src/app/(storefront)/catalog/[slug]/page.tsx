@@ -59,12 +59,14 @@ export default async function ProductPage({
       include: {
         category: { include: { parent: true } },
         brand: true,
+        tags: true,
       },
     },
     images: {
       orderBy: [{ isMain: "desc" }, { sortOrder: "asc" }],
     },
     documents: true,
+    tags: true,
   },
 });
 
@@ -73,6 +75,11 @@ if (!variant) {
 }
 
 const category = variant.product.category;
+
+const mergedTagsMap = new Map<string, { id: string; name: string; slug: string }>();
+for (const t of variant.product.tags) mergedTagsMap.set(t.id, t);
+for (const t of variant.tags) mergedTagsMap.set(t.id, t);
+const productTags = Array.from(mergedTagsMap.values());
 
 const crumbs = [
   { label: "AKVERA", href: "/" },
@@ -174,6 +181,18 @@ const crumbs = [
         {/* Инфо */}
       <div>
         <h1 className="text-2xl font-semibold">{variant.product.name}</h1>
+        {productTags.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-1">
+            {productTags.map((tag) => (
+              <span
+                key={tag.id}
+                className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded"
+              >
+                {tag.name}
+              </span>
+            ))}
+          </div>
+        )}
         {variant.product.brand && (
           <Link
             href={`/brands/${variant.product.brand.slug}`}

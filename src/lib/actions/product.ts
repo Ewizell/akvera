@@ -49,6 +49,7 @@ export async function updateProduct(id: string, formData: FormData) {
   const description = formData.get('description') as string
   const brandId = formData.get('brandId') as string
   const shortDescription = formData.get('shortDescription') as string
+  const tagIds = formData.getAll('tagIds') as string[]
 
   await prisma.product.update({
     where: { id },
@@ -58,6 +59,7 @@ export async function updateProduct(id: string, formData: FormData) {
       description: description || null,
       shortDescription: shortDescription || null,
       brandId: brandId || null,
+      tags: { set: tagIds.map((id) => ({ id })) },
     },
   })
 

@@ -19,6 +19,7 @@ export type CatalogCard = {
   image: string | null;
   price: number | null;
   attrs: { label: string; value: string }[];
+  tags: { id: string; name: string; slug: string }[];
 };
 
 export async function getCatalogProducts(
@@ -70,11 +71,13 @@ export async function getCatalogProducts(
       include: {
         brand: true,
         category: { include: { attributes: true } },
+        tags: true,
         variants: {
           orderBy: { price: "asc" },
           take: 1,
           include: {
             images: { orderBy: [{ isMain: "desc" }, { sortOrder: "asc" }], take: 1 },
+            tags: true,
           },
         },
       },
@@ -92,11 +95,13 @@ export async function getCatalogProducts(
       include: {
         brand: true,
         category: { include: { attributes: true } },
+        tags: true,
         variants: {
           orderBy: { price: "asc" },
           take: 1,
           include: {
             images: { orderBy: [{ isMain: "desc" }, { sortOrder: "asc" }], take: 1 },
+            tags: true,
           },
         },
       },
@@ -121,6 +126,10 @@ export async function getCatalogProducts(
         value: `${(variant!.attributes as Record<string, unknown>)[a.key]}${a.unit ?? ""}`,
       }));
 
+    const mergedTagsMap = new Map<string, { id: string; name: string; slug: string }>();
+    for (const t of product.tags) mergedTagsMap.set(t.id, t);
+    for (const t of variant?.tags ?? []) mergedTagsMap.set(t.id, t);
+
     return {
       id: product.id,
       variantId: variant?.id ?? "",
@@ -132,6 +141,7 @@ export async function getCatalogProducts(
       image: image?.url ?? null,
       price: variant?.price ? Number(variant.price) : null,
       attrs,
+      tags: Array.from(mergedTagsMap.values()),
     };
   });
 

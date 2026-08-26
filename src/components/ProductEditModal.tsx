@@ -6,6 +6,7 @@
   import VariantImages from './VariantImages'
   import VariantDocuments from './VariantDocuments'
   import { slugify } from '@/lib/slugify'
+  import TagPicker from './TagPicker'
 
   type CategoryAttribute = {
     id: string
@@ -28,6 +29,7 @@
     metaKeywords: string | null
     images: { id: string; url: string; isMain: boolean }[]
     documents: { id: string; title: string; type: string; url: string }[]
+    tagIds: string[]
   }
 
   type Product = {
@@ -37,10 +39,12 @@
     brandId: string | null
     description: string | null
     shortDescription: string | null
+    tagIds: string[]
     variants: Variant[]
   }
 
   type Category = { id: string; name: string; attributes: CategoryAttribute[] }
+  type Tag = { id: string; name: string }
 
   function AttributeFields({
     schema,
@@ -165,7 +169,15 @@
   )
 }
 
-  function VariantFormFields({ variant, attrSchema }: { variant?: Variant; attrSchema: CategoryAttribute[] }) {
+  function VariantFormFields({
+    variant,
+    attrSchema,
+    allTags,
+  }: {
+    variant?: Variant
+    attrSchema: CategoryAttribute[]
+    allTags: Tag[]
+  }) {
     const isCreate = !variant
     const [name, setName] = useState(variant?.name ?? '')
     const [slug, setSlug] = useState(variant?.slug ?? '')
@@ -211,6 +223,10 @@
           <CustomAttributesEditor initial={customInitial} />
         </div>
         <div className="border-t pt-2">
+          <p className="text-xs font-medium text-gray-600 mb-1">Дополнительные теги исполнения</p>
+          <TagPicker allTags={allTags} selectedIds={variant?.tagIds ?? []} name="variantTagIds" />
+        </div>
+        <div className="border-t pt-2">
           <p className="text-xs font-medium text-gray-600 mb-1">SEO</p>
           <div className="space-y-2">
             <div>
@@ -252,10 +268,12 @@
     variant,
     isOnlyVariant,
     attrSchema,
+    allTags,
   }: {
     variant: Variant
     isOnlyVariant: boolean
     attrSchema: CategoryAttribute[]
+    allTags: Tag[]
   }) {
     const [editing, setEditing] = useState(false)
     const [isPending, startTransition] = useTransition()
@@ -286,7 +304,7 @@
       return (
         <li className="border rounded p-3 space-y-2">
           <form action={handleSave}>
-            <VariantFormFields variant={variant} attrSchema={attrSchema} />
+            <VariantFormFields variant={variant} attrSchema={attrSchema} allTags={allTags} />
             {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
             <div className="flex gap-2 mt-2">
               <button type="submit" disabled={isPending} className="text-xs text-blue-600 hover:underline">
@@ -355,11 +373,13 @@
     product,
     categories,
     brands,
+    tags,
     onClose,
   }: {
     product: Product
     categories: Category[]
     brands: Brand[]
+    tags: Tag[]
     onClose: () => void
   }) {
     const [isPending, startTransition] = useTransition()
@@ -449,6 +469,10 @@
               <label className="block text-sm text-gray-600 mb-1">Описание</label>
               <textarea name="description" defaultValue={product.description ?? ''} rows={3} className="w-full border rounded px-3 py-2" />
             </div>
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">Теги</label>
+              <TagPicker allTags={tags} selectedIds={product.tagIds} name="tagIds" />
+            </div>
                         <div>
               <label className="block text-xs text-gray-500 mb-0.5">Краткое описание</label>
               <textarea
@@ -478,13 +502,14 @@
                   variant={v}
                   isOnlyVariant={product.variants.length === 1}
                   attrSchema={attrSchema}
+                  allTags={tags}
                 />
               ))}
             </ul>
 
             <form key={addFormKey} id="add-variant-form" action={handleAddVariant} className="border-t pt-4">
               <p className="text-sm font-medium mb-2">Добавить исполнение</p>
-              <VariantFormFields attrSchema={attrSchema} />
+              <VariantFormFields attrSchema={attrSchema} allTags={tags} />
               {addError && <p className="text-xs text-red-600 mt-1">{addError}</p>}
               <button type="submit" disabled={isPending} className="mt-2 bg-blue-600 text-white px-3 py-1.5 rounded text-sm hover:bg-blue-700 disabled:opacity-50">
                 {isPending ? 'Добавление...' : '+ Добавить исполнение'}
