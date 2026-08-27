@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import CatalogGrid from "@/components/CatalogGrid";
 import CatalogPagination from "@/components/CatalogPagination";
+import CatalogFilterBar from "@/components/CatalogFilterBar";
 import { getCatalogProducts, PAGE_SIZE } from "@/lib/catalog-query";
 
 export const revalidate = 3600; // ISR: обновлять раз в час
@@ -9,13 +10,22 @@ export const revalidate = 3600; // ISR: обновлять раз в час
 export default async function CatalogPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string; brand?: string; q?: string; page?: string }>;
+  searchParams: Promise<{
+    category?: string;
+    brand?: string;
+    q?: string;
+    page?: string;
+    tags?: string;
+    sort?: string;
+  }>;
 }) {
-  const { category, brand, q, page: pageParam } = await searchParams;
+  const { category, brand, q, page: pageParam, tags: tagsParam, sort: sortParam } = await searchParams;
   const page = Math.max(1, parseInt(pageParam ?? "1", 10) || 1);
+  const selectedTagSlugs = tagsParam ? tagsParam.split(",").filter(Boolean) : [];
+  const sort = sortParam === "price_asc" || sortParam === "price_desc" || sortParam === "stock" ? sortParam : undefined;
 
-  const [{ cards, totalCount }, categories, brands, activeCategory, activeBrand] = await Promise.all([
-    getCatalogProducts({ category, brand, q }, page),
+  const [{ cards, totalCount }, categories, brands, activeCategory, activeBrand, allTags] = await Promise.all([
+    getCatalogProducts({ category, brand, q, tags: selectedTagSlugs, sort }, page),
     prisma.category.findMany({
       where: { parentId: null },
       orderBy: { name: "asc" },
@@ -24,6 +34,7 @@ export default async function CatalogPage({
     prisma.brand.findMany({ orderBy: { name: "asc" } }),
     category ? prisma.category.findUnique({ where: { slug: category } }) : null,
     brand ? prisma.brand.findUnique({ where: { slug: brand } }) : null,
+    prisma.tag.findMany({ orderBy: { name: "asc" } }),
   ]);
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
@@ -39,10 +50,24 @@ export default async function CatalogPage({
   }
 
   function pageHref(targetPage: number) {
+    return filterHref({}, targetPage);
+  }
+
+  function filterHref(
+    override: { tags?: string[]; sort?: string },
+    targetPage: number = 1
+  ) {
     const params = new URLSearchParams();
     if (category) params.set("category", category);
     if (brand) params.set("brand", brand);
     if (q) params.set("q", q);
+
+    const nextTags = override.tags !== undefined ? override.tags : selectedTagSlugs;
+    if (nextTags.length > 0) params.set("tags", nextTags.join(","));
+
+    const nextSort = override.sort !== undefined ? override.sort : sort;
+    if (nextSort) params.set("sort", nextSort);
+
     if (targetPage > 1) params.set("page", String(targetPage));
     const qs = params.toString();
     return qs ? `/catalog?${qs}` : "/catalog";
@@ -122,10 +147,19 @@ export default async function CatalogPage({
             {q ? `Результаты по запросу «${q}»` : activeCategory?.name ?? activeBrand?.name ?? "Каталог"}
           </h1>
 
+          <CatalogFilterBar
+            allTags={allTags}
+            selectedTagSlugs={selectedTagSlugs}
+            currentSort={sort ?? ""}
+            category={category}
+            brand={brand}
+            q={q}
+          />
+
           <CatalogGrid
-            key={`${category ?? ""}|${brand ?? ""}|${q ?? ""}|${page}`}
+            key={`${category ?? ""}|${brand ?? ""}|${q ?? ""}|${selectedTagSlugs.join(",")}|${sort ?? ""}|${page}`}
             products={cards}
-            filters={{ category, brand, q }}
+            filters={{ category, brand, q, tags: selectedTagSlugs, sort }}
             page={page}
             totalPages={totalPages}
           />
@@ -141,7 +175,15 @@ export default async function CatalogPage({
           )}
 
           {totalPages > 1 && (
-            <CatalogPagination currentPage={page} totalPages={totalPages} buildHref={pageHref} />
+          <CatalogPagination
+            currentPage={page}
+            totalPages={totalPages}
+            category={category}
+            brand={brand}
+            q={q}
+            tags={selectedTagSlugs}
+            sort={sort}
+          />
           )}
         </div>
       </div>

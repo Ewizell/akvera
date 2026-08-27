@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import CartCardControl from './CartCardControl'
+import SortDropdown from './SortDropdown'
 import { loadMoreCatalogProducts } from '@/lib/actions/catalog'
 import type { CatalogFilters } from '@/lib/catalog-query'
 
@@ -60,7 +61,15 @@ export default function CatalogGrid({
 
   return (
     <div>
-      <div className="flex justify-end gap-1 mb-4">
+      <div className="flex justify-between items-center mb-4">
+        <SortDropdown
+          currentSort={filters.sort ?? ''}
+          category={filters.category}
+          brand={filters.brand}
+          q={filters.q}
+          tags={filters.tags}
+        />
+        <div className="flex gap-1">
         <button
           onClick={() => setViewAndSave('grid')}
           aria-label="Плиткой"
@@ -84,6 +93,7 @@ export default function CatalogGrid({
             <line x1="4" y1="18" x2="20" y2="18" />
           </svg>
         </button>
+        </div>
       </div>
 
       {view === 'grid' ? (

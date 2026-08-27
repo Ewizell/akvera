@@ -1,18 +1,66 @@
+'use client'
+
 import Link from "next/link";
 
 export default function CatalogPagination({
   currentPage,
   totalPages,
-  buildHref,
+  category,
+  brand,
+  q,
+  tags,
+  sort,
 }: {
   currentPage: number;
   totalPages: number;
-  buildHref: (page: number) => string;
+  category?: string;
+  brand?: string;
+  q?: string;
+  tags?: string[];
+  sort?: string;
 }) {
-  const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
+  const pages = Array.from(
+    { length: totalPages },
+    (_, i) => i + 1
+  );
+
+  function buildHref(page: number) {
+    const params = new URLSearchParams();
+
+    if (category) {
+      params.set("category", category);
+    }
+
+    if (brand) {
+      params.set("brand", brand);
+    }
+
+    if (q) {
+      params.set("q", q);
+    }
+
+    if (tags && tags.length > 0) {
+      params.set("tags", tags.join(","));
+    }
+
+    if (sort) {
+      params.set("sort", sort);
+    }
+
+    if (page > 1) {
+      params.set("page", String(page));
+    }
+
+    const qs = params.toString();
+
+    return qs ? `/catalog?${qs}` : "/catalog";
+  }
 
   return (
-    <nav className="flex justify-center items-center gap-1 mt-10" aria-label="Пагинация">
+    <nav
+      className="flex justify-center items-center gap-1 mt-10"
+      aria-label="Пагинация"
+    >
       <Link
         href={buildHref(Math.max(1, currentPage - 1))}
         aria-disabled={currentPage === 1}
@@ -24,19 +72,25 @@ export default function CatalogPagination({
       >
         ←
       </Link>
+
       {pages.map((p) => (
         <Link
           key={p}
           href={buildHref(p)}
           className={`px-3 py-1.5 rounded border text-sm ${
-            p === currentPage ? "bg-black text-white border-black" : "border-gray-300 hover:bg-gray-50"
+            p === currentPage
+              ? "bg-black text-white border-black"
+              : "border-gray-300 hover:bg-gray-50"
           }`}
         >
           {p}
         </Link>
       ))}
+
       <Link
-        href={buildHref(Math.min(totalPages, currentPage + 1))}
+        href={buildHref(
+          Math.min(totalPages, currentPage + 1)
+        )}
         aria-disabled={currentPage === totalPages}
         className={`px-3 py-1.5 rounded border text-sm ${
           currentPage === totalPages
