@@ -3,7 +3,8 @@ import { prisma } from "@/lib/prisma";
 export const PAGE_SIZE = 12;
 
 export type CatalogFilters = {
-  category?: string;
+  categoryId?: string; // точное совпадение — лист/родитель-без-детей, либо конкретная подкатегория
+  categoryIds?: string[]; // OR — используется для /category/[slug]/all (родитель + все дети)
   brand?: string;
   q?: string;
   tags?: string[]; // slugs, OR-логика
@@ -78,10 +79,16 @@ export async function getCatalogProducts(
   filters: CatalogFilters,
   page: number
 ): Promise<{ cards: CatalogCard[]; totalCount: number }> {
-  const { category, brand, q, tags, sort } = filters;
+  const { categoryId, categoryIds, brand, q, tags, sort } = filters;
+
+  const categoryFilter = categoryId
+    ? { id: categoryId }
+    : categoryIds && categoryIds.length > 0
+    ? { id: { in: categoryIds } }
+    : undefined;
 
   const baseWhere = {
-    category: category ? { slug: category } : undefined,
+    category: categoryFilter,
     brand: brand ? { slug: brand } : undefined,
     tags: tags && tags.length > 0 ? { some: { slug: { in: tags } } } : undefined,
   };

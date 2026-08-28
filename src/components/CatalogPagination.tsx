@@ -5,7 +5,7 @@ import Link from "next/link";
 export default function CatalogPagination({
   currentPage,
   totalPages,
-  category,
+  basePath,
   brand,
   q,
   tags,
@@ -13,7 +13,7 @@ export default function CatalogPagination({
 }: {
   currentPage: number;
   totalPages: number;
-  category?: string;
+  basePath: string;
   brand?: string;
   q?: string;
   tags?: string[];
@@ -27,16 +27,12 @@ export default function CatalogPagination({
   function buildHref(page: number) {
     const params = new URLSearchParams();
 
-    if (category) {
-      params.set("category", category);
+    if (q) {
+      params.set("q", q);
     }
 
     if (brand) {
       params.set("brand", brand);
-    }
-
-    if (q) {
-      params.set("q", q);
     }
 
     if (tags && tags.length > 0) {
@@ -53,7 +49,7 @@ export default function CatalogPagination({
 
     const qs = params.toString();
 
-    return qs ? `/catalog?${qs}` : "/catalog";
+    return qs ? `${basePath}?${qs}` : basePath;
   }
 
   return (

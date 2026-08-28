@@ -65,15 +65,13 @@ function SortDropdown({
 export default function CatalogFilterBar({
   allTags,
   selectedTagSlugs,
-  currentSort,
-  category,
+  basePath,
   brand,
   q,
 }: {
   allTags: Tag[]
   selectedTagSlugs: string[]
-  currentSort: string
-  category?: string
+  basePath: string
   brand?: string
   q?: string
 }) {
@@ -84,27 +82,19 @@ export default function CatalogFilterBar({
     ? allTags
     : allTags.slice(0, VISIBLE_COUNT)
 
-  function buildHref(params: {
-    tags?: string[]
-    sort?: string
-  }) {
+  function buildHref(params: { tags?: string[] }) {
     const searchParams = new URLSearchParams()
 
-    if (category) searchParams.set('category', category)
-    if (brand) searchParams.set('brand', brand)
     if (q) searchParams.set('q', q)
+    if (brand) searchParams.set('brand', brand)
 
     if (params.tags && params.tags.length > 0) {
       searchParams.set('tags', params.tags.join(','))
     }
 
-    if (params.sort) {
-      searchParams.set('sort', params.sort)
-    }
-
     const qs = searchParams.toString()
 
-    return qs ? `/catalog?${qs}` : '/catalog'
+    return qs ? `${basePath}?${qs}` : basePath
   }
 
   function toggleTag(slug: string) {
@@ -112,10 +102,7 @@ export default function CatalogFilterBar({
       ? selectedTagSlugs.filter((s) => s !== slug)
       : [...selectedTagSlugs, slug]
 
-    return buildHref({
-      tags: next,
-      sort: currentSort,
-    })
+    return buildHref({ tags: next })
   }
 
   return (

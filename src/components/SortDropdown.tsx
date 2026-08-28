@@ -12,15 +12,13 @@ const SORT_OPTIONS: { value: string; label: string }[] = [
 
 export default function SortDropdown({
   currentSort,
-  category,
+  basePath,
   brand,
-  q,
   tags,
 }: {
   currentSort: string
-  category?: string
+  basePath: string
   brand?: string
-  q?: string
   tags?: string[]
 }) {
   const [open, setOpen] = useState(false)
@@ -28,13 +26,11 @@ export default function SortDropdown({
 
   function buildHref(sortValue: string) {
     const params = new URLSearchParams()
-    if (category) params.set('category', category)
     if (brand) params.set('brand', brand)
-    if (q) params.set('q', q)
     if (tags && tags.length > 0) params.set('tags', tags.join(','))
     if (sortValue) params.set('sort', sortValue)
     const qs = params.toString()
-    return qs ? `/catalog?${qs}` : '/catalog'
+    return qs ? `${basePath}?${qs}` : basePath
   }
 
   return (

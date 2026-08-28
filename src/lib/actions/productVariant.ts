@@ -69,7 +69,7 @@ export async function createVariant(productId: string, formData: FormData) {
       },
     })
     revalidatePath('/admin/products')
-    revalidatePath(`/catalog/${slug}`)
+    revalidatePath(`/product/${slug}`)
     return { success: true }
   } catch (error) {
     return {
@@ -108,7 +108,7 @@ export async function updateVariant(id: string, formData: FormData) {
       },
     })
     revalidatePath('/admin/products')
-    revalidatePath(`/catalog/${slug}`)
+    revalidatePath(`/product/${slug}`)
     return { success: true }
   } catch (error) {
     return {

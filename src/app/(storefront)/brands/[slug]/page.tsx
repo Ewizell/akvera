@@ -63,7 +63,7 @@ export default async function BrandPage({
             return (
               <Link
                 key={product.id}
-                href={`/catalog/${variant.slug}`}
+                href={`/product/${variant.slug}`}
                 className="block group"
               >
                 <div className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden">
@@ -83,7 +83,7 @@ export default async function BrandPage({
                 </div>
                 <p className="mt-2 text-sm font-medium">{product.name}</p>
                 <p className="text-sm text-gray-500">
-                  {variant.price ? `${variant.price.toLocaleString("ru-RU")} ₽` : "Цена по запросу"}
+                  {variant.price ? `${Number(variant.price).toLocaleString("ru-RU")} ₽` : "Цена по запросу"}
                 </p>
               </Link>
             );

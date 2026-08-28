@@ -55,7 +55,7 @@ export default function SearchBox() {
     e.preventDefault()
     if (!query.trim()) return
     setOpen(false)
-    router.push(`/catalog?q=${encodeURIComponent(query)}`)
+    router.push(`/catalog/search?q=${encodeURIComponent(query)}`)
   }
 
   return (
@@ -82,7 +82,7 @@ export default function SearchBox() {
           {suggestions.map((item) => (
             <Link
               key={item.id}
-              href={`/catalog/${item.slug}`}
+              href={`/product/${item.slug}`}
               onClick={() => setOpen(false)}
               className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 border-b last:border-b-0"
             >

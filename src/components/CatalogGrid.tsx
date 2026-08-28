@@ -101,7 +101,7 @@ export default function CatalogGrid({
           {items.map((product) => (
             <Link
               key={product.id}
-              href={`/catalog/${product.slug}`}
+              href={`/product/${product.slug}`}
               className="group border rounded-lg overflow-hidden hover:shadow-md transition-shadow bg-white"
             >
               <div className="relative aspect-square bg-gray-100">
@@ -162,7 +162,7 @@ export default function CatalogGrid({
           {items.map((product) => (
             <Link
               key={product.id}
-              href={`/catalog/${product.slug}`}
+              href={`/product/${product.slug}`}
               className="group border rounded-lg overflow-hidden hover:shadow-md transition-shadow bg-white flex flex-col sm:flex-row w-full"
             >
               <div className="relative w-full sm:w-48 aspect-square sm:aspect-auto shrink-0 bg-gray-100">

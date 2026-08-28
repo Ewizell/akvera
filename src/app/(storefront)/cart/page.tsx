@@ -27,7 +27,7 @@ export default function CartPage() {
       <div className="space-y-4">
         {items.map((item) => (
           <div key={item.variantId} className="flex gap-4 border rounded-lg p-4">
-            <Link href={`/catalog/${item.slug}`} className="relative w-24 h-24 bg-gray-100 rounded shrink-0">
+            <Link href={`/product/${item.slug}`} className="relative w-24 h-24 bg-gray-100 rounded shrink-0">
               {item.image ? (
                 <Image src={item.image} alt={item.productName} fill className="object-contain p-2" />
               ) : (
@@ -38,7 +38,7 @@ export default function CartPage() {
             </Link>
 
             <div className="flex-1 min-w-0">
-              <Link href={`/catalog/${item.slug}`} className="font-medium hover:underline">
+              <Link href={`/product/${item.slug}`} className="font-medium hover:underline">
                 {item.productName}
               </Link>
               {item.variantName && <p className="text-sm text-gray-500">{item.variantName}</p>}
