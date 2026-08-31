@@ -30,11 +30,13 @@ export default function CatalogGrid({
   filters,
   page,
   totalPages,
+  basePath,
 }: {
   products: CatalogCard[]
   filters: CatalogFilters
   page: number
   totalPages: number
+  basePath: string
 }) {
   const [view, setView] = useState<'grid' | 'list'>('grid')
   const [items, setItems] = useState(products)
@@ -65,7 +67,7 @@ export default function CatalogGrid({
       <div className="flex justify-between items-center mb-4">
         <SortDropdown
           currentSort={filters.sort ?? ''}
-          category={filters.category}
+          basePath={basePath}
           brand={filters.brand}
           q={filters.q}
           tags={filters.tags}

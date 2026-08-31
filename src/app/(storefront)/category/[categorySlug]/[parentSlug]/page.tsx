@@ -10,10 +10,10 @@ export default async function ChildCategoryPage({
   params,
   searchParams,
 }: {
-  params: Promise<{ categorySlug: string; childSlug: string }>;
+  params: Promise<{ categorySlug: string; parentSlug: string }>;
   searchParams: Promise<{ page?: string; tags?: string; sort?: string; brand?: string }>;
 }) {
-  const { categorySlug, childSlug } = await params;
+  const { categorySlug, parentSlug } = await params;
   const { page: pageParam, tags: tagsParam, sort: sortParam, brand } = await searchParams;
 
   const parent = await prisma.category.findUnique({
@@ -25,7 +25,7 @@ export default async function ChildCategoryPage({
   }
 
   const category = await prisma.category.findUnique({
-    where: { slug: childSlug },
+    where: { slug: parentSlug },
     include: {
       children: {
         orderBy: { name: "asc" },
@@ -34,7 +34,6 @@ export default async function ChildCategoryPage({
     },
   });
 
-  // Категория должна существовать и быть именно ребёнком parent — иначе 404
   if (!category || category.parentId !== parent.id) {
     notFound();
   }
@@ -46,7 +45,6 @@ export default async function ChildCategoryPage({
     { label: category.name },
   ];
 
-  // Есть свои подкатегории (третий уровень) — показываем плитку
   if (category.children.length > 0) {
     return (
       <main className="max-w-7xl mx-auto px-4 py-10">
@@ -82,7 +80,6 @@ export default async function ChildCategoryPage({
     );
   }
 
-  // Лист без подкатегорий — сразу листинг товаров
   const page = Math.max(1, parseInt(pageParam ?? "1", 10) || 1);
   const selectedTagSlugs = tagsParam ? tagsParam.split(",").filter(Boolean) : [];
   const sort = sortParam === "price_asc" || sortParam === "price_desc" || sortParam === "stock" ? sortParam : undefined;

@@ -43,6 +43,27 @@ export async function createProduct(formData: FormData) {
   }
 }
 
+export async function getRelatedVariants(categoryId: string, excludeVariantId: string, limit = 8) {
+  const variants = await prisma.productVariant.findMany({
+    where: {
+      product: { categoryId },
+      id: { not: excludeVariantId },
+    },
+    include: {
+      product: { select: { name: true } },
+      images: { where: { isMain: true }, take: 1 },
+    },
+    take: limit,
+    orderBy: { createdAt: 'desc' },
+  })
+
+  // Decimal нельзя передавать в клиентские компоненты — сериализуем в number
+  return variants.map((v) => ({
+    ...v,
+    price: v.price !== null ? Number(v.price) : null,
+  }))
+}
+
 export async function updateProduct(id: string, formData: FormData) {
   const name = formData.get('name') as string
   const categoryId = formData.get('categoryId') as string

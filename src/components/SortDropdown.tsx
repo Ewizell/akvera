@@ -14,11 +14,13 @@ export default function SortDropdown({
   currentSort,
   basePath,
   brand,
+  q,
   tags,
 }: {
   currentSort: string
   basePath: string
   brand?: string
+  q?: string
   tags?: string[]
 }) {
   const [open, setOpen] = useState(false)
@@ -26,6 +28,7 @@ export default function SortDropdown({
 
   function buildHref(sortValue: string) {
     const params = new URLSearchParams()
+    if (q) params.set('q', q)
     if (brand) params.set('brand', brand)
     if (tags && tags.length > 0) params.set('tags', tags.join(','))
     if (sortValue) params.set('sort', sortValue)

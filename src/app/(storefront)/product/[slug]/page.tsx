@@ -6,6 +6,10 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import type { Metadata } from "next";
 import AddToCartButton from "@/components/AddToCartButton";
 import CompareButton from "@/components/CompareButton";
+import { ProductGallery } from "@/components/ProductGallery";
+import { getRelatedVariants } from "@/lib/actions/product";
+import { RelatedProductsCarousel } from "@/components/RelatedProductsCarousel";
+import { RecentlyViewedCarousel } from "@/components/RecentlyViewedCarousel";
 
 export const revalidate = 3600;
 
@@ -77,6 +81,11 @@ if (!variant) {
 
 const category = variant.product.category;
 
+const relatedVariants = await getRelatedVariants(
+  variant.product.categoryId,
+  variant.id
+);
+
 const mergedTagsMap = new Map<string, { id: string; name: string; slug: string }>();
 for (const t of variant.product.tags) mergedTagsMap.set(t.id, t);
 for (const t of variant.tags) mergedTagsMap.set(t.id, t);
@@ -143,43 +152,7 @@ const crumbs = [
       <Breadcrumbs items={crumbs} />
       <div className="grid md:grid-cols-2 gap-10">
         {/* Галерея */}
-        <div>
-          <div className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden">
-            {variant.images[0] ? (
-              <Image
-                src={variant.images[0].url}
-                alt={variant.images[0].alt || variant.product.name}
-                fill
-                className="object-contain p-6"
-                sizes="(max-width: 768px) 100vw, 50vw"
-                priority
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-gray-400">
-                Нет фото
-              </div>
-            )}
-          </div>
-
-          {variant.images.length > 1 && (
-            <div className="mt-4 grid grid-cols-5 gap-2">
-              {variant.images.slice(1).map((img) => (
-                <div
-                  key={img.id}
-                  className="relative aspect-square bg-gray-100 rounded overflow-hidden"
-                >
-                  <Image
-                    src={img.url}
-                    alt={img.alt || variant.product.name}
-                    fill
-                    className="object-contain p-1"
-                    sizes="100px"
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <ProductGallery images={variant.images} productName={variant.product.name} />
 
         {/* Инфо */}
       <div>
@@ -260,6 +233,21 @@ const crumbs = [
           </ul>
         </div>
       )}
+
+      <RelatedProductsCarousel variants={relatedVariants} />
+
+      <RecentlyViewedCarousel
+        current={{
+          id: variant.id,
+          slug: variant.slug,
+          name: variant.name,
+          price: variant.price ? Number(variant.price) : null,
+          product: { name: variant.product.name },
+          images: variant.images[0]
+            ? [{ url: variant.images[0].url, alt: variant.images[0].alt }]
+            : [],
+        }}
+      />
     </main>
   );
 }

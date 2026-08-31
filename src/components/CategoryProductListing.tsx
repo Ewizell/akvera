@@ -99,6 +99,7 @@ export default async function CategoryProductListing({
             filters={filters}
             page={page}
             totalPages={totalPages}
+            basePath={basePath}
           />
 
           {totalCount === 0 && (
