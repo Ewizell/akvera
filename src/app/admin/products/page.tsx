@@ -41,9 +41,11 @@ export default async function ProductsPage() {
   }))
 
   return (
-    <div className="max-w-5xl mx-auto p-8">
-      <h1 className="text-2xl font-bold mb-6">Товары</h1>
-      <ProductList products={serializedProducts} categories={categories} brands={brands} tags={tags} />
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-5xl mx-auto p-8 text-gray-900">
+        <h1 className="text-2xl font-bold text-gray-900 mb-6">Товары</h1>
+        <ProductList products={serializedProducts} categories={categories} brands={brands} tags={tags} />
+      </div>
     </div>
   )
 }

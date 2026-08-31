@@ -19,48 +19,55 @@ export default function BrandList({ brands }: { brands: Brand[] }) {
 
   return (
     <>
-      <div className="flex justify-end mb-4">
+      <div className="flex items-center justify-between mb-5">
+        <p className="text-sm text-gray-500">
+          {brands.length} {brands.length === 1 ? 'бренд' : 'брендов'}
+        </p>
         <button
           onClick={() => setCreating(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700"
         >
           + Добавить бренд
         </button>
       </div>
 
-      <table className="w-full border-collapse">
-        <thead>
-          <tr className="border-b text-left text-sm text-gray-500">
-            <th className="py-2"></th>
-            <th className="py-2">Название</th>
-            <th className="py-2">Slug</th>
-            <th className="py-2"></th>
-          </tr>
-        </thead>
-        <tbody>
+      {brands.length === 0 ? (
+        <div className="text-center py-16 text-sm text-gray-400 border border-dashed border-gray-300 bg-white rounded-lg">
+          Брендов пока нет
+        </div>
+      ) : (
+        <ul className="space-y-2">
           {brands.map((brand) => (
-            <tr key={brand.id} className="border-b">
-              <td className="py-3">
+            <li
+              key={brand.id}
+              className="flex items-center justify-between gap-4 bg-white rounded-lg px-4 py-3 shadow-sm hover:shadow-md transition-shadow"
+            >
+              <div className="flex items-center gap-3 min-w-0">
                 {brand.logoUrl ? (
-                  <img src={brand.logoUrl} alt="" className="w-8 h-8 object-contain" />
+                  <img
+                    src={brand.logoUrl}
+                    alt=""
+                    className="w-10 h-10 object-contain rounded-md bg-gray-50 shrink-0"
+                  />
                 ) : (
-                  <div className="w-8 h-8 rounded bg-gray-100" />
+                  <div className="w-10 h-10 rounded-md bg-gray-50 shrink-0" />
                 )}
-              </td>
-              <td className="py-3">{brand.name}</td>
-              <td className="py-3 text-gray-500">{brand.slug}</td>
-              <td className="py-3 text-right">
-                <button
-                  onClick={() => setEditingId(brand.id)}
-                  className="text-blue-600 hover:underline"
-                >
-                  Редактировать
-                </button>
-              </td>
-            </tr>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">{brand.name}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{brand.slug}</p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setEditingId(brand.id)}
+                className="text-sm text-blue-600 hover:underline shrink-0"
+              >
+                Редактировать
+              </button>
+            </li>
           ))}
-        </tbody>
-      </table>
+        </ul>
+      )}
 
       {creating && <BrandCreateModal onClose={() => setCreating(false)} />}
 

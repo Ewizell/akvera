@@ -42,20 +42,27 @@ function CategoryRow({
 }) {
   return (
     <>
-      <tr className="border-b">
-        <td className="py-3" style={{ paddingLeft: `${depth * 24 + 12}px` }}>
-          {category.name}
-        </td>
-        <td className="py-3 text-gray-500">{category.slug}</td>
-        <td className="py-3 text-right space-x-3">
-          <button onClick={() => onAttributes(category)} className="text-gray-600 hover:underline">
+      <li
+        className="flex items-center justify-between gap-4 bg-white border border-gray-200 rounded-lg px-4 py-3 hover:border-gray-300 transition-colors"
+        style={{ marginLeft: `${depth * 20}px` }}
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          {depth > 0 && <span className="text-gray-300 shrink-0">└</span>}
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-gray-900 truncate">{category.name}</p>
+            <p className="text-xs text-gray-500 mt-0.5">{category.slug}</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 shrink-0">
+          <button onClick={() => onAttributes(category)} className="text-sm text-gray-600 hover:underline">
             Атрибуты ({category.attributes.length})
           </button>
-          <button onClick={() => onEdit(category)} className="text-blue-600 hover:underline">
+          <button onClick={() => onEdit(category)} className="text-sm text-blue-600 hover:underline">
             Редактировать
           </button>
-        </td>
-      </tr>
+        </div>
+      </li>
       {category.children.map((child) => (
         <CategoryRow key={child.id} category={child} depth={depth + 1} onEdit={onEdit} onAttributes={onAttributes} />
       ))}
@@ -71,24 +78,24 @@ export default function CategoryList({ categories }: { categories: Category[] })
 
   return (
     <>
-      <div className="flex justify-end mb-4">
+      <div className="flex items-center justify-between mb-5">
+        <p className="text-sm text-gray-500">
+          {categories.length} {categories.length === 1 ? 'категория' : 'категорий'}
+        </p>
         <button
           onClick={() => setCreating(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700"
         >
           + Добавить категорию
         </button>
       </div>
 
-      <table className="w-full border-collapse">
-        <thead>
-          <tr className="border-b text-left text-sm text-gray-500">
-            <th className="py-2">Название</th>
-            <th className="py-2">Slug</th>
-            <th className="py-2"></th>
-          </tr>
-        </thead>
-        <tbody>
+      {tree.length === 0 ? (
+        <div className="text-center py-16 text-sm text-gray-400 border border-dashed border-gray-200 rounded-lg">
+          Категорий пока нет
+        </div>
+      ) : (
+        <ul className="space-y-2">
           {tree.map((c) => (
             <CategoryRow
               key={c.id}
@@ -98,8 +105,8 @@ export default function CategoryList({ categories }: { categories: Category[] })
               onAttributes={setAttributesFor}
             />
           ))}
-        </tbody>
-      </table>
+        </ul>
+      )}
 
       {editing && (
         <CategoryEditModal

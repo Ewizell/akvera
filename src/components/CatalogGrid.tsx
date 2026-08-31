@@ -7,6 +7,7 @@ import CartCardControl from './CartCardControl'
 import SortDropdown from './SortDropdown'
 import { loadMoreCatalogProducts } from '@/lib/actions/catalog'
 import type { CatalogFilters } from '@/lib/catalog-query'
+import CompareButton from './CompareButton'
 
 type CatalogCard = {
   id: string
@@ -153,6 +154,7 @@ export default function CatalogGrid({
                   price={product.price}
                   image={product.image}
                 />
+                <CompareButton variantId={product.variantId} className="mt-2 w-full" />
               </div>
             </Link>
           ))}
@@ -227,6 +229,7 @@ export default function CatalogGrid({
                     price={product.price}
                     image={product.image}
                   />
+                  <CompareButton variantId={product.variantId} className="mt-2" />
                 </div>
               </div>
             </Link>

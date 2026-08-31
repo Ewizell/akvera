@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import type { Metadata } from "next";
 import AddToCartButton from "@/components/AddToCartButton";
+import CompareButton from "@/components/CompareButton";
 
 export const revalidate = 3600;
 
@@ -226,6 +227,7 @@ const crumbs = [
           price={variant.price ? Number(variant.price) : null}
           image={variant.images[0]?.url || null}
         />
+        <CompareButton variantId={variant.id} className="mt-3 w-full sm:w-auto" />
     </div>
       </div>
 

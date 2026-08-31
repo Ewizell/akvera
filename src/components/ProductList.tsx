@@ -53,47 +53,60 @@ function ProductRow({
   const firstVariantImage = product.variants[0]?.images.find((img) => img.isMain) ?? product.variants[0]?.images[0]
 
   return (
-    <tr className="border-b">
-      <td className="py-3">
-        <div className="flex items-center gap-2">
-          {firstVariantImage ? (
-            <img src={firstVariantImage.url} alt="" className="w-8 h-8 object-cover rounded border" />
-          ) : (
-            <div className="w-8 h-8 rounded border bg-gray-100" />
-          )}
-          {product.name}
-        </div>
-      </td>
-      <td className="py-3 text-gray-500">{product.category.name}</td>
-      <td className="py-3">{product.variants.length}</td>
-      <td className="py-3 text-right">
-        {error && <span className="text-xs text-red-600 mr-3">{error}</span>}
-        <button onClick={() => onEdit(product)} className="text-blue-600 hover:underline mr-3">
-          Редактировать
-        </button>
-        {!confirming ? (
-          <button
-            onClick={() => {
-              setError(null)
-              setConfirming(true)
-            }}
-            className="text-red-600 hover:underline"
-          >
-            Удалить
-          </button>
+    <li className="flex items-center justify-between gap-4 bg-white border border-gray-200 rounded-lg px-4 py-3 hover:border-gray-300 transition-colors">
+      <div className="flex items-center gap-3 min-w-0">
+        {firstVariantImage ? (
+          <img
+            src={firstVariantImage.url}
+            alt=""
+            className="w-10 h-10 object-cover rounded-md border border-gray-200 shrink-0"
+          />
         ) : (
-          <span className="text-sm">
-            Точно?{' '}
-            <button onClick={handleDelete} disabled={isPending} className="text-red-600 font-medium hover:underline">
+          <div className="w-10 h-10 rounded-md border border-gray-200 bg-gray-50 shrink-0" />
+        )}
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-gray-900 truncate">{product.name}</p>
+          <p className="text-xs text-gray-500 mt-0.5">
+            {product.category.name} · {product.variants.length}{' '}
+            {product.variants.length === 1 ? 'исполнение' : 'исполнений'}
+          </p>
+          {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
+        </div>
+      </div>
+
+      <div className="flex items-center gap-3 shrink-0">
+        {confirming ? (
+          <span className="flex items-center gap-2 text-sm">
+            <span className="text-gray-500">Удалить?</span>
+            <button
+              onClick={handleDelete}
+              disabled={isPending}
+              className="text-red-600 font-medium hover:underline disabled:opacity-50"
+            >
               Да
-            </button>{' '}
+            </button>
             <button onClick={() => setConfirming(false)} className="text-gray-500 hover:underline">
               Отмена
             </button>
           </span>
+        ) : (
+          <>
+            <button onClick={() => onEdit(product)} className="text-sm text-blue-600 hover:underline">
+              Редактировать
+            </button>
+            <button
+              onClick={() => {
+                setError(null)
+                setConfirming(true)
+              }}
+              className="text-sm text-red-600 hover:underline"
+            >
+              Удалить
+            </button>
+          </>
         )}
-      </td>
-    </tr>
+      </div>
+    </li>
   )
 }
 
@@ -115,33 +128,32 @@ export default function ProductList({
 
   return (
     <>
-      <div className="flex justify-end mb-4">
+      <div className="flex items-center justify-between mb-5">
+        <p className="text-sm text-gray-500">
+          {products.length} {products.length === 1 ? 'товар' : 'товаров'}
+        </p>
         <button
           onClick={() => setCreating(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700"
         >
           + Добавить товар
         </button>
       </div>
 
-      <table className="w-full border-collapse">
-        <thead>
-          <tr className="border-b text-left text-sm text-gray-500">
-            <th className="py-2">Название</th>
-            <th className="py-2">Категория</th>
-            <th className="py-2">Вариантов</th>
-            <th className="py-2"></th>
-          </tr>
-        </thead>
-        <tbody>
+      {products.length === 0 ? (
+        <div className="text-center py-16 text-sm text-gray-400 border border-dashed border-gray-200 rounded-lg">
+          Товаров пока нет
+        </div>
+      ) : (
+        <ul className="space-y-2">
           {products.map((product) => (
             <ProductRow key={product.id} product={product} onEdit={(p) => setEditingId(p.id)} />
           ))}
-        </tbody>
-      </table>
+        </ul>
+      )}
 
       {creating && (
-        <ProductCreateModal categories={categories} brands={brands} tags={tags} onClose={() => setCreating(false)} />
+        <ProductCreateModal categories={categories} brands={brands} onClose={() => setCreating(false)} />
       )}
 
       {editingProduct && (

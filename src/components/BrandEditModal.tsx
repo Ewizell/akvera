@@ -10,6 +10,10 @@ type Brand = {
   logoUrl: string | null
 }
 
+const inputCls =
+  'w-full border border-gray-200 rounded-md px-3 py-2 text-sm text-gray-900 placeholder-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+const labelCls = 'block text-sm font-medium text-gray-700 mb-1'
+
 export default function BrandEditModal({
   brand,
   onClose,
@@ -47,38 +51,42 @@ export default function BrandEditModal({
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+      className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-lg p-6 max-w-lg w-full mx-4"
+        className="bg-white rounded-xl shadow-xl p-6 max-w-lg w-full mx-4 text-gray-900"
         onClick={(e) => e.stopPropagation()}
       >
         <form action={handleSubmit} className="space-y-4">
-          <h2 className="text-xl font-bold">Редактировать бренд</h2>
+          <h2 className="text-xl font-bold text-gray-900">Редактировать бренд</h2>
 
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Название</label>
-            <input name="name" defaultValue={brand.name} required className="w-full border rounded px-3 py-2" />
+            <label className={labelCls}>Название</label>
+            <input name="name" defaultValue={brand.name} required className={inputCls} />
           </div>
 
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Slug</label>
-            <input name="slug" defaultValue={brand.slug} required className="w-full border rounded px-3 py-2" />
+            <label className={labelCls}>Slug</label>
+            <input name="slug" defaultValue={brand.slug} required className={inputCls} />
           </div>
 
           <div>
-            <label className="block text-sm text-gray-600 mb-1">URL логотипа (необязательно)</label>
-            <input name="logoUrl" defaultValue={brand.logoUrl ?? ''} className="w-full border rounded px-3 py-2" />
+            <label className={labelCls}>URL логотипа (необязательно)</label>
+            <input name="logoUrl" defaultValue={brand.logoUrl ?? ''} className={inputCls} />
           </div>
 
-          {saveError && <p className="text-sm text-red-600">{saveError}</p>}
+          {saveError && (
+            <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-md px-3 py-2">
+              {saveError}
+            </p>
+          )}
 
           <div className="flex items-center justify-between pt-2">
             <button
               type="submit"
               disabled={isPending}
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+              className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
             >
               {isPending ? 'Сохранение...' : 'Сохранить'}
             </button>

@@ -6,6 +6,10 @@ import { slugify } from '@/lib/slugify'
 
 type Tag = { id: string; name: string; slug: string }
 
+const inputCls =
+  'w-full border border-gray-200 rounded-md px-3 py-2 text-sm text-gray-900 placeholder-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+const labelCls = 'block text-sm font-medium text-gray-700 mb-1'
+
 export default function TagFormModal({
   tag,
   onClose,
@@ -32,18 +36,18 @@ export default function TagFormModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-sm">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm text-gray-900">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">{isEdit ? 'Редактировать тег' : 'Новый тег'}</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-800 text-xl">
+          <h2 className="text-lg font-semibold text-gray-900">{isEdit ? 'Редактировать тег' : 'Новый тег'}</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-700 text-xl leading-none">
             ✕
           </button>
         </div>
 
         <form action={handleSubmit} className="space-y-3">
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Название</label>
+            <label className={labelCls}>Название</label>
             <input
               name="name"
               value={name}
@@ -52,11 +56,11 @@ export default function TagFormModal({
                 if (!slugEdited) setSlug(slugify(e.target.value))
               }}
               required
-              className="w-full border rounded px-3 py-2"
+              className={inputCls}
             />
           </div>
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Slug</label>
+            <label className={labelCls}>Slug</label>
             <input
               name="slug"
               value={slug}
@@ -65,16 +69,18 @@ export default function TagFormModal({
                 setSlugEdited(true)
               }}
               required
-              className="w-full border rounded px-3 py-2"
+              className={inputCls}
             />
           </div>
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && (
+            <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-md px-3 py-2">{error}</p>
+          )}
 
           <button
             type="submit"
             disabled={isPending}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50 w-full"
+            className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 disabled:opacity-50 w-full"
           >
             {isPending ? 'Сохранение...' : 'Сохранить'}
           </button>
