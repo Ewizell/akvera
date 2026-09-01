@@ -1,23 +1,18 @@
 'use client'
 
 import Link from "next/link";
+import type { CatalogFilters } from "@/lib/catalog-query";
 
 export default function CatalogPagination({
   currentPage,
   totalPages,
   basePath,
-  brand,
-  q,
-  tags,
-  sort,
+  filters,
 }: {
   currentPage: number;
   totalPages: number;
   basePath: string;
-  brand?: string;
-  q?: string;
-  tags?: string[];
-  sort?: string;
+  filters: CatalogFilters;
 }) {
   const pages = Array.from(
     { length: totalPages },
@@ -27,20 +22,23 @@ export default function CatalogPagination({
   function buildHref(page: number) {
     const params = new URLSearchParams();
 
-    if (q) {
-      params.set("q", q);
+    if (filters.q) params.set("q", filters.q);
+    if (filters.brand) params.set("brand", filters.brand);
+    if (filters.tags && filters.tags.length > 0) params.set("tags", filters.tags.join(","));
+    if (filters.sort) params.set("sort", filters.sort);
+    if (filters.priceMin !== undefined) params.set("priceMin", String(filters.priceMin));
+    if (filters.priceMax !== undefined) params.set("priceMax", String(filters.priceMax));
+    if (filters.inStock) params.set("stock", "1");
+    if (filters.attrValues) {
+      for (const [key, values] of Object.entries(filters.attrValues)) {
+        if (values.length > 0) params.set(`attr_${key}`, values.join(","));
+      }
     }
-
-    if (brand) {
-      params.set("brand", brand);
-    }
-
-    if (tags && tags.length > 0) {
-      params.set("tags", tags.join(","));
-    }
-
-    if (sort) {
-      params.set("sort", sort);
+    if (filters.attrRanges) {
+      for (const [key, range] of Object.entries(filters.attrRanges)) {
+        if (range.min !== undefined) params.set(`attr_${key}_min`, String(range.min));
+        if (range.max !== undefined) params.set(`attr_${key}_max`, String(range.max));
+      }
     }
 
     if (page > 1) {

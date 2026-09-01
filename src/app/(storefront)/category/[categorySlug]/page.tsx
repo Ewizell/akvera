@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import CategoryProductListing from "@/components/CategoryProductListing";
+import { parseCatalogSearchParams } from "@/lib/catalog-query";
+import type { CategoryNavData } from "@/components/CategoryFilterSidebar";
 
 export const revalidate = 3600;
 
@@ -11,10 +13,12 @@ export default async function CategoryPage({
   searchParams,
 }: {
   params: Promise<{ categorySlug: string }>;
-  searchParams: Promise<{ page?: string; tags?: string; sort?: string; brand?: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const { categorySlug } = await params;
-  const { page: pageParam, tags: tagsParam, sort: sortParam, brand } = await searchParams;
+  const sp = await searchParams;
+  const { page, tags: selectedTagSlugs, sort, brand, priceMin, priceMax, inStock, attrValues, attrRanges } =
+    parseCatalogSearchParams(sp);
 
   const category = await prisma.category.findUnique({
     where: { slug: categorySlug },
@@ -22,6 +26,14 @@ export default async function CategoryPage({
       children: {
         orderBy: { name: "asc" },
         include: { _count: { select: { products: true } } },
+      },
+      parent: {
+        include: {
+          children: {
+            orderBy: { name: "asc" },
+            include: { _count: { select: { products: true } } },
+          },
+        },
       },
     },
   });
@@ -73,9 +85,32 @@ export default async function CategoryPage({
   }
 
   // Лист без подкатегорий — сразу листинг товаров
-  const page = Math.max(1, parseInt(pageParam ?? "1", 10) || 1);
-  const selectedTagSlugs = tagsParam ? tagsParam.split(",").filter(Boolean) : [];
-  const sort = sortParam === "price_asc" || sortParam === "price_desc" || sortParam === "stock" ? sortParam : undefined;
+  const siblings = category.parent
+    ? category.parent.children
+    : await prisma.category.findMany({
+        where: { parentId: null },
+        orderBy: { name: "asc" },
+        include: { _count: { select: { products: true } } },
+      });
+
+  const categoryNav: CategoryNavData = {
+    parentLink: category.parent ? { name: category.parent.name, href: `/category/${category.parent.slug}` } : null,
+    currentSlug: category.slug,
+    siblings: siblings.map((s) => ({
+      id: s.id,
+      name: s.name,
+      slug: s.slug,
+      href: category.parent ? `/category/${category.parent.slug}/${s.slug}` : `/category/${s.slug}`,
+      productCount: s._count.products,
+    })),
+    children: category.children.map((c) => ({
+      id: c.id,
+      name: c.name,
+      slug: c.slug,
+      href: `/category/${category.slug}/${c.slug}`,
+      productCount: c._count.products,
+    })),
+  };
 
   return (
     <CategoryProductListing
@@ -88,6 +123,12 @@ export default async function CategoryPage({
       page={page}
       crumbs={crumbs}
       backHref="/catalog"
+      categoryNav={categoryNav}
+      priceMin={priceMin}
+      priceMax={priceMax}
+      inStock={inStock}
+      attrValues={attrValues}
+      attrRanges={attrRanges}
     />
   );
 }

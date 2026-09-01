@@ -64,12 +64,14 @@ export async function createVariant(productId: string, formData: FormData) {
         metaTitle: metaTitle || null,
         metaDescription: metaDescription || null,
         metaKeywords: metaKeywords || null,
-        shortDescription: shortDescription || null,
+        tags: { connect: variantTagIds.map((tagId) => ({ id: tagId })) },
         attributes,
       },
     })
     revalidatePath('/admin/products')
     revalidatePath(`/product/${slug}`)
+    revalidatePath('/category', 'layout')
+    revalidatePath('/catalog')
     return { success: true }
   } catch (error) {
     return {
@@ -109,6 +111,8 @@ export async function updateVariant(id: string, formData: FormData) {
     })
     revalidatePath('/admin/products')
     revalidatePath(`/product/${slug}`)
+    revalidatePath('/category', 'layout')
+    revalidatePath('/catalog')
     return { success: true }
   } catch (error) {
     return {
@@ -122,6 +126,8 @@ export async function deleteVariant(id: string) {
   try {
     await prisma.productVariant.delete({ where: { id } })
     revalidatePath('/admin/products')
+    revalidatePath('/category', 'layout')
+    revalidatePath('/catalog')
     return { success: true }
   } catch (error) {
     return {

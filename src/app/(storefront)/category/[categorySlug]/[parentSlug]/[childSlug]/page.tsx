@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import CategoryProductListing from "@/components/CategoryProductListing";
+import { parseCatalogSearchParams } from "@/lib/catalog-query";
+import type { CategoryNavData } from "@/components/CategoryFilterSidebar";
 
 export const revalidate = 3600;
 
@@ -11,13 +13,21 @@ export default async function ChildCategoryPage({
   searchParams,
 }: {
   params: Promise<{ categorySlug: string; childSlug: string }>;
-  searchParams: Promise<{ page?: string; tags?: string; sort?: string; brand?: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const { categorySlug, childSlug } = await params;
-  const { page: pageParam, tags: tagsParam, sort: sortParam, brand } = await searchParams;
+  const sp = await searchParams;
+  const { page, tags: selectedTagSlugs, sort, brand, priceMin, priceMax, inStock, attrValues, attrRanges } =
+    parseCatalogSearchParams(sp);
 
   const parent = await prisma.category.findUnique({
     where: { slug: categorySlug },
+    include: {
+      children: {
+        orderBy: { name: "asc" },
+        include: { _count: { select: { products: true } } },
+      },
+    },
   });
 
   if (!parent) {
@@ -83,9 +93,18 @@ export default async function ChildCategoryPage({
   }
 
   // Лист без подкатегорий — сразу листинг товаров
-  const page = Math.max(1, parseInt(pageParam ?? "1", 10) || 1);
-  const selectedTagSlugs = tagsParam ? tagsParam.split(",").filter(Boolean) : [];
-  const sort = sortParam === "price_asc" || sortParam === "price_desc" || sortParam === "stock" ? sortParam : undefined;
+  const categoryNav: CategoryNavData = {
+    parentLink: { name: parent.name, href: `/category/${parent.slug}` },
+    currentSlug: category.slug,
+    siblings: parent.children.map((s) => ({
+      id: s.id,
+      name: s.name,
+      slug: s.slug,
+      href: `/category/${parent.slug}/${s.slug}`,
+      productCount: s._count.products,
+    })),
+    children: [],
+  };
 
   return (
     <CategoryProductListing
@@ -98,6 +117,12 @@ export default async function ChildCategoryPage({
       page={page}
       crumbs={crumbs}
       backHref={`/category/${parent.slug}`}
+      categoryNav={categoryNav}
+      priceMin={priceMin}
+      priceMax={priceMax}
+      inStock={inStock}
+      attrValues={attrValues}
+      attrRanges={attrRanges}
     />
   );
 }

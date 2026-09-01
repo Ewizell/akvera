@@ -9,6 +9,11 @@ export type CatalogFilters = {
   q?: string;
   tags?: string[]; // slugs, OR-логика
   sort?: "price_asc" | "price_desc" | "stock";
+  priceMin?: number;
+  priceMax?: number;
+  inStock?: boolean;
+  attrValues?: Record<string, string[]>; // key -> выбранные значения (select-атрибуты), OR внутри ключа
+  attrRanges?: Record<string, { min?: number; max?: number }>; // key -> диапазон (числовые атрибуты)
 };
 
 export type CatalogCard = {
@@ -79,7 +84,8 @@ export async function getCatalogProducts(
   filters: CatalogFilters,
   page: number
 ): Promise<{ cards: CatalogCard[]; totalCount: number }> {
-  const { categoryId, categoryIds, brand, q, tags, sort } = filters;
+  const { categoryId, categoryIds, brand, q, tags, sort, priceMin, priceMax, inStock, attrValues, attrRanges } =
+    filters;
 
   const categoryFilter = categoryId
     ? { id: categoryId }
@@ -87,10 +93,47 @@ export async function getCatalogProducts(
     ? { id: { in: categoryIds } }
     : undefined;
 
+  // условия по JSONB-атрибутам варианта: одно условие на ключ, все условия объединяются через AND
+  const attrConditions: Record<string, unknown>[] = [];
+  if (attrValues) {
+    for (const [key, values] of Object.entries(attrValues)) {
+      if (values.length === 0) continue;
+      attrConditions.push({ OR: values.map((v) => ({ attributes: { path: [key], equals: v } })) });
+    }
+  }
+  if (attrRanges) {
+    for (const [key, range] of Object.entries(attrRanges)) {
+      if (range.min !== undefined) attrConditions.push({ attributes: { path: [key], gte: range.min } });
+      if (range.max !== undefined) attrConditions.push({ attributes: { path: [key], lte: range.max } });
+    }
+  }
+
+  const variantWhere =
+    priceMin !== undefined || priceMax !== undefined || inStock || attrConditions.length > 0
+      ? {
+          ...(priceMin !== undefined || priceMax !== undefined
+            ? {
+                OR: [
+                  { price: null }, // "цена по запросу" — всегда проходит числовой фильтр цены
+                  {
+                    price: {
+                      ...(priceMin !== undefined ? { gte: priceMin } : {}),
+                      ...(priceMax !== undefined ? { lte: priceMax } : {}),
+                    },
+                  },
+                ],
+              }
+            : {}),
+          ...(inStock ? { stock: { gt: 0 } } : {}),
+          ...(attrConditions.length > 0 ? { AND: attrConditions } : {}),
+        }
+      : undefined;
+
   const baseWhere = {
     category: categoryFilter,
     brand: brand ? { slug: brand } : undefined,
     tags: tags && tags.length > 0 ? { some: { slug: { in: tags } } } : undefined,
+    variants: variantWhere ? { some: variantWhere } : undefined,
   };
 
   let matchedProductIds: string[] | null = null;
@@ -118,7 +161,7 @@ export async function getCatalogProducts(
 
     // применяем фильтры категории/бренда/тегов к результатам поиска,
     // сохраняя порядок релевантности
-    if (category || brand || (tags && tags.length > 0)) {
+    if (categoryFilter || brand || (tags && tags.length > 0) || variantWhere) {
       const validRows = await prisma.product.findMany({
         where: { id: { in: allMatchedIds }, ...baseWhere },
         select: { id: true },
@@ -196,4 +239,132 @@ export async function getCatalogProducts(
 
   const cards = products.map(buildCard);
   return { cards, totalCount };
+}
+
+
+export async function getPriceRange(
+  filters: Pick<CatalogFilters, "categoryId" | "categoryIds" | "brand" | "tags">
+): Promise<{ min: number; max: number }> {
+  const categoryFilter = filters.categoryId
+    ? { id: filters.categoryId }
+    : filters.categoryIds && filters.categoryIds.length > 0
+    ? { id: { in: filters.categoryIds } }
+    : undefined;
+
+  const result = await prisma.productVariant.aggregate({
+    where: {
+      price: { not: null },
+      product: {
+        category: categoryFilter,
+        brand: filters.brand ? { slug: filters.brand } : undefined,
+        tags: filters.tags && filters.tags.length > 0 ? { some: { slug: { in: filters.tags } } } : undefined,
+      },
+    },
+    _min: { price: true },
+    _max: { price: true },
+  });
+
+  return {
+    min: result._min.price ? Math.floor(Number(result._min.price)) : 0,
+    max: result._max.price ? Math.ceil(Number(result._max.price)) : 0,
+  };
+}
+
+export type AttributeFilterOption =
+  | { key: string; label: string; unit: string | null; fieldType: "number"; min: number; max: number }
+  | { key: string; label: string; unit: string | null; fieldType: "select"; options: string[] };
+
+export async function getAttributeFilterOptions(
+  categoryId: string | undefined,
+  categoryIds: string[] | undefined
+): Promise<AttributeFilterOption[]> {
+  const primaryCategoryId = categoryId ?? categoryIds?.[0];
+  if (!primaryCategoryId) return [];
+
+  const category = await prisma.category.findUnique({
+    where: { id: primaryCategoryId },
+    include: { attributes: { orderBy: { sortOrder: "asc" } } },
+  });
+  if (!category || category.attributes.length === 0) return [];
+
+  const productCategoryFilter = categoryId ? { id: categoryId } : { id: { in: categoryIds! } };
+  const variants = await prisma.productVariant.findMany({
+    where: { product: { category: productCategoryFilter } },
+    select: { attributes: true },
+  });
+
+  return category.attributes.map((attr): AttributeFilterOption => {
+    const rawValues = variants
+      .map((v) => (v.attributes as Record<string, unknown>)[attr.key])
+      .filter((v) => v !== undefined && v !== null && v !== "");
+
+    if (attr.fieldType === "number") {
+      const nums = rawValues.map((v) => Number(v)).filter((n) => !Number.isNaN(n));
+      return {
+        key: attr.key,
+        label: attr.label,
+        unit: attr.unit,
+        fieldType: "number",
+        min: nums.length > 0 ? Math.min(...nums) : 0,
+        max: nums.length > 0 ? Math.max(...nums) : 0,
+      };
+    }
+
+    const options = Array.from(new Set(rawValues.map((v) => String(v)))).sort();
+    return { key: attr.key, label: attr.label, unit: attr.unit, fieldType: "select", options };
+  });
+}
+
+export type ParsedCatalogParams = {
+  page: number;
+  tags: string[];
+  sort?: CatalogFilters["sort"];
+  brand?: string;
+  priceMin?: number;
+  priceMax?: number;
+  inStock: boolean;
+  attrValues: Record<string, string[]>;
+  attrRanges: Record<string, { min?: number; max?: number }>;
+};
+
+export function parseCatalogSearchParams(sp: Record<string, string | string[] | undefined>): ParsedCatalogParams {
+  const get = (key: string) => {
+    const v = sp[key];
+    return Array.isArray(v) ? v[0] : v;
+  };
+
+  const page = Math.max(1, parseInt(get("page") ?? "1", 10) || 1);
+  const tagsParam = get("tags");
+  const tags = tagsParam ? tagsParam.split(",").filter(Boolean) : [];
+  const sortParam = get("sort");
+  const sort =
+    sortParam === "price_asc" || sortParam === "price_desc" || sortParam === "stock" ? sortParam : undefined;
+  const brand = get("brand") || undefined;
+  const priceMinParam = get("priceMin");
+  const priceMaxParam = get("priceMax");
+  const priceMin = priceMinParam ? Number(priceMinParam) : undefined;
+  const priceMax = priceMaxParam ? Number(priceMaxParam) : undefined;
+  const inStock = get("stock") === "1";
+
+  const attrValues: Record<string, string[]> = {};
+  const attrRanges: Record<string, { min?: number; max?: number }> = {};
+
+  for (const key of Object.keys(sp)) {
+    if (!key.startsWith("attr_")) continue;
+    const value = get(key);
+    if (!value) continue;
+
+    if (key.endsWith("_min")) {
+      const attrKey = key.slice("attr_".length, -"_min".length);
+      attrRanges[attrKey] = { ...attrRanges[attrKey], min: Number(value) };
+    } else if (key.endsWith("_max")) {
+      const attrKey = key.slice("attr_".length, -"_max".length);
+      attrRanges[attrKey] = { ...attrRanges[attrKey], max: Number(value) };
+    } else {
+      const attrKey = key.slice("attr_".length);
+      attrValues[attrKey] = value.split(",").filter(Boolean);
+    }
+  }
+
+  return { page, tags, sort, brand, priceMin, priceMax, inStock, attrValues, attrRanges };
 }

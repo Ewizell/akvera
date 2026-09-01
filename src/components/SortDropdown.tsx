@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import type { CatalogFilters } from '@/lib/catalog-query'
 
 const SORT_OPTIONS: { value: string; label: string }[] = [
   { value: '', label: 'По умолчанию' },
@@ -13,25 +14,35 @@ const SORT_OPTIONS: { value: string; label: string }[] = [
 export default function SortDropdown({
   currentSort,
   basePath,
-  brand,
-  q,
-  tags,
+  filters,
 }: {
   currentSort: string
   basePath: string
-  brand?: string
-  q?: string
-  tags?: string[]
+  filters: CatalogFilters
 }) {
   const [open, setOpen] = useState(false)
   const currentLabel = SORT_OPTIONS.find((o) => o.value === currentSort)?.label ?? SORT_OPTIONS[0].label
 
   function buildHref(sortValue: string) {
     const params = new URLSearchParams()
-    if (q) params.set('q', q)
-    if (brand) params.set('brand', brand)
-    if (tags && tags.length > 0) params.set('tags', tags.join(','))
+    if (filters.q) params.set('q', filters.q)
+    if (filters.brand) params.set('brand', filters.brand)
+    if (filters.tags && filters.tags.length > 0) params.set('tags', filters.tags.join(','))
     if (sortValue) params.set('sort', sortValue)
+    if (filters.priceMin !== undefined) params.set('priceMin', String(filters.priceMin))
+    if (filters.priceMax !== undefined) params.set('priceMax', String(filters.priceMax))
+    if (filters.inStock) params.set('stock', '1')
+    if (filters.attrValues) {
+      for (const [key, values] of Object.entries(filters.attrValues)) {
+        if (values.length > 0) params.set(`attr_${key}`, values.join(','))
+      }
+    }
+    if (filters.attrRanges) {
+      for (const [key, range] of Object.entries(filters.attrRanges)) {
+        if (range.min !== undefined) params.set(`attr_${key}_min`, String(range.min))
+        if (range.max !== undefined) params.set(`attr_${key}_max`, String(range.max))
+      }
+    }
     const qs = params.toString()
     return qs ? `${basePath}?${qs}` : basePath
   }

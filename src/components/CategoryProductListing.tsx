@@ -4,7 +4,14 @@ import CatalogGrid from "@/components/CatalogGrid";
 import CatalogFilterBar from "@/components/CatalogFilterBar";
 import CatalogPagination from "@/components/CatalogPagination";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
-import { getCatalogProducts, PAGE_SIZE, type CatalogFilters } from "@/lib/catalog-query";
+import {
+  getCatalogProducts,
+  getPriceRange,
+  getAttributeFilterOptions,
+  PAGE_SIZE,
+  type CatalogFilters,
+} from "@/lib/catalog-query";
+import { CategoryFilterSidebar, type CategoryNavData } from "@/components/CategoryFilterSidebar";
 
 export default async function CategoryProductListing({
   title,
@@ -18,6 +25,12 @@ export default async function CategoryProductListing({
   page,
   crumbs,
   backHref,
+  categoryNav,
+  priceMin,
+  priceMax,
+  inStock,
+  attrValues,
+  attrRanges,
 }: {
   title: string;
   basePath: string;
@@ -30,56 +43,57 @@ export default async function CategoryProductListing({
   page: number;
   crumbs: { label: string; href?: string }[];
   backHref: string;
+  categoryNav: CategoryNavData;
+  priceMin?: number;
+  priceMax?: number;
+  inStock?: boolean;
+  attrValues: Record<string, string[]>;
+  attrRanges: Record<string, { min?: number; max?: number }>;
 }) {
-  const filters: CatalogFilters = { categoryId, categoryIds, brand, q, tags, sort };
+  const filters: CatalogFilters = {
+    categoryId,
+    categoryIds,
+    brand,
+    q,
+    tags,
+    sort,
+    priceMin,
+    priceMax,
+    inStock,
+    attrValues,
+    attrRanges,
+  };
 
-  const [{ cards, totalCount }, brands, allTags] = await Promise.all([
+  const [{ cards, totalCount }, brands, allTags, priceRange, attributeOptions] = await Promise.all([
     getCatalogProducts(filters, page),
     prisma.brand.findMany({ orderBy: { name: "asc" } }),
     prisma.tag.findMany({ orderBy: { name: "asc" } }),
+    getPriceRange({ categoryId, categoryIds, brand, tags }),
+    getAttributeFilterOptions(categoryId, categoryIds),
   ]);
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
-  function brandHref(slug: string | null) {
-    const params = new URLSearchParams();
-    if (q) params.set("q", q);
-    if (slug) params.set("brand", slug);
-    if (tags.length > 0) params.set("tags", tags.join(","));
-    if (sort) params.set("sort", sort);
-    const qs = params.toString();
-    return qs ? `${basePath}?${qs}` : basePath;
-  }
-
   return (
     <main className="max-w-7xl mx-auto px-4 py-10">
       <div className="grid md:grid-cols-[220px_1fr] gap-8">
-        <aside className="space-y-6">
-          {brands.length > 0 && (
-            <div>
-              <h2 className="text-sm font-semibold text-gray-500 mb-2">Бренды</h2>
-              <ul className="space-y-1 text-sm">
-                <li>
-                  <Link
-                    href={brandHref(null)}
-                    className={!brand ? "font-medium" : "text-gray-600 hover:underline"}
-                  >
-                    Все бренды
-                  </Link>
-                </li>
-                {brands.map((b) => (
-                  <li key={b.id}>
-                    <Link
-                      href={brandHref(b.slug)}
-                      className={brand === b.slug ? "font-medium" : "text-gray-600 hover:underline"}
-                    >
-                      {b.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+        <aside>
+          <CategoryFilterSidebar
+            basePath={basePath}
+            categoryNav={categoryNav}
+            priceRange={priceRange}
+            brands={brands}
+            attributeOptions={attributeOptions}
+            q={q}
+            brand={brand}
+            tags={tags}
+            sort={sort}
+            priceMin={priceMin}
+            priceMax={priceMax}
+            inStock={inStock}
+            attrValues={attrValues}
+            attrRanges={attrRanges}
+          />
         </aside>
 
         <div>
@@ -91,10 +105,10 @@ export default async function CategoryProductListing({
             </Link>
           </div>
 
-          <CatalogFilterBar allTags={allTags} selectedTagSlugs={tags} basePath={basePath} brand={brand} q={q} />
+          <CatalogFilterBar allTags={allTags} selectedTagSlugs={tags} basePath={basePath} filters={filters} />
 
           <CatalogGrid
-            key={`${brand ?? ""}|${tags.join(",")}|${sort ?? ""}|${page}`}
+            key={JSON.stringify({ brand, tags, sort, page, priceMin, priceMax, inStock, attrValues, attrRanges })}
             products={cards}
             filters={filters}
             page={page}
@@ -111,10 +125,7 @@ export default async function CategoryProductListing({
               currentPage={page}
               totalPages={totalPages}
               basePath={basePath}
-              brand={brand}
-              q={q}
-              tags={tags}
-              sort={sort}
+              filters={filters}
             />
           )}
         </div>

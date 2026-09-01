@@ -65,13 +65,7 @@ export default function CatalogGrid({
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
-        <SortDropdown
-          currentSort={filters.sort ?? ''}
-          basePath={basePath}
-          brand={filters.brand}
-          q={filters.q}
-          tags={filters.tags}
-        />
+        <SortDropdown currentSort={filters.sort ?? ''} basePath={basePath} filters={filters} />
         <div className="flex gap-1">
         <button
           onClick={() => setViewAndSave('grid')}

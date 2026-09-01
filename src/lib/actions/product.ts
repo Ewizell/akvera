@@ -34,6 +34,8 @@ export async function createProduct(formData: FormData) {
       },
     })
     revalidatePath('/admin/products')
+    revalidatePath('/category', 'layout')
+    revalidatePath('/catalog')
     return { success: true }
   } catch (error) {
     return {
@@ -85,6 +87,8 @@ export async function updateProduct(id: string, formData: FormData) {
   })
 
   revalidatePath('/admin/products')
+  revalidatePath('/category', 'layout')
+  revalidatePath('/catalog')
   return { success: true }
 }
 
@@ -92,6 +96,8 @@ export async function deleteProduct(id: string) {
   try {
     await prisma.product.delete({ where: { id } })
     revalidatePath('/admin/products')
+    revalidatePath('/category', 'layout')
+    revalidatePath('/catalog')
     return { success: true }
   } catch (error) {
     return {
