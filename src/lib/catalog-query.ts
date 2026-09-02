@@ -22,6 +22,7 @@ export type CatalogCard = {
   sku: string;
   slug: string;
   name: string;
+  variantName: string | null; // название исполнения, если оно есть — показывается под названием товара
   brandName: string | null;
   shortDescription: string | null;
   image: string | null;
@@ -32,49 +33,48 @@ export type CatalogCard = {
 };
 
 const cardInclude = {
-  brand: true,
-  category: { include: { attributes: true } },
-  tags: true,
-  variants: {
-    orderBy: { price: "asc" as const },
-    take: 1,
+  product: {
     include: {
-      images: { orderBy: [{ isMain: "desc" as const }, { sortOrder: "asc" as const }], take: 1 },
+      brand: true,
+      category: { include: { attributes: true } },
       tags: true,
     },
   },
+  images: { orderBy: [{ isMain: "desc" as const }, { sortOrder: "asc" as const }], take: 1 },
+  tags: true,
 };
 
-function buildCard(product: any): CatalogCard {
-  const variant = product.variants[0];
-  const image = variant?.images[0];
+function buildCard(variant: any): CatalogCard {
+  const product = variant.product;
+  const image = variant.images[0];
   const attrSchema = product.category?.attributes ?? [];
   const attrs = attrSchema
     .filter((a: any) => {
-      const v = (variant?.attributes as Record<string, unknown> | undefined)?.[a.key];
+      const v = (variant.attributes as Record<string, unknown> | undefined)?.[a.key];
       return v !== undefined && v !== "";
     })
     .slice(0, 4)
     .map((a: any) => ({
       label: a.label,
-      value: `${(variant!.attributes as Record<string, unknown>)[a.key]}${a.unit ?? ""}`,
+      value: `${(variant.attributes as Record<string, unknown>)[a.key]}${a.unit ?? ""}`,
     }));
 
   const mergedTagsMap = new Map<string, { id: string; name: string; slug: string }>();
   for (const t of product.tags) mergedTagsMap.set(t.id, t);
-  for (const t of variant?.tags ?? []) mergedTagsMap.set(t.id, t);
+  for (const t of variant.tags ?? []) mergedTagsMap.set(t.id, t);
 
   return {
-    id: product.id,
-    variantId: variant?.id ?? "",
-    sku: variant?.sku ?? "",
-    slug: variant?.slug ?? "",
+    id: variant.id,
+    variantId: variant.id,
+    sku: variant.sku,
+    slug: variant.slug,
     name: product.name,
+    variantName: variant.name || null,
     brandName: product.brand?.name ?? null,
     shortDescription: product.shortDescription ?? null,
     image: image?.url ?? null,
-    price: variant?.price ? Number(variant.price) : null,
-    stock: variant?.stock ?? 0,
+    price: variant.price !== null ? Number(variant.price) : null,
+    stock: variant.stock,
     attrs,
     tags: Array.from(mergedTagsMap.values()),
   };
@@ -108,39 +108,43 @@ export async function getCatalogProducts(
     }
   }
 
-  const variantWhere =
-    priceMin !== undefined || priceMax !== undefined || inStock || attrConditions.length > 0
-      ? {
-          ...(priceMin !== undefined || priceMax !== undefined
-            ? {
-                OR: [
-                  { price: null }, // "цена по запросу" — всегда проходит числовой фильтр цены
-                  {
-                    price: {
-                      ...(priceMin !== undefined ? { gte: priceMin } : {}),
-                      ...(priceMax !== undefined ? { lte: priceMax } : {}),
-                    },
-                  },
-                ],
-              }
-            : {}),
-          ...(inStock ? { stock: { gt: 0 } } : {}),
-          ...(attrConditions.length > 0 ? { AND: attrConditions } : {}),
-        }
-      : undefined;
+  // фильтры теперь применяются напрямую к ProductVariant — каждое исполнение это своя карточка
+  const andConditions: Record<string, unknown>[] = [];
+  if (priceMin !== undefined || priceMax !== undefined) {
+    andConditions.push({
+      OR: [
+        { price: null }, // "цена по запросу" — всегда проходит числовой фильтр цены
+        {
+          price: {
+            ...(priceMin !== undefined ? { gte: priceMin } : {}),
+            ...(priceMax !== undefined ? { lte: priceMax } : {}),
+          },
+        },
+      ],
+    });
+  }
+  if (inStock) andConditions.push({ stock: { gt: 0 } });
+  if (attrConditions.length > 0) andConditions.push(...attrConditions);
+  if (tags && tags.length > 0) {
+    // тег может быть проставлен и на товаре, и на конкретном исполнении
+    andConditions.push({
+      OR: [{ tags: { some: { slug: { in: tags } } } }, { product: { tags: { some: { slug: { in: tags } } } } }],
+    });
+  }
 
   const baseWhere = {
-    category: categoryFilter,
-    brand: brand ? { slug: brand } : undefined,
-    tags: tags && tags.length > 0 ? { some: { slug: { in: tags } } } : undefined,
-    variants: variantWhere ? { some: variantWhere } : undefined,
+    product: {
+      category: categoryFilter,
+      brand: brand ? { slug: brand } : undefined,
+    },
+    ...(andConditions.length > 0 ? { AND: andConditions } : {}),
   };
 
-  let matchedProductIds: string[] | null = null;
+  let matchedVariantIds: string[] | null = null;
   if (q && q.trim()) {
     const prefix = `${q}%`;
     const rows = await prisma.$queryRaw<{ id: string }[]>`
-      SELECT p.id, MAX(
+      SELECT v.id, MAX(
         CASE
           WHEN p.name ILIKE ${prefix} OR v.sku ILIKE ${prefix} OR v.name ILIKE ${prefix} THEN 1.0
           ELSE GREATEST(
@@ -150,54 +154,43 @@ export async function getCatalogProducts(
           )
         END
       ) AS max_sim
-      FROM "Product" p
-      LEFT JOIN "ProductVariant" v ON v."productId" = p.id
+      FROM "ProductVariant" v
+      JOIN "Product" p ON p.id = v."productId"
       WHERE p.name ILIKE ${prefix} OR v.sku ILIKE ${prefix} OR v.name ILIKE ${prefix}
          OR p.name % ${q} OR v.sku % ${q} OR v.name % ${q}
-      GROUP BY p.id
+      GROUP BY v.id
       ORDER BY max_sim DESC
     `;
     const allMatchedIds = rows.map((r) => r.id);
 
-    // применяем фильтры категории/бренда/тегов к результатам поиска,
-    // сохраняя порядок релевантности
-    if (categoryFilter || brand || (tags && tags.length > 0) || variantWhere) {
-      const validRows = await prisma.product.findMany({
-        where: { id: { in: allMatchedIds }, ...baseWhere },
-        select: { id: true },
-      });
-      const validIds = new Set(validRows.map((r) => r.id));
-      matchedProductIds = allMatchedIds.filter((id) => validIds.has(id));
-    } else {
-      matchedProductIds = allMatchedIds;
-    }
+    const validRows = await prisma.productVariant.findMany({
+      where: { id: { in: allMatchedIds }, ...baseWhere },
+      select: { id: true },
+    });
+    const validIds = new Set(validRows.map((r) => r.id));
+    matchedVariantIds = allMatchedIds.filter((id) => validIds.has(id));
   }
 
   const skip = (page - 1) * PAGE_SIZE;
 
-  // Сортировка по цене/наличию требует полной выборки (без skip/take на уровне БД),
-  // так как Prisma не сортирует Product по полю связанного ProductVariant напрямую.
+  // Сортировка по цене/наличию требует полной выборки (сортируем в JS)
   if (sort) {
-    const where = matchedProductIds
-      ? { id: { in: matchedProductIds } }
-      : baseWhere;
+    const where = matchedVariantIds ? { id: { in: matchedVariantIds } } : baseWhere;
 
-    const allProducts = await prisma.product.findMany({
+    const allVariants = await prisma.productVariant.findMany({
       where,
       include: cardInclude,
     });
 
-    let cards = allProducts.map(buildCard);
+    let cards = allVariants.map(buildCard);
 
-    if (matchedProductIds) {
-      // сохраняем релевантность как вторичный признак порядка при равенстве по сортировке
-      const orderIndex = new Map(matchedProductIds.map((id, i) => [id, i]));
+    if (matchedVariantIds) {
+      const orderIndex = new Map(matchedVariantIds.map((id, i) => [id, i]));
       cards = cards.sort((a, b) => (orderIndex.get(a.id) ?? 0) - (orderIndex.get(b.id) ?? 0));
     }
 
     if (sort === "price_asc" || sort === "price_desc") {
       cards = cards.sort((a, b) => {
-        // товары "по запросу" (price === null) всегда уходят в конец
         if (a.price === null && b.price === null) return 0;
         if (a.price === null) return 1;
         if (b.price === null) return -1;
@@ -212,35 +205,34 @@ export async function getCatalogProducts(
     return { cards: pageCards, totalCount };
   }
 
-  // Без активной сортировки — прежнее поведение (эффективная пагинация на уровне БД)
-  const totalCount = matchedProductIds
-    ? matchedProductIds.length
-    : await prisma.product.count({ where: baseWhere });
+  // Без активной сортировки — эффективная пагинация на уровне БД
+  const totalCount = matchedVariantIds
+    ? matchedVariantIds.length
+    : await prisma.productVariant.count({ where: baseWhere });
 
-  let products;
-  if (matchedProductIds) {
-    const pageIds = matchedProductIds.slice(skip, skip + PAGE_SIZE);
-    const rawProducts = await prisma.product.findMany({
+  let variants;
+  if (matchedVariantIds) {
+    const pageIds = matchedVariantIds.slice(skip, skip + PAGE_SIZE);
+    const rawVariants = await prisma.productVariant.findMany({
       where: { id: { in: pageIds } },
       include: cardInclude,
     });
-    products = pageIds
-      .map((id) => rawProducts.find((p) => p.id === id))
-      .filter((p): p is (typeof rawProducts)[number] => Boolean(p));
+    variants = pageIds
+      .map((id) => rawVariants.find((v) => v.id === id))
+      .filter((v): v is (typeof rawVariants)[number] => Boolean(v));
   } else {
-    products = await prisma.product.findMany({
+    variants = await prisma.productVariant.findMany({
       where: baseWhere,
       include: cardInclude,
-      orderBy: { name: "asc" },
+      orderBy: [{ product: { name: "asc" } }, { name: "asc" }],
       skip,
       take: PAGE_SIZE,
     });
   }
 
-  const cards = products.map(buildCard);
+  const cards = variants.map(buildCard);
   return { cards, totalCount };
 }
-
 
 export async function getPriceRange(
   filters: Pick<CatalogFilters, "categoryId" | "categoryIds" | "brand" | "tags">

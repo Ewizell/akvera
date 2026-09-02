@@ -106,3 +106,21 @@ export async function deleteProduct(id: string) {
     }
   }
 }
+
+export async function getOtherVariants(productId: string, excludeVariantId: string) {
+  const variants = await prisma.productVariant.findMany({
+    where: { productId, id: { not: excludeVariantId } },
+    include: {
+      images: { where: { isMain: true }, take: 1 },
+    },
+    orderBy: { name: 'asc' },
+  })
+
+  return variants.map((v) => ({
+    id: v.id,
+    slug: v.slug,
+    name: v.name,
+    price: v.price !== null ? Number(v.price) : null,
+    image: v.images[0]?.url ?? null,
+  }))
+}

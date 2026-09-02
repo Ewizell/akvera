@@ -7,9 +7,10 @@ import type { Metadata } from "next";
 import AddToCartButton from "@/components/AddToCartButton";
 import CompareButton from "@/components/CompareButton";
 import { ProductGallery } from "@/components/ProductGallery";
-import { getRelatedVariants } from "@/lib/actions/product";
+import { getRelatedVariants, getOtherVariants } from "@/lib/actions/product";
 import { RelatedProductsCarousel } from "@/components/RelatedProductsCarousel";
 import { RecentlyViewedCarousel } from "@/components/RecentlyViewedCarousel";
+import { OtherVariantsTile } from "@/components/OtherVariantsTile";
 
 export const revalidate = 3600;
 
@@ -85,6 +86,8 @@ const relatedVariants = await getRelatedVariants(
   variant.product.categoryId,
   variant.id
 );
+
+const otherVariants = await getOtherVariants(variant.productId, variant.id);
 
 const mergedTagsMap = new Map<string, { id: string; name: string; slug: string }>();
 for (const t of variant.product.tags) mergedTagsMap.set(t.id, t);
@@ -201,6 +204,8 @@ const crumbs = [
           image={variant.images[0]?.url || null}
         />
         <CompareButton variantId={variant.id} className="mt-3 w-full sm:w-auto" />
+
+        <OtherVariantsTile variants={otherVariants} />
     </div>
       </div>
 

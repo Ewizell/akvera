@@ -15,6 +15,7 @@ type CatalogCard = {
   sku: string
   slug: string
   name: string
+  variantName: string | null
   brandName: string | null
   shortDescription: string | null
   image: string | null
@@ -122,6 +123,9 @@ export default function CatalogGrid({
                 )}
                 <h2 className="text-sm font-medium text-gray-900 line-clamp-2 min-h-[2.5rem]">
                   {product.name}
+                  {product.variantName && (
+                    <span className="block text-xs font-normal text-gray-500">{product.variantName}</span>
+                  )}
                 </h2>
                 {product.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1 mt-1">
@@ -183,7 +187,12 @@ export default function CatalogGrid({
                   {product.brandName && (
                     <p className="text-xs text-gray-400 mb-1">{product.brandName}</p>
                   )}
-                  <h2 className="text-base font-medium text-gray-900">{product.name}</h2>
+                  <h2 className="text-base font-medium text-gray-900">
+                    {product.name}
+                    {product.variantName && (
+                      <span className="block text-sm font-normal text-gray-500">{product.variantName}</span>
+                    )}
+                  </h2>
                   {product.tags.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-1">
                       {product.tags.map((tag) => (

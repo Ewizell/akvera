@@ -1,16 +1,37 @@
+import { prisma } from "@/lib/prisma";
 import CategoryProductListing from "@/components/CategoryProductListing";
+import { parseCatalogSearchParams } from "@/lib/catalog-query";
+import type { CategoryNavData } from "@/components/CategoryFilterSidebar";
 
 export const revalidate = 3600;
 
 export default async function CatalogAllPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; tags?: string; sort?: string; brand?: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const { page: pageParam, tags: tagsParam, sort: sortParam, brand } = await searchParams;
-  const page = Math.max(1, parseInt(pageParam ?? "1", 10) || 1);
-  const selectedTagSlugs = tagsParam ? tagsParam.split(",").filter(Boolean) : [];
-  const sort = sortParam === "price_asc" || sortParam === "price_desc" || sortParam === "stock" ? sortParam : undefined;
+  const sp = await searchParams;
+  const { page, tags: selectedTagSlugs, sort, brand, priceMin, priceMax, inStock, attrValues, attrRanges } =
+    parseCatalogSearchParams(sp);
+
+  const rootCategories = await prisma.category.findMany({
+    where: { parentId: null },
+    orderBy: { name: "asc" },
+    include: { _count: { select: { products: true } } },
+  });
+
+  const categoryNav: CategoryNavData = {
+    parentLink: null,
+    currentSlug: "",
+    siblings: rootCategories.map((c) => ({
+      id: c.id,
+      name: c.name,
+      slug: c.slug,
+      href: `/category/${c.slug}`,
+      productCount: c._count.products,
+    })),
+    children: [],
+  };
 
   const crumbs = [
     { label: "Главная", href: "/" },
@@ -28,6 +49,12 @@ export default async function CatalogAllPage({
       page={page}
       crumbs={crumbs}
       backHref="/catalog"
+      categoryNav={categoryNav}
+      priceMin={priceMin}
+      priceMax={priceMax}
+      inStock={inStock}
+      attrValues={attrValues}
+      attrRanges={attrRanges}
     />
   );
 }
