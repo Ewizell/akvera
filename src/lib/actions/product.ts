@@ -124,3 +124,47 @@ export async function getOtherVariants(productId: string, excludeVariantId: stri
     image: v.images[0]?.url ?? null,
   }))
 }
+export async function bulkDeleteProducts(productIds: string[]) {
+  await prisma.product.deleteMany({ where: { id: { in: productIds } } });
+  revalidatePath("/admin/products");
+}
+
+export async function bulkUpdateCategory(productIds: string[], categoryId: string) {
+  await prisma.product.updateMany({
+    where: { id: { in: productIds } },
+    data: { categoryId },
+  });
+  revalidatePath("/admin/products");
+}
+
+export async function bulkUpdateBrand(productIds: string[], brandId: string | null) {
+  await prisma.product.updateMany({
+    where: { id: { in: productIds } },
+    data: { brandId },
+  });
+  revalidatePath("/admin/products");
+}
+
+export async function bulkAddTags(productIds: string[], tagIds: string[]) {
+  await prisma.$transaction(
+    productIds.map((id) =>
+      prisma.product.update({
+        where: { id },
+        data: { tags: { connect: tagIds.map((tagId) => ({ id: tagId })) } },
+      })
+    )
+  );
+  revalidatePath("/admin/products");
+}
+
+export async function bulkRemoveTags(productIds: string[], tagIds: string[]) {
+  await prisma.$transaction(
+    productIds.map((id) =>
+      prisma.product.update({
+        where: { id },
+        data: { tags: { disconnect: tagIds.map((tagId) => ({ id: tagId })) } },
+      })
+    )
+  );
+  revalidatePath("/admin/products");
+}
