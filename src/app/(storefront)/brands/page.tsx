@@ -2,8 +2,15 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import Image from "next/image";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import type { Metadata } from "next";
 
 export const revalidate = 3600;
+
+export const metadata: Metadata = {
+  title: "Бренды",
+  description:
+    "Все бренды оборудования в каталоге Akvera. Выбирайте технику проверенных производителей для вашего бизнеса.",
+};
 
 export default async function BrandsCatalogPage() {
   const brands = await prisma.brand.findMany({

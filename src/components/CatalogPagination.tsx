@@ -14,10 +14,41 @@ export default function CatalogPagination({
   basePath: string;
   filters: CatalogFilters;
 }) {
-  const pages = Array.from(
-    { length: totalPages },
-    (_, i) => i + 1
-  );
+  function range(start: number, end: number): number[] {
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  }
+
+  function getPageItems(
+    current: number,
+    total: number,
+    siblingCount = 1
+  ): (number | "dots-left" | "dots-right")[] {
+    const totalPageNumbers = siblingCount * 2 + 5;
+
+    if (totalPageNumbers >= total) {
+      return range(1, total);
+    }
+
+    const leftSiblingIndex = Math.max(current - siblingCount, 1);
+    const rightSiblingIndex = Math.min(current + siblingCount, total);
+
+    const shouldShowLeftDots = leftSiblingIndex > 2;
+    const shouldShowRightDots = rightSiblingIndex < total - 1;
+
+    if (!shouldShowLeftDots && shouldShowRightDots) {
+      const leftItemCount = 3 + 2 * siblingCount;
+      return [...range(1, leftItemCount), "dots-right", total];
+    }
+
+    if (shouldShowLeftDots && !shouldShowRightDots) {
+      const rightItemCount = 3 + 2 * siblingCount;
+      return [1, "dots-left", ...range(total - rightItemCount + 1, total)];
+    }
+
+    return [1, "dots-left", ...range(leftSiblingIndex, rightSiblingIndex), "dots-right", total];
+  }
+
+  const pageItems = getPageItems(currentPage, totalPages);
 
   function buildHref(page: number) {
     const params = new URLSearchParams();
@@ -67,19 +98,25 @@ export default function CatalogPagination({
         ←
       </Link>
 
-      {pages.map((p) => (
-        <Link
-          key={p}
-          href={buildHref(p)}
-          className={`px-3 py-1.5 rounded border text-sm ${
-            p === currentPage
-              ? "bg-black text-white border-black"
-              : "border-gray-300 hover:bg-gray-50"
-          }`}
-        >
-          {p}
-        </Link>
-      ))}
+      {pageItems.map((item) =>
+        item === "dots-left" || item === "dots-right" ? (
+          <span key={item} className="px-2 text-sm text-gray-400 select-none">
+            …
+          </span>
+        ) : (
+          <Link
+            key={item}
+            href={buildHref(item)}
+            className={`px-3 py-1.5 rounded border text-sm ${
+              item === currentPage
+                ? "bg-black text-white border-black"
+                : "border-gray-300 hover:bg-gray-50"
+            }`}
+          >
+            {item}
+          </Link>
+        )
+      )}
 
       <Link
         href={buildHref(

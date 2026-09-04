@@ -8,6 +8,8 @@ import SortDropdown from './SortDropdown'
 import { loadMoreCatalogProducts } from '@/lib/actions/catalog'
 import type { CatalogFilters } from '@/lib/catalog-query'
 import CompareButton from './CompareButton'
+import CatalogPagination from './CatalogPagination'
+import FavoriteButton from './FavoriteButton'
 
 type CatalogCard = {
   id: string
@@ -155,6 +157,7 @@ export default function CatalogGrid({
                   image={product.image}
                 />
                 <CompareButton variantId={product.variantId} className="mt-2 w-full" />
+                <FavoriteButton variantId={product.variantId} className="mt-2 w-full" />
               </div>
             </Link>
           ))}
@@ -235,6 +238,7 @@ export default function CatalogGrid({
                     image={product.image}
                   />
                   <CompareButton variantId={product.variantId} className="mt-2" />
+                  <FavoriteButton variantId={product.variantId} className="mt-2" />
                 </div>
               </div>
             </Link>
@@ -249,9 +253,18 @@ export default function CatalogGrid({
             disabled={isPending}
             className="px-6 py-2.5 border rounded-lg text-sm hover:bg-gray-50 disabled:opacity-50"
           >
-            {isPending ? 'Загрузка...' : 'Показать ещё'}
+            {isPending ? 'Загрузка...' : 'Показать ещё 40'}
           </button>
         </div>
+      )}
+
+      {totalPages > 1 && (
+        <CatalogPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          basePath={basePath}
+          filters={filters}
+        />
       )}
     </div>
   )

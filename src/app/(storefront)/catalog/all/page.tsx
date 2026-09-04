@@ -2,8 +2,15 @@ import { prisma } from "@/lib/prisma";
 import CategoryProductListing from "@/components/CategoryProductListing";
 import { parseCatalogSearchParams } from "@/lib/catalog-query";
 import type { CategoryNavData } from "@/components/CategoryFilterSidebar";
+import type { Metadata } from "next";
 
 export const revalidate = 3600;
+
+export const metadata: Metadata = {
+  title: "Все товары",
+  description:
+    "Полный каталог товаров Akvera — промышленное оборудование с фильтрами по категориям, брендам и характеристикам.",
+};
 
 export default async function CatalogAllPage({
   searchParams,

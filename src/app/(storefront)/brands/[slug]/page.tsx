@@ -3,8 +3,29 @@ import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import type { Metadata } from "next";
 
 export const revalidate = 3600;
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+
+  const brand = await prisma.brand.findUnique({
+    where: { slug },
+    select: { name: true },
+  });
+
+  if (!brand) return {};
+
+  return {
+    title: brand.name,
+    description: `Товары бренда ${brand.name} в каталоге Akvera.`,
+  };
+}
 
 export default async function BrandPage({
   params,

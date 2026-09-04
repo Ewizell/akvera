@@ -2,7 +2,6 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import CatalogGrid from "@/components/CatalogGrid";
 import CatalogFilterBar from "@/components/CatalogFilterBar";
-import CatalogPagination from "@/components/CatalogPagination";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import {
   getCatalogProducts,
@@ -118,15 +117,6 @@ export default async function CategoryProductListing({
 
           {totalCount === 0 && (
             <p className="text-gray-500 text-center py-20">В этой категории пока нет товаров</p>
-          )}
-
-          {totalPages > 1 && (
-            <CatalogPagination
-              currentPage={page}
-              totalPages={totalPages}
-              basePath={basePath}
-              filters={filters}
-            />
           )}
         </div>
       </div>

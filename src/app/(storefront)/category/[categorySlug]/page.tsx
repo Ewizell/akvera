@@ -5,8 +5,29 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import CategoryProductListing from "@/components/CategoryProductListing";
 import { parseCatalogSearchParams } from "@/lib/catalog-query";
 import type { CategoryNavData } from "@/components/CategoryFilterSidebar";
+import type { Metadata } from "next";
 
 export const revalidate = 3600;
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ categorySlug: string }>;
+}): Promise<Metadata> {
+  const { categorySlug } = await params;
+
+  const category = await prisma.category.findUnique({
+    where: { slug: categorySlug },
+    select: { name: true },
+  });
+
+  if (!category) return {};
+
+  return {
+    title: category.name,
+    description: `${category.name} — каталог оборудования Akvera.`,
+  };
+}
 
 export default async function CategoryPage({
   params,

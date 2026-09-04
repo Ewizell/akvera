@@ -5,8 +5,29 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import CategoryProductListing from "@/components/CategoryProductListing";
 import { parseCatalogSearchParams } from "@/lib/catalog-query";
 import type { CategoryNavData } from "@/components/CategoryFilterSidebar";
+import type { Metadata } from "next";
 
 export const revalidate = 3600;
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ categorySlug: string; childSlug: string }>;
+}): Promise<Metadata> {
+  const { categorySlug, childSlug } = await params;
+
+  const [parent, category] = await Promise.all([
+    prisma.category.findUnique({ where: { slug: categorySlug }, select: { name: true } }),
+    prisma.category.findUnique({ where: { slug: childSlug }, select: { name: true } }),
+  ]);
+
+  if (!parent || !category) return {};
+
+  return {
+    title: `${category.name} — ${parent.name}`,
+    description: `${category.name} в разделе «${parent.name}» — каталог оборудования Akvera.`,
+  };
+}
 
 export default async function ChildCategoryPage({
   params,

@@ -1,7 +1,14 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
+import type { Metadata } from "next";
 
 export const revalidate = 3600;
+
+export const metadata: Metadata = {
+  title: "Каталог",
+  description:
+    "Каталог оборудования Akvera: все категории и подкатегории товаров.",
+};
 
 export default async function CatalogPage() {
   const categories = await prisma.category.findMany({

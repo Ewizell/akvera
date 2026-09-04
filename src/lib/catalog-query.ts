@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 
-export const PAGE_SIZE = 12;
+export const PAGE_SIZE = 40;
 
 export type CatalogFilters = {
   categoryId?: string; // точное совпадение — лист/родитель-без-детей, либо конкретная подкатегория
@@ -32,7 +32,7 @@ export type CatalogCard = {
   tags: { id: string; name: string; slug: string }[];
 };
 
-const cardInclude = {
+export const cardInclude = {
   product: {
     include: {
       brand: true,
@@ -44,7 +44,7 @@ const cardInclude = {
   tags: true,
 };
 
-function buildCard(variant: any): CatalogCard {
+export function buildCard(variant: any): CatalogCard {
   const product = variant.product;
   const image = variant.images[0];
   const attrSchema = product.category?.attributes ?? [];

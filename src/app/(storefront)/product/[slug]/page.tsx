@@ -11,6 +11,7 @@ import { getRelatedVariants, getOtherVariants } from "@/lib/actions/product";
 import { RelatedProductsCarousel } from "@/components/RelatedProductsCarousel";
 import { RecentlyViewedCarousel } from "@/components/RecentlyViewedCarousel";
 import { OtherVariantsTile } from "@/components/OtherVariantsTile";
+import FavoriteButton from "@/components/FavoriteButton";
 
 export const revalidate = 3600;
 
@@ -204,6 +205,7 @@ const crumbs = [
           image={variant.images[0]?.url || null}
         />
         <CompareButton variantId={variant.id} className="mt-3 w-full sm:w-auto" />
+        <FavoriteButton variantId={variant.id} className="mt-3 w-full sm:w-auto" />
 
         <OtherVariantsTile variants={otherVariants} />
     </div>
