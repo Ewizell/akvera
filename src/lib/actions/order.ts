@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { writeFile, mkdir } from 'fs/promises'
 import path from 'path'
 import { randomUUID } from 'crypto'
+import { auth } from '@/auth'
 
 type CreateOrderResult = { success: true; orderId: string } | { success: false; error: string }
 
@@ -49,9 +50,12 @@ export async function createOrder(formData: FormData): Promise<CreateOrderResult
   const files = formData.getAll('attachments') as File[]
   const validFiles = files.filter((f) => f instanceof File && f.size > 0)
 
+  const session = await auth()
+
   const order = await prisma.$transaction(async (tx) => {
     const newOrder = await tx.order.create({
       data: {
+        userId: session?.user?.id,
         contactName,
         contactPhone,
         contactEmail,

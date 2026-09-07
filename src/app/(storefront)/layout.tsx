@@ -6,6 +6,7 @@ import CartButton from '@/components/CartButton'
 import CompareCounterButton from '@/components/CompareCounterButton'
 import { FavoritesProvider } from '@/lib/favorites-context'
 import FavoritesCounterButton from '@/components/FavoritesCounterButton'
+import HeaderAuthLink from '@/components/HeaderAuthLink'
 
 export default function StorefrontLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -28,6 +29,7 @@ export default function StorefrontLayout({ children }: { children: React.ReactNo
               <CompareCounterButton />
               <FavoritesCounterButton />
               <CartButton />
+              <HeaderAuthLink />
             </nav>
           </div>
         </header>
