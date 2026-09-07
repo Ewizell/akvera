@@ -105,7 +105,7 @@ export function CategoryFilterSidebar({
   attrRanges,
 }: {
   basePath: string
-  categoryNav: CategoryNavData
+  categoryNav?: CategoryNavData
   priceRange: { min: number; max: number }
   brands: Brand[]
   attributeOptions: AttributeFilterOption[]
@@ -196,46 +196,48 @@ export function CategoryFilterSidebar({
   return (
     <div className="space-y-6 text-sm">
       {/* Категории */}
-      <div>
-        {categoryNav.parentLink && (
-          <Link
-            href={categoryNav.parentLink.href}
-            className="text-gray-500 hover:underline flex items-center gap-1 mb-2"
-          >
-            ← {categoryNav.parentLink.name}
-          </Link>
-        )}
-        <ul className="space-y-1">
-          {categoryNav.siblings.map((item) => (
-            <li key={item.id}>
-              <Link
-                href={item.href}
-                className={
-                  item.slug === categoryNav.currentSlug
-                    ? 'font-semibold text-black'
-                    : 'text-gray-600 hover:underline'
-                }
-              >
-                {item.name}
-              </Link>
-              <span className="text-gray-400 text-xs"> ({item.productCount})</span>
+      {categoryNav && (
+        <div>
+          {categoryNav.parentLink && (
+            <Link
+              href={categoryNav.parentLink.href}
+              className="text-gray-500 hover:underline flex items-center gap-1 mb-2"
+            >
+              ← {categoryNav.parentLink.name}
+            </Link>
+          )}
+          <ul className="space-y-1">
+            {categoryNav.siblings.map((item) => (
+              <li key={item.id}>
+                <Link
+                  href={item.href}
+                  className={
+                    item.slug === categoryNav.currentSlug
+                      ? 'font-semibold text-black'
+                      : 'text-gray-600 hover:underline'
+                  }
+                >
+                  {item.name}
+                </Link>
+                <span className="text-gray-400 text-xs"> ({item.productCount})</span>
 
-              {item.slug === categoryNav.currentSlug && categoryNav.children.length > 0 && (
-                <ul className="ml-3 mt-1 space-y-1">
-                  {categoryNav.children.map((child) => (
-                    <li key={child.id}>
-                      <Link href={child.href} className="text-gray-600 hover:underline">
-                        {child.name}
-                      </Link>
-                      <span className="text-gray-400 text-xs"> ({child.productCount})</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </li>
-          ))}
-        </ul>
-      </div>
+                {item.slug === categoryNav.currentSlug && categoryNav.children.length > 0 && (
+                  <ul className="ml-3 mt-1 space-y-1">
+                    {categoryNav.children.map((child) => (
+                      <li key={child.id}>
+                        <Link href={child.href} className="text-gray-600 hover:underline">
+                          {child.name}
+                        </Link>
+                        <span className="text-gray-400 text-xs"> ({child.productCount})</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* Цена */}
       {priceRange.max > priceRange.min && (

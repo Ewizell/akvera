@@ -28,8 +28,8 @@ export default async function CategoryProductListing({
   priceMin,
   priceMax,
   inStock,
-  attrValues,
-  attrRanges,
+  attrValues = {},
+  attrRanges = {},
 }: {
   title: string;
   basePath: string;
@@ -42,12 +42,12 @@ export default async function CategoryProductListing({
   page: number;
   crumbs: { label: string; href?: string }[];
   backHref: string;
-  categoryNav: CategoryNavData;
+  categoryNav?: CategoryNavData;
   priceMin?: number;
   priceMax?: number;
   inStock?: boolean;
-  attrValues: Record<string, string[]>;
-  attrRanges: Record<string, { min?: number; max?: number }>;
+  attrValues?: Record<string, string[]>;
+  attrRanges?: Record<string, { min?: number; max?: number }>;
 }) {
   const filters: CatalogFilters = {
     categoryId,

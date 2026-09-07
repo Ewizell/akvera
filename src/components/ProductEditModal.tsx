@@ -318,13 +318,15 @@ function VariantRow({
   isOnlyVariant,
   attrSchema,
   allTags,
+  startEditing,
 }: {
   variant: Variant
   isOnlyVariant: boolean
   attrSchema: CategoryAttribute[]
   allTags: Tag[]
+  startEditing?: boolean
 }) {
-  const [editing, setEditing] = useState(false)
+  const [editing, setEditing] = useState(startEditing ?? false)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
 
@@ -440,14 +442,16 @@ export default function ProductEditModal({
   brands,
   tags,
   onClose,
+  initialVariantId,
 }: {
   product: Product
   categories: Category[]
   brands: Brand[]
   tags: Tag[]
   onClose: () => void
+  initialVariantId?: string | null
 }) {
-  const [topTab, setTopTab] = useState<TopTab>('Основное')
+  const [topTab, setTopTab] = useState<TopTab>(initialVariantId ? 'Исполнения' : 'Основное')
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [categoryId, setCategoryId] = useState(product.categoryId)
@@ -611,6 +615,7 @@ export default function ProductEditModal({
                   isOnlyVariant={product.variants.length === 1}
                   attrSchema={attrSchema}
                   allTags={tags}
+                  startEditing={v.id === initialVariantId}
                 />
               ))}
             </ul>
