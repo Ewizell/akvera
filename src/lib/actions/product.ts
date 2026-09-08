@@ -168,3 +168,73 @@ export async function bulkRemoveTags(productIds: string[], tagIds: string[]) {
   );
   revalidatePath("/admin/products");
 }
+
+export async function duplicateProduct(productId: string) {
+  try {
+    const source = await prisma.product.findUnique({
+      where: { id: productId },
+      include: {
+        tags: true,
+        variants: {
+          include: {
+            images: true,
+            documents: true,
+            tags: true,
+          },
+        },
+      },
+    })
+
+    if (!source) {
+      return { success: false, error: 'Товар не найден' }
+    }
+
+    const suffix = Date.now().toString(36)
+
+    await prisma.product.create({
+      data: {
+        name: `${source.name} (копия)`,
+        categoryId: source.categoryId,
+        brandId: source.brandId,
+        description: source.description,
+        shortDescription: source.shortDescription,
+        tags: { connect: source.tags.map((t) => ({ id: t.id })) },
+        variants: {
+          create: source.variants.map((v) => ({
+            name: v.name,
+            sku: `${v.sku}-copy-${suffix}`,
+            slug: `${v.slug}-copy-${suffix}`,
+            price: v.price,
+            stock: v.stock,
+            attributes: v.attributes as object,
+            metaTitle: v.metaTitle,
+            metaDescription: v.metaDescription,
+            metaKeywords: v.metaKeywords,
+            tags: { connect: v.tags.map((t) => ({ id: t.id })) },
+            images: {
+              create: v.images.map((img) => ({
+                url: img.url,
+                isMain: img.isMain,
+                sortOrder: img.sortOrder,
+              })),
+            },
+            documents: {
+              create: v.documents.map((doc) => ({
+                title: doc.title,
+                type: doc.type,
+                url: doc.url,
+              })),
+            },
+          })),
+        },
+      },
+    })
+
+    revalidatePath('/admin/products')
+    revalidatePath('/category', 'layout')
+    revalidatePath('/catalog')
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: 'Не удалось скопировать товар.' }
+  }
+}

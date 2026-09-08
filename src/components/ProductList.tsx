@@ -3,8 +3,8 @@
 import { useState, useTransition, useMemo } from 'react'
 import ProductCreateModal from './ProductCreateModal'
 import ProductEditModal from './ProductEditModal'
-import { deleteProduct } from '@/lib/actions/product'
-import { deleteVariant } from '@/lib/actions/productVariant'
+import { deleteProduct, duplicateProduct } from '@/lib/actions/product'
+import { deleteVariant, duplicateVariant } from '@/lib/actions/productVariant'
 import BulkActionsToolbar from './BulkActionsToolbar'
 import CategoryTree from './CategoryTree'
 
@@ -156,6 +156,15 @@ function ProductRow({
       if (!result.success) {
         setError(result.error ?? 'Не удалось удалить товар')
         setConfirming(false)
+      }
+    })
+  }
+
+  function handleDuplicate() {
+    startTransition(async () => {
+      const result = await duplicateProduct(product.id)
+      if (!result.success) {
+        setError(result.error ?? 'Не удалось скопировать товар')
       }
     })
   }
@@ -325,6 +334,7 @@ export default function ProductList({
   const [selectedDescendantIds, setSelectedDescendantIds] = useState<string[] | null>(null)
   const [search, setSearch] = useState('')
   const [treeCollapsed, setTreeCollapsed] = useState(false)
+  const [sortBy, setSortBy] = useState<'name' | 'stock_asc' | 'stock_desc' | 'price_asc' | 'price_desc'>('name')
 
   const editingProduct = products.find((p) => p.id === editingId) ?? null
 
@@ -347,6 +357,15 @@ export default function ProductList({
     setSelectedDescendantIds(descendantIds)
   }
 
+  function getTotalStock(p: Product) {
+    return p.variants.reduce((sum, v) => sum + v.stock, 0)
+  }
+
+  function getMinPrice(p: Product) {
+    const prices = p.variants.map((v) => v.price).filter((price): price is number => price !== null)
+    return prices.length > 0 ? Math.min(...prices) : null
+  }
+
   const filteredProducts = useMemo(() => {
     let result = products
 
@@ -364,8 +383,33 @@ export default function ProductList({
       })
     }
 
+    result = [...result].sort((a, b) => {
+      switch (sortBy) {
+        case 'stock_asc':
+          return getTotalStock(a) - getTotalStock(b)
+        case 'stock_desc':
+          return getTotalStock(b) - getTotalStock(a)
+        case 'price_asc': {
+          const pa = getMinPrice(a)
+          const pb = getMinPrice(b)
+          if (pa === null) return 1
+          if (pb === null) return -1
+          return pa - pb
+        }
+        case 'price_desc': {
+          const pa = getMinPrice(a)
+          const pb = getMinPrice(b)
+          if (pa === null) return 1
+          if (pb === null) return -1
+          return pb - pa
+        }
+        default:
+          return a.name.localeCompare(b.name, 'ru')
+      }
+    })
+
     return result
-  }, [products, selectedDescendantIds, search])
+  }, [products, selectedDescendantIds, search, sortBy])
 
   function toggleSelectAll() {
     setSelectedIds((prev) =>
@@ -450,6 +494,18 @@ export default function ProductList({
               className="w-full border border-gray-300 rounded-lg pl-11 pr-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
+
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+            className="border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-900 shrink-0"
+          >
+            <option value="name">По названию</option>
+            <option value="stock_desc">Остаток: сначала больше</option>
+            <option value="stock_asc">Остаток: сначала меньше</option>
+            <option value="price_asc">Цена: сначала дешевле</option>
+            <option value="price_desc">Цена: сначала дороже</option>
+          </select>
 
           <button
             onClick={() => setCreating(true)}

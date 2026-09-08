@@ -10,7 +10,7 @@ import {
   PAGE_SIZE,
   type CatalogFilters,
 } from "@/lib/catalog-query";
-import { CategoryFilterSidebar, type CategoryNavData } from "@/components/CategoryFilterSidebar";
+import { CategoryFilterSidebar, type CategoryNavData, type CategoryTreeNode } from "@/components/CategoryFilterSidebar";
 
 export default async function CategoryProductListing({
   title,
@@ -25,6 +25,7 @@ export default async function CategoryProductListing({
   crumbs,
   backHref,
   categoryNav,
+  categoryTree,
   priceMin,
   priceMax,
   inStock,
@@ -43,6 +44,7 @@ export default async function CategoryProductListing({
   crumbs: { label: string; href?: string }[];
   backHref: string;
   categoryNav?: CategoryNavData;
+  categoryTree?: CategoryTreeNode;
   priceMin?: number;
   priceMax?: number;
   inStock?: boolean;
@@ -80,6 +82,7 @@ export default async function CategoryProductListing({
           <CategoryFilterSidebar
             basePath={basePath}
             categoryNav={categoryNav}
+            categoryTree={categoryTree}
             priceRange={priceRange}
             brands={brands}
             attributeOptions={attributeOptions}

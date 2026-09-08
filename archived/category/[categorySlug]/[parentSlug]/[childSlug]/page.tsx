@@ -12,64 +12,72 @@ export const revalidate = 3600;
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ categorySlug: string }>;
+  params: Promise<{ categorySlug: string; childSlug: string }>;
 }): Promise<Metadata> {
-  const { categorySlug } = await params;
+  const { categorySlug, childSlug } = await params;
 
-  const category = await prisma.category.findUnique({
-    where: { slug: categorySlug },
-    select: { name: true },
-  });
+  const [parent, category] = await Promise.all([
+    prisma.category.findUnique({ where: { slug: categorySlug }, select: { name: true } }),
+    prisma.category.findUnique({ where: { slug: childSlug }, select: { name: true } }),
+  ]);
 
-  if (!category) return {};
+  if (!parent || !category) return {};
 
   return {
-    title: category.name,
-    description: `${category.name} — каталог оборудования Akvera.`,
+    title: `${category.name} — ${parent.name}`,
+    description: `${category.name} в разделе «${parent.name}» — каталог оборудования Akvera.`,
   };
 }
 
-export default async function CategoryPage({
+export default async function ChildCategoryPage({
   params,
   searchParams,
 }: {
-  params: Promise<{ categorySlug: string }>;
+  params: Promise<{ categorySlug: string; childSlug: string }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const { categorySlug } = await params;
+  const { categorySlug, childSlug } = await params;
   const sp = await searchParams;
   const { page, tags: selectedTagSlugs, sort, brand, priceMin, priceMax, inStock, attrValues, attrRanges } =
     parseCatalogSearchParams(sp);
 
-  const category = await prisma.category.findUnique({
+  const parent = await prisma.category.findUnique({
     where: { slug: categorySlug },
     include: {
       children: {
         orderBy: { name: "asc" },
         include: { _count: { select: { products: true } } },
       },
-      parent: {
-        include: {
-          children: {
-            orderBy: { name: "asc" },
-            include: { _count: { select: { products: true } } },
-          },
-        },
+    },
+  });
+
+  if (!parent) {
+    notFound();
+  }
+
+  const category = await prisma.category.findUnique({
+    where: { slug: childSlug },
+    include: {
+      children: {
+        orderBy: { name: "asc" },
+        include: { _count: { select: { products: true } } },
       },
     },
   });
 
-  if (!category) {
+  // Категория должна существовать и быть именно ребёнком parent — иначе 404
+  if (!category || category.parentId !== parent.id) {
     notFound();
   }
 
   const crumbs = [
     { label: "Главная", href: "/" },
     { label: "Каталог", href: "/catalog" },
+    { label: parent.name, href: `/category/${parent.slug}` },
     { label: category.name },
   ];
 
-  // Есть подкатегории — показываем плитку, а не список товаров
+  // Есть свои подкатегории (третий уровень) — показываем плитку
   if (category.children.length > 0) {
     return (
       <main className="max-w-7xl mx-auto px-4 py-10">
@@ -78,12 +86,12 @@ export default async function CategoryPage({
           <h1 className="text-2xl font-semibold">{category.name}</h1>
           <div className="flex items-center gap-4">
             <Link
-              href={`/category/${category.slug}/all`}
+              href={`/category/${parent.slug}/${category.slug}/all`}
               className="text-sm text-blue-600 hover:underline"
             >
               Показать все товары →
             </Link>
-            <Link href="/catalog" className="text-sm text-gray-500 hover:underline">
+            <Link href={`/category/${parent.slug}`} className="text-sm text-gray-500 hover:underline">
               ← Назад
             </Link>
           </div>
@@ -93,7 +101,7 @@ export default async function CategoryPage({
           {category.children.map((child) => (
             <Link
               key={child.id}
-              href={`/category/${category.slug}/${child.slug}`}
+              href={`/category/${parent.slug}/${category.slug}/${child.slug}`}
               className="border rounded-lg p-4 hover:shadow-md transition-shadow"
             >
               <p className="font-medium">{child.name}</p>
@@ -106,44 +114,29 @@ export default async function CategoryPage({
   }
 
   // Лист без подкатегорий — сразу листинг товаров
-  const siblings = category.parent
-    ? category.parent.children
-    : await prisma.category.findMany({
-        where: { parentId: null },
-        orderBy: { name: "asc" },
-        include: { _count: { select: { products: true } } },
-      });
-
   const categoryNav: CategoryNavData = {
-    parentLink: category.parent ? { name: category.parent.name, href: `/category/${category.parent.slug}` } : null,
-    currentSlug: category.slug,
-    siblings: siblings.map((s) => ({
+    allProductsLink: { label: `Все товары: ${parent.name}`, href: `/category/${parent.slug}/all` },
+    activeSlug: category.slug,
+    items: parent.children.map((s) => ({
       id: s.id,
       name: s.name,
       slug: s.slug,
-      href: category.parent ? `/category/${category.parent.slug}/${s.slug}` : `/category/${s.slug}`,
+      href: `/category/${parent.slug}/${s.slug}`,
       productCount: s._count.products,
-    })),
-    children: category.children.map((c) => ({
-      id: c.id,
-      name: c.name,
-      slug: c.slug,
-      href: `/category/${category.slug}/${c.slug}`,
-      productCount: c._count.products,
     })),
   };
 
   return (
     <CategoryProductListing
       title={category.name}
-      basePath={`/category/${category.slug}`}
+      basePath={`/category/${parent.slug}/${category.slug}`}
       categoryId={category.id}
       brand={brand}
       tags={selectedTagSlugs}
       sort={sort}
       page={page}
       crumbs={crumbs}
-      backHref="/catalog"
+      backHref={`/category/${parent.slug}`}
       categoryNav={categoryNav}
       priceMin={priceMin}
       priceMax={priceMax}

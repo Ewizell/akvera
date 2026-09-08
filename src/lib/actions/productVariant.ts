@@ -136,3 +136,55 @@ export async function deleteVariant(id: string) {
     }
   }
 }
+
+export async function duplicateVariant(id: string) {
+  try {
+    const source = await prisma.productVariant.findUnique({
+      where: { id },
+      include: { images: true, documents: true, tags: true },
+    })
+
+    if (!source) {
+      return { success: false, error: 'Исполнение не найдено' }
+    }
+
+    const suffix = Date.now().toString(36)
+
+    await prisma.productVariant.create({
+      data: {
+        productId: source.productId,
+        name: `${source.name} (копия)`,
+        sku: `${source.sku}-copy-${suffix}`,
+        slug: `${source.slug}-copy-${suffix}`,
+        price: source.price,
+        stock: source.stock,
+        attributes: source.attributes as object,
+        metaTitle: source.metaTitle,
+        metaDescription: source.metaDescription,
+        metaKeywords: source.metaKeywords,
+        tags: { connect: source.tags.map((t) => ({ id: t.id })) },
+        images: {
+          create: source.images.map((img) => ({
+            url: img.url,
+            isMain: img.isMain,
+            sortOrder: img.sortOrder,
+          })),
+        },
+        documents: {
+          create: source.documents.map((doc) => ({
+            title: doc.title,
+            type: doc.type,
+            url: doc.url,
+          })),
+        },
+      },
+    })
+
+    revalidatePath('/admin/products')
+    revalidatePath('/category', 'layout')
+    revalidatePath('/catalog')
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: 'Не удалось скопировать исполнение.' }
+  }
+}

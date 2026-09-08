@@ -28,16 +28,15 @@ export default async function CatalogAllPage({
   });
 
   const categoryNav: CategoryNavData = {
-    parentLink: null,
-    currentSlug: "",
-    siblings: rootCategories.map((c) => ({
+    allProductsLink: { label: "Все товары", href: "/catalog/all" },
+    activeSlug: null,
+    items: rootCategories.map((c) => ({
       id: c.id,
       name: c.name,
       slug: c.slug,
       href: `/category/${c.slug}`,
       productCount: c._count.products,
     })),
-    children: [],
   };
 
   const crumbs = [

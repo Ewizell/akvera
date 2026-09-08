@@ -98,7 +98,16 @@ export async function getCatalogProducts(
   if (attrValues) {
     for (const [key, values] of Object.entries(attrValues)) {
       if (values.length === 0) continue;
-      attrConditions.push({ OR: values.map((v) => ({ attributes: { path: [key], equals: v } })) });
+      attrConditions.push({
+        OR: values.flatMap((v) => {
+          const num = Number(v);
+          const conditions: Record<string, unknown>[] = [{ attributes: { path: [key], equals: v } }];
+          if (v.trim() !== "" && !Number.isNaN(num)) {
+            conditions.push({ attributes: { path: [key], equals: num } });
+          }
+          return conditions;
+        }),
+      });
     }
   }
   if (attrRanges) {
@@ -262,9 +271,13 @@ export async function getPriceRange(
   };
 }
 
-export type AttributeFilterOption =
-  | { key: string; label: string; unit: string | null; fieldType: "number"; min: number; max: number }
-  | { key: string; label: string; unit: string | null; fieldType: "select"; options: string[] };
+export type AttributeFilterOption = {
+  key: string;
+  label: string;
+  unit: string | null;
+  fieldType: "number" | "select";
+  options: string[];
+};
 
 export async function getAttributeFilterOptions(
   categoryId: string | undefined,
@@ -291,14 +304,14 @@ export async function getAttributeFilterOptions(
       .filter((v) => v !== undefined && v !== null && v !== "");
 
     if (attr.fieldType === "number") {
-      const nums = rawValues.map((v) => Number(v)).filter((n) => !Number.isNaN(n));
+      const uniqueNums = Array.from(new Set(rawValues.map((v) => Number(v)))).filter((n) => !Number.isNaN(n));
+      uniqueNums.sort((a, b) => a - b);
       return {
         key: attr.key,
         label: attr.label,
         unit: attr.unit,
         fieldType: "number",
-        min: nums.length > 0 ? Math.min(...nums) : 0,
-        max: nums.length > 0 ? Math.max(...nums) : 0,
+        options: uniqueNums.map((n) => String(n)),
       };
     }
 
@@ -359,4 +372,88 @@ export function parseCatalogSearchParams(sp: Record<string, string | string[] | 
   }
 
   return { page, tags, sort, brand, priceMin, priceMax, inStock, attrValues, attrRanges };
+}
+export type CategoryAncestor = { id: string; name: string; slug: string };
+
+export async function getCategoryAncestors(parentId: string | null): Promise<CategoryAncestor[]> {
+  const chain: CategoryAncestor[] = [];
+  let currentId = parentId;
+  while (currentId) {
+    const cat = await prisma.category.findUnique({
+      where: { id: currentId },
+      select: { id: true, name: true, slug: true, parentId: true },
+    });
+    if (!cat) break;
+    chain.unshift({ id: cat.id, name: cat.name, slug: cat.slug });
+    currentId = cat.parentId;
+  }
+  return chain;
+}
+
+export async function getDescendantCategoryIds(rootId: string): Promise<string[]> {
+  const all = await prisma.category.findMany({ select: { id: true, parentId: true } });
+  const byParent = new Map<string, string[]>();
+  for (const c of all) {
+    const key = c.parentId ?? "__root__";
+    if (!byParent.has(key)) byParent.set(key, []);
+    byParent.get(key)!.push(c.id);
+  }
+  const result: string[] = [rootId];
+  const stack = [rootId];
+  while (stack.length > 0) {
+    const id = stack.pop()!;
+    for (const childId of byParent.get(id) ?? []) {
+      result.push(childId);
+      stack.push(childId);
+    }
+  }
+  return result;
+}
+
+export type CategoryTreeNode = {
+  id: string;
+  name: string;
+  slug: string;
+  productCount: number;
+  pageHref: string;
+  ownProductsHref: string;
+  children: CategoryTreeNode[];
+};
+
+export async function buildCategoryTree(
+  rootId: string,
+  rootAncestorSlugs: string[]
+): Promise<CategoryTreeNode | null> {
+  const all = await prisma.category.findMany({
+    select: { id: true, name: true, slug: true, parentId: true, _count: { select: { products: true } } },
+  });
+  const byParent = new Map<string, typeof all>();
+  for (const c of all) {
+    const key = c.parentId ?? "__root__";
+    if (!byParent.has(key)) byParent.set(key, []);
+    byParent.get(key)!.push(c);
+  }
+  const root = all.find((c) => c.id === rootId);
+  if (!root) return null;
+
+  function build(cat: (typeof all)[number], pathSlugs: string[]): CategoryTreeNode {
+    const fullPath = [...pathSlugs, cat.slug];
+    const pageHref = `/category/${fullPath.join("/")}`;
+    const children = (byParent.get(cat.id) ?? [])
+      .slice()
+      .sort((a, b) => a.name.localeCompare(b.name, "ru"))
+      .map((child) => build(child, fullPath));
+
+    return {
+      id: cat.id,
+      name: cat.name,
+      slug: cat.slug,
+      productCount: cat._count.products,
+      pageHref,
+      ownProductsHref: children.length > 0 ? `${pageHref}/own` : pageHref,
+      children,
+    };
+  }
+
+  return build(root, rootAncestorSlugs);
 }

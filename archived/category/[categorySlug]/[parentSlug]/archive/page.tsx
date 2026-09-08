@@ -5,38 +5,17 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import CategoryProductListing from "@/components/CategoryProductListing";
 import { parseCatalogSearchParams } from "@/lib/catalog-query";
 import type { CategoryNavData } from "@/components/CategoryFilterSidebar";
-import type { Metadata } from "next";
 
 export const revalidate = 3600;
-
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ categorySlug: string; childSlug: string }>;
-}): Promise<Metadata> {
-  const { categorySlug, childSlug } = await params;
-
-  const [parent, category] = await Promise.all([
-    prisma.category.findUnique({ where: { slug: categorySlug }, select: { name: true } }),
-    prisma.category.findUnique({ where: { slug: childSlug }, select: { name: true } }),
-  ]);
-
-  if (!parent || !category) return {};
-
-  return {
-    title: `${category.name} — ${parent.name}`,
-    description: `${category.name} в разделе «${parent.name}» — каталог оборудования Akvera.`,
-  };
-}
 
 export default async function ChildCategoryPage({
   params,
   searchParams,
 }: {
-  params: Promise<{ categorySlug: string; childSlug: string }>;
+  params: Promise<{ categorySlug: string; parentSlug: string }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const { categorySlug, childSlug } = await params;
+  const { categorySlug, parentSlug } = await params;
   const sp = await searchParams;
   const { page, tags: selectedTagSlugs, sort, brand, priceMin, priceMax, inStock, attrValues, attrRanges } =
     parseCatalogSearchParams(sp);
@@ -56,7 +35,7 @@ export default async function ChildCategoryPage({
   }
 
   const category = await prisma.category.findUnique({
-    where: { slug: childSlug },
+    where: { slug: parentSlug },
     include: {
       children: {
         orderBy: { name: "asc" },
@@ -65,7 +44,6 @@ export default async function ChildCategoryPage({
     },
   });
 
-  // Категория должна существовать и быть именно ребёнком parent — иначе 404
   if (!category || category.parentId !== parent.id) {
     notFound();
   }
@@ -77,7 +55,6 @@ export default async function ChildCategoryPage({
     { label: category.name },
   ];
 
-  // Есть свои подкатегории (третий уровень) — показываем плитку
   if (category.children.length > 0) {
     return (
       <main className="max-w-7xl mx-auto px-4 py-10">
@@ -113,7 +90,6 @@ export default async function ChildCategoryPage({
     );
   }
 
-  // Лист без подкатегорий — сразу листинг товаров
   const categoryNav: CategoryNavData = {
     allProductsLink: { label: `Все товары: ${parent.name}`, href: `/category/${parent.slug}/all` },
     activeSlug: category.slug,

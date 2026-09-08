@@ -76,10 +76,9 @@ export type CategoryNavItem = {
 }
 
 export type CategoryNavData = {
-  parentLink: { name: string; href: string } | null
-  siblings: CategoryNavItem[]
-  currentSlug: string
-  children: CategoryNavItem[]
+  allProductsLink: { label: string; href: string }
+  items: CategoryNavItem[]
+  activeSlug: string | null
 }
 
 export type AttributeFilterOption =
@@ -88,9 +87,61 @@ export type AttributeFilterOption =
 
 type Brand = { id: string; name: string; slug: string }
 
+export type CategoryTreeNode = {
+  id: string
+  name: string
+  slug: string
+  productCount: number
+  pageHref: string
+  ownProductsHref: string
+  children: CategoryTreeNode[]
+}
+
+function CategoryTreeItem({ node, depth = 0 }: { node: CategoryTreeNode; depth?: number }) {
+  const [open, setOpen] = useState(depth === 0)
+  const hasChildren = node.children.length > 0
+
+  return (
+    <li>
+      <div className="flex items-center gap-1">
+        {hasChildren ? (
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            className="text-gray-400 hover:text-gray-600 shrink-0 w-4 text-xs"
+          >
+            {open ? '▾' : '▸'}
+          </button>
+        ) : (
+          <span className="w-4 shrink-0" />
+        )}
+        <Link href={node.pageHref} className="text-gray-700 hover:underline truncate text-sm">
+          {node.name}
+        </Link>
+        <span className="text-gray-400 text-xs shrink-0">({node.productCount})</span>
+      </div>
+
+      {hasChildren && (
+        <Link href={node.ownProductsHref} className="ml-5 text-xs text-blue-600 hover:underline">
+          Товары этого раздела
+        </Link>
+      )}
+
+      {hasChildren && open && (
+        <ul className="ml-4 mt-1 space-y-1.5 border-l border-gray-100 pl-2">
+          {node.children.map((child) => (
+            <CategoryTreeItem key={child.id} node={child} depth={depth + 1} />
+          ))}
+        </ul>
+      )}
+    </li>
+  )
+}
+
 export function CategoryFilterSidebar({
   basePath,
   categoryNav,
+  categoryTree,
   priceRange,
   brands,
   attributeOptions,
@@ -106,6 +157,7 @@ export function CategoryFilterSidebar({
 }: {
   basePath: string
   categoryNav?: CategoryNavData
+  categoryTree?: CategoryTreeNode
   priceRange: { min: number; max: number }
   brands: Brand[]
   attributeOptions: AttributeFilterOption[]
@@ -185,34 +237,26 @@ export function CategoryFilterSidebar({
     router.push(buildHref({ attrValues: { ...attrValues, [key]: next } }))
   }
 
-  function applyAttrRange(key: string, min: string, max: string) {
-    const range = {
-      min: min !== '' ? Number(min) : undefined,
-      max: max !== '' ? Number(max) : undefined,
-    }
-    router.push(buildHref({ attrRanges: { ...attrRanges, [key]: range } }))
-  }
-
   return (
     <div className="space-y-6 text-sm">
-      {/* Категории */}
+      {/* Категории — плоский список (лист) */}
       {categoryNav && (
         <div>
-          {categoryNav.parentLink && (
-            <Link
-              href={categoryNav.parentLink.href}
-              className="text-gray-500 hover:underline flex items-center gap-1 mb-2"
-            >
-              ← {categoryNav.parentLink.name}
-            </Link>
-          )}
+          <Link
+            href={categoryNav.allProductsLink.href}
+            className={`block mb-2 ${
+              categoryNav.activeSlug === null ? 'font-semibold text-black' : 'text-gray-600 hover:underline'
+            }`}
+          >
+            {categoryNav.allProductsLink.label}
+          </Link>
           <ul className="space-y-1">
-            {categoryNav.siblings.map((item) => (
+            {categoryNav.items.map((item) => (
               <li key={item.id}>
                 <Link
                   href={item.href}
                   className={
-                    item.slug === categoryNav.currentSlug
+                    item.slug === categoryNav.activeSlug
                       ? 'font-semibold text-black'
                       : 'text-gray-600 hover:underline'
                   }
@@ -220,21 +264,18 @@ export function CategoryFilterSidebar({
                   {item.name}
                 </Link>
                 <span className="text-gray-400 text-xs"> ({item.productCount})</span>
-
-                {item.slug === categoryNav.currentSlug && categoryNav.children.length > 0 && (
-                  <ul className="ml-3 mt-1 space-y-1">
-                    {categoryNav.children.map((child) => (
-                      <li key={child.id}>
-                        <Link href={child.href} className="text-gray-600 hover:underline">
-                          {child.name}
-                        </Link>
-                        <span className="text-gray-400 text-xs"> ({child.productCount})</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
               </li>
             ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Категории — раскрывающееся дерево (режим "все товары") */}
+      {categoryTree && (
+        <div>
+          <h3 className="font-semibold text-gray-900 mb-2">Категории</h3>
+          <ul className="space-y-1.5">
+            <CategoryTreeItem node={categoryTree} />
           </ul>
         </div>
       )}
@@ -343,27 +384,7 @@ export function CategoryFilterSidebar({
             {attr.fieldType === 'number' && attr.unit ? `, ${attr.unit}` : ''}
           </h3>
 
-          {attr.fieldType === 'number' ? (
-            attr.max > attr.min && (
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  defaultValue={attrRanges[attr.key]?.min ?? ''}
-                  placeholder={String(attr.min)}
-                  onBlur={(e) => applyAttrRange(attr.key, e.target.value, String(attrRanges[attr.key]?.max ?? ''))}
-                  className="w-full border rounded px-2 py-1 text-gray-900"
-                />
-                <span className="text-gray-400">—</span>
-                <input
-                  type="number"
-                  defaultValue={attrRanges[attr.key]?.max ?? ''}
-                  placeholder={String(attr.max)}
-                  onBlur={(e) => applyAttrRange(attr.key, String(attrRanges[attr.key]?.min ?? ''), e.target.value)}
-                  className="w-full border rounded px-2 py-1 text-gray-900"
-                />
-              </div>
-            )
-          ) : (
+          {attr.options.length > 0 && (
             <div className="space-y-1.5 max-h-40 overflow-y-auto">
               {attr.options.map((opt) => {
                 const checked = (attrValues[attr.key] ?? []).includes(opt)
