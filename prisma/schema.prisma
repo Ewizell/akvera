@@ -197,6 +197,7 @@ model Order {
 
   status        OrderStatus @default(NEW)
   comment       String?
+  adminComment  String?
 
   items         OrderItem[]
   attachments   OrderAttachment[]

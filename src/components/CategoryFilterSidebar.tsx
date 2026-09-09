@@ -92,8 +92,8 @@ export type CategoryTreeNode = {
   name: string
   slug: string
   productCount: number
-  pageHref: string
-  ownProductsHref: string
+  allProductsHref: string
+  ownProductsHref: string | null
   children: CategoryTreeNode[]
 }
 
@@ -115,13 +115,13 @@ function CategoryTreeItem({ node, depth = 0 }: { node: CategoryTreeNode; depth?:
         ) : (
           <span className="w-4 shrink-0" />
         )}
-        <Link href={node.pageHref} className="text-gray-700 hover:underline truncate text-sm">
+        <Link href={node.allProductsHref} className="text-gray-700 hover:underline truncate text-sm">
           {node.name}
         </Link>
         <span className="text-gray-400 text-xs shrink-0">({node.productCount})</span>
       </div>
 
-      {hasChildren && (
+      {node.ownProductsHref && (
         <Link href={node.ownProductsHref} className="ml-5 text-xs text-blue-600 hover:underline">
           Товары этого раздела
         </Link>

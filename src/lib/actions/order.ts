@@ -1,99 +1,100 @@
-'use server'
+"use server";
 
-import { prisma } from '@/lib/prisma'
-import { writeFile, mkdir } from 'fs/promises'
-import path from 'path'
-import { randomUUID } from 'crypto'
-import { auth } from '@/auth'
+import { OrderStatus, Prisma } from "@/generated/prisma";
+import { prisma } from "@/lib/prisma";
+import type { OrderListItem } from "@/lib/orderTypes";
 
-type CreateOrderResult = { success: true; orderId: string } | { success: false; error: string }
+export async function getOrders(params: {
+  status?: OrderStatus;
+  search?: string;
+  page?: number;
+  pageSize?: number;
+}) {
+  const { status, search, page = 1, pageSize = 20 } = params;
 
-export async function createOrder(formData: FormData): Promise<CreateOrderResult> {
-  const contactName = (formData.get('contactName') as string)?.trim()
-  const contactPhone = (formData.get('contactPhone') as string)?.trim()
-  const contactEmail = (formData.get('contactEmail') as string)?.trim() || null
-  const comment = (formData.get('comment') as string)?.trim() || null
-  const itemsRaw = formData.get('items') as string
+  const where: Prisma.OrderWhereInput = {
+    ...(status ? { status } : {}),
+    ...(search
+      ? {
+          OR: [
+            { contactName: { contains: search, mode: "insensitive" } },
+            { contactEmail: { contains: search, mode: "insensitive" } },
+            { contactPhone: { contains: search, mode: "insensitive" } },
+          ],
+        }
+      : {}),
+  };
 
-  if (!contactName || !contactPhone) {
-    return { success: false, error: 'Укажите имя и телефон' }
-  }
+  const [orders, total] = await Promise.all([
+    prisma.order.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+      include: { items: { select: { priceAtOrder: true, quantity: true } } },
+    }),
+    prisma.order.count({ where }),
+  ]);
 
-  let parsedItems: { variantId: string; quantity: number }[]
-  try {
-    parsedItems = JSON.parse(itemsRaw)
-  } catch {
-    return { success: false, error: 'Некорректные данные корзины' }
-  }
+  const items: OrderListItem[] = orders.map((o) => {
+    const anyOnRequest = o.items.some((i) => i.priceAtOrder === null);
+    const sum = o.items.reduce(
+      (acc, i) => acc + (i.priceAtOrder ? Number(i.priceAtOrder) : 0) * i.quantity,
+      0
+    );
+    return {
+      id: o.id,
+      status: o.status,
+      createdAt: o.createdAt,
+      contactName: o.contactName,
+      contactEmail: o.contactEmail,
+      contactPhone: o.contactPhone,
+      itemsCount: o.items.length,
+      total: anyOnRequest ? null : sum,
+      adminComment: o.adminComment,
+    };
+  });
 
-  if (!Array.isArray(parsedItems) || parsedItems.length === 0) {
-    return { success: false, error: 'Корзина пуста' }
-  }
+  return { items, total, pageCount: Math.ceil(total / pageSize) };
+}
 
-  // подтягиваем актуальные цены с сервера, не доверяем клиенту
-  const variantIds = parsedItems.map((i) => i.variantId)
-  const variants = await prisma.productVariant.findMany({
-    where: { id: { in: variantIds } },
-    select: { id: true, price: true, stock: true },
-  })
-  const variantMap = new Map(variants.map((v) => [v.id, v]))
-
-  for (const item of parsedItems) {
-    if (!variantMap.has(item.variantId)) {
-      return { success: false, error: 'Один из товаров больше недоступен' }
-    }
-    if (!Number.isInteger(item.quantity) || item.quantity < 1) {
-      return { success: false, error: 'Некорректное количество товара' }
-    }
-  }
-
-  const files = formData.getAll('attachments') as File[]
-  const validFiles = files.filter((f) => f instanceof File && f.size > 0)
-
-  const session = await auth()
-
-  const order = await prisma.$transaction(async (tx) => {
-    const newOrder = await tx.order.create({
-      data: {
-        userId: session?.user?.id,
-        contactName,
-        contactPhone,
-        contactEmail,
-        comment,
-        items: {
-          create: parsedItems.map((item) => {
-            const variant = variantMap.get(item.variantId)!
-            return {
-              variant: { connect: { id: item.variantId } },
-              quantity: item.quantity,
-              priceAtOrder: variant.price, // null, если цена была "по запросу"
-            }
-          }),
+export async function getOrderById(id: string) {
+  const order = await prisma.order.findUnique({
+    where: { id },
+    include: {
+      items: {
+        include: {
+          variant: {
+            include: { product: true, images: { take: 1 } },
+          },
         },
       },
-    })
-    return newOrder
-  })
+      attachments: true,
+      user: { select: { id: true, email: true, name: true } },
+    },
+  });
+  if (!order) return null;
 
-  if (validFiles.length > 0) {
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'orders', order.id)
-    await mkdir(uploadDir, { recursive: true })
+  return {
+    ...order,
+    items: order.items.map((i) => ({
+      ...i,
+      priceAtOrder: i.priceAtOrder !== null ? Number(i.priceAtOrder) : null,
+    })),
+  };
+}
 
-    for (const file of validFiles) {
-      const ext = path.extname(file.name)
-      const filename = `${randomUUID()}${ext}`
-      const buffer = Buffer.from(await file.arrayBuffer())
-      await writeFile(path.join(uploadDir, filename), buffer)
+export async function updateOrderStatus(id: string, status: OrderStatus) {
+  return prisma.order.update({ where: { id }, data: { status } });
+}
 
-      await prisma.orderAttachment.create({
-        data: {
-          orderId: order.id,
-          url: `/uploads/orders/${order.id}/${filename}`,
-          filename: file.name,
-        },
-      })
-    }
-  }
+export async function updateOrderContact(
+  id: string,
+  data: { contactName: string; contactPhone: string; contactEmail: string | null; comment: string | null }
+) {
+  return prisma.order.update({ where: { id }, data });
+}
 
-  return { success: true, orderId: order.id }
+export async function updateOrderAdminComment(id: string, adminComment: string | null) {
+  return prisma.order.update({ where: { id }, data: { adminComment } });
 }

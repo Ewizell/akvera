@@ -415,8 +415,8 @@ export type CategoryTreeNode = {
   name: string;
   slug: string;
   productCount: number;
-  pageHref: string;
-  ownProductsHref: string;
+  allProductsHref: string;
+  ownProductsHref: string | null;
   children: CategoryTreeNode[];
 };
 
@@ -438,19 +438,23 @@ export async function buildCategoryTree(
 
   function build(cat: (typeof all)[number], pathSlugs: string[]): CategoryTreeNode {
     const fullPath = [...pathSlugs, cat.slug];
-    const pageHref = `/category/${fullPath.join("/")}`;
+    const pagePath = `/category/${fullPath.join("/")}`;
     const children = (byParent.get(cat.id) ?? [])
       .slice()
       .sort((a, b) => a.name.localeCompare(b.name, "ru"))
       .map((child) => build(child, fullPath));
+
+    const hasChildren = children.length > 0;
 
     return {
       id: cat.id,
       name: cat.name,
       slug: cat.slug,
       productCount: cat._count.products,
-      pageHref,
-      ownProductsHref: children.length > 0 ? `${pageHref}/own` : pageHref,
+      // клик по узлу дерева всегда остаётся в режиме "все товары" этой ветки
+      allProductsHref: hasChildren ? `${pagePath}/all` : pagePath,
+      // ссылка "товары этого раздела" имеет смысл только когда есть подкатегории
+      ownProductsHref: hasChildren ? `${pagePath}/own` : null,
       children,
     };
   }
