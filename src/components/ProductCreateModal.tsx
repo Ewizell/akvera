@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { createProduct } from '@/lib/actions/product'
 import { slugify } from '@/lib/slugify'
+import StringListEditor from './StringListEditor'
 
 type Category = { id: string; name: string }
 type Brand = { id: string; name: string }
@@ -102,6 +103,16 @@ export default function ProductCreateModal({
               <div>
                 <label className={labelCls}>Описание</label>
                 <textarea name="description" rows={3} className={inputCls} />
+              </div>
+
+              <div>
+                <label className={labelCls}>Область применения</label>
+                <StringListEditor name="applicationAreas" placeholder="Например: отопление складских помещений" />
+              </div>
+
+              <div>
+                <label className={labelCls}>Преимущества</label>
+                <StringListEditor name="advantages" placeholder="Например: низкое энергопотребление" />
               </div>
             </div>
           </div>

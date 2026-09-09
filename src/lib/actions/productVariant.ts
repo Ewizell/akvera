@@ -5,6 +5,17 @@ import { revalidatePath } from 'next/cache'
 
 type AttrSchema = { key: string; fieldType: string }
 
+function parseStringList(formData: FormData, name: string): string[] {
+  const raw = formData.get(name) as string | null
+  if (!raw) return []
+  try {
+    const arr = JSON.parse(raw)
+    return Array.isArray(arr) ? arr.map((s) => String(s).trim()).filter(Boolean) : []
+  } catch {
+    return []
+  }
+}
+
 function parseAttributes(formData: FormData): Record<string, unknown> {
   const schemaJson = formData.get('attrsSchema') as string
   const result: Record<string, unknown> = {}
@@ -51,6 +62,8 @@ export async function createVariant(productId: string, formData: FormData) {
   const metaKeywords = formData.get('metaKeywords') as string
   const attributes = parseAttributes(formData)
   const variantTagIds = formData.getAll('variantTagIds') as string[]
+  const applicationAreas = parseStringList(formData, 'applicationAreas')
+  const advantages = parseStringList(formData, 'advantages')
 
   try {
     await prisma.productVariant.create({
@@ -65,6 +78,8 @@ export async function createVariant(productId: string, formData: FormData) {
         metaDescription: metaDescription || null,
         metaKeywords: metaKeywords || null,
         tags: { connect: variantTagIds.map((tagId) => ({ id: tagId })) },
+        applicationAreas,
+        advantages,
         attributes,
       },
     })
@@ -92,6 +107,8 @@ export async function updateVariant(id: string, formData: FormData) {
   const metaKeywords = formData.get('metaKeywords') as string
   const attributes = parseAttributes(formData)
   const variantTagIds = formData.getAll('variantTagIds') as string[]
+  const applicationAreas = parseStringList(formData, 'applicationAreas')
+  const advantages = parseStringList(formData, 'advantages')
 
   try {
     await prisma.productVariant.update({
@@ -106,6 +123,8 @@ export async function updateVariant(id: string, formData: FormData) {
         metaDescription: metaDescription || null,
         tags: { set: variantTagIds.map((tagId) => ({ id: tagId })) },
         metaKeywords: metaKeywords || null,
+        applicationAreas,
+        advantages,
         attributes,
       },
     })
@@ -159,6 +178,8 @@ export async function duplicateVariant(id: string) {
         price: source.price,
         stock: source.stock,
         attributes: source.attributes as object,
+        applicationAreas: source.applicationAreas,
+        advantages: source.advantages,
         metaTitle: source.metaTitle,
         metaDescription: source.metaDescription,
         metaKeywords: source.metaKeywords,
@@ -172,9 +193,8 @@ export async function duplicateVariant(id: string) {
         },
         documents: {
           create: source.documents.map((doc) => ({
-            title: doc.title,
-            type: doc.type,
-            url: doc.url,
+            documentId: doc.documentId,
+            sortOrder: doc.sortOrder,
           })),
         },
       },

@@ -4,7 +4,16 @@ import { useState, useTransition } from 'react'
 import { updateProduct } from '@/lib/actions/product'
 import { createVariant, updateVariant, deleteVariant } from '@/lib/actions/productVariant'
 import VariantImages from './VariantImages'
-import VariantDocuments from './VariantDocuments'
+import DocumentPicker from './DocumentPicker'
+import StringListEditor from './StringListEditor'
+import {
+  attachDocumentToProduct,
+  uploadAndAttachToProduct,
+  detachDocumentFromProduct,
+  attachDocumentToVariant,
+  uploadAndAttachToVariant,
+  detachDocumentFromVariant,
+} from '@/lib/actions/document'
 import { slugify } from '@/lib/slugify'
 import TagPicker from './TagPicker'
 
@@ -15,6 +24,8 @@ type CategoryAttribute = {
   fieldType: string
   unit: string | null
 }
+
+type DocJoin = { id: string; documentId: string; document: { title: string; type: string; url: string } }
 
 type Variant = {
   id: string
@@ -27,8 +38,10 @@ type Variant = {
   metaTitle: string | null
   metaDescription: string | null
   metaKeywords: string | null
+  applicationAreas: string[]
+  advantages: string[]
   images: { id: string; url: string; isMain: boolean }[]
-  documents: { id: string; title: string; type: string; url: string }[]
+  documents: DocJoin[]
   tagIds: string[]
 }
 
@@ -39,8 +52,15 @@ type Product = {
   brandId: string | null
   description: string | null
   shortDescription: string | null
+  applicationAreas: string[]
+  advantages: string[]
   tagIds: string[]
+  documents: DocJoin[]
   variants: Variant[]
+}
+
+function toAttached(docs: DocJoin[] | undefined) {
+  return (docs ?? []).map((d) => ({ joinId: d.id, documentId: d.documentId, title: d.document.title, type: d.document.type, url: d.document.url }))
 }
 
 type Category = { id: string; name: string; attributes: CategoryAttribute[] }
@@ -181,7 +201,7 @@ function PriceField({ defaultValue }: { defaultValue: number | null }) {
 
 // ── Редактор варианта (общая форма для создания и правки) ─────
 
-const VARIANT_TABS = ['Общее', 'Характеристики', 'SEO'] as const
+const VARIANT_TABS = ['Общее', 'Характеристики', 'Контент', 'SEO'] as const
 type VariantTab = (typeof VARIANT_TABS)[number]
 
 function VariantFormFields({
@@ -273,6 +293,27 @@ function VariantFormFields({
         <div>
           <p className="text-sm font-medium text-gray-700 mb-2">Дополнительные теги исполнения</p>
           <TagPicker allTags={allTags} selectedIds={variant?.tagIds ?? []} name="variantTagIds" />
+        </div>
+      </div>
+
+      <div className={tab === 'Контент' ? 'space-y-5' : 'hidden'}>
+        <div>
+          <p className="text-sm font-medium text-gray-700 mb-1">Область применения</p>
+          <p className="text-xs text-gray-400 mb-2">Если пусто — на странице покажется список товара</p>
+          <StringListEditor
+            name="applicationAreas"
+            initial={variant?.applicationAreas ?? []}
+            placeholder="Например: отопление складских помещений"
+          />
+        </div>
+        <div>
+          <p className="text-sm font-medium text-gray-700 mb-1">Преимущества</p>
+          <p className="text-xs text-gray-400 mb-2">Если пусто — на странице покажется список товара</p>
+          <StringListEditor
+            name="advantages"
+            initial={variant?.advantages ?? []}
+            placeholder="Например: низкое энергопотребление"
+          />
         </div>
       </div>
 
@@ -382,8 +423,14 @@ function VariantRow({
             <VariantImages variantId={variant.id} images={variant.images} />
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-700 mb-2">Документы</p>
-            <VariantDocuments variantId={variant.id} documents={variant.documents} />
+            <p className="text-sm font-medium text-gray-700 mb-2">Документы исполнения</p>
+            <p className="text-xs text-gray-400 mb-2">Специфичные для этого исполнения — плюс к общим документам товара</p>
+            <DocumentPicker
+              attached={toAttached(variant.documents)}
+              onAttachExisting={(documentId) => attachDocumentToVariant(variant.id, documentId)}
+              onUploadNew={(formData) => uploadAndAttachToVariant(variant.id, formData)}
+              onDetach={(joinId) => detachDocumentFromVariant(joinId)}
+            />
           </div>
         </div>
       </li>
@@ -580,8 +627,41 @@ export default function ProductEditModal({
                 </div>
 
                 <div>
+                  <label className={labelCls}>Область применения</label>
+                  <p className="text-xs text-gray-400 mb-2">Общая для всех исполнений (если у исполнения не задана своя)</p>
+                  <StringListEditor
+                    name="applicationAreas"
+                    initial={product.applicationAreas}
+                    placeholder="Например: отопление складских помещений"
+                  />
+                </div>
+
+                <div>
+                  <label className={labelCls}>Преимущества</label>
+                  <p className="text-xs text-gray-400 mb-2">Общие для всех исполнений (если у исполнения не заданы свои)</p>
+                  <StringListEditor
+                    name="advantages"
+                    initial={product.advantages}
+                    placeholder="Например: низкое энергопотребление"
+                  />
+                </div>
+
+                <div>
                   <label className={labelCls}>Теги</label>
                   <TagPicker allTags={tags} selectedIds={product.tagIds} name="tagIds" />
+                </div>
+
+                <div>
+                  <label className={labelCls}>Документы товара</label>
+                  <p className="text-xs text-gray-400 mb-2">
+                    Общие для всех исполнений (сертификаты, общие инструкции)
+                  </p>
+                  <DocumentPicker
+                    attached={toAttached(product.documents)}
+                    onAttachExisting={(documentId) => attachDocumentToProduct(product.id, documentId)}
+                    onUploadNew={(formData) => uploadAndAttachToProduct(product.id, formData)}
+                    onDetach={(joinId) => detachDocumentFromProduct(joinId)}
+                  />
                 </div>
               </div>
             </div>

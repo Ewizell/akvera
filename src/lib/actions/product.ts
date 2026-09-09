@@ -3,6 +3,17 @@
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 
+function parseStringList(formData: FormData, name: string): string[] {
+  const raw = formData.get(name) as string | null
+  if (!raw) return []
+  try {
+    const arr = JSON.parse(raw)
+    return Array.isArray(arr) ? arr.map((s) => String(s).trim()).filter(Boolean) : []
+  } catch {
+    return []
+  }
+}
+
 export async function createProduct(formData: FormData) {
   const name = formData.get('name') as string
   const categoryId = formData.get('categoryId') as string
@@ -13,6 +24,8 @@ export async function createProduct(formData: FormData) {
   const slug = formData.get('slug') as string
   const price = formData.get('price') as string
   const shortDescription = formData.get('shortDescription') as string
+  const applicationAreas = parseStringList(formData, 'applicationAreas')
+  const advantages = parseStringList(formData, 'advantages')
 
   try {
     await prisma.product.create({
@@ -21,6 +34,8 @@ export async function createProduct(formData: FormData) {
         categoryId,
         description: description || null,
         shortDescription: shortDescription || null,
+        applicationAreas,
+        advantages,
         brandId: brandId || null,
         variants: {
           create: {
@@ -73,6 +88,8 @@ export async function updateProduct(id: string, formData: FormData) {
   const brandId = formData.get('brandId') as string
   const shortDescription = formData.get('shortDescription') as string
   const tagIds = formData.getAll('tagIds') as string[]
+  const applicationAreas = parseStringList(formData, 'applicationAreas')
+  const advantages = parseStringList(formData, 'advantages')
 
   await prisma.product.update({
     where: { id },
@@ -81,6 +98,8 @@ export async function updateProduct(id: string, formData: FormData) {
       categoryId,
       description: description || null,
       shortDescription: shortDescription || null,
+      applicationAreas,
+      advantages,
       brandId: brandId || null,
       tags: { set: tagIds.map((id) => ({ id })) },
     },
@@ -175,6 +194,7 @@ export async function duplicateProduct(productId: string) {
       where: { id: productId },
       include: {
         tags: true,
+        documents: true,
         variants: {
           include: {
             images: true,
@@ -198,7 +218,15 @@ export async function duplicateProduct(productId: string) {
         brandId: source.brandId,
         description: source.description,
         shortDescription: source.shortDescription,
+        applicationAreas: source.applicationAreas,
+        advantages: source.advantages,
         tags: { connect: source.tags.map((t) => ({ id: t.id })) },
+        documents: {
+          create: source.documents.map((doc) => ({
+            documentId: doc.documentId,
+            sortOrder: doc.sortOrder,
+          })),
+        },
         variants: {
           create: source.variants.map((v) => ({
             name: v.name,
@@ -207,6 +235,8 @@ export async function duplicateProduct(productId: string) {
             price: v.price,
             stock: v.stock,
             attributes: v.attributes as object,
+            applicationAreas: v.applicationAreas,
+            advantages: v.advantages,
             metaTitle: v.metaTitle,
             metaDescription: v.metaDescription,
             metaKeywords: v.metaKeywords,
@@ -220,9 +250,8 @@ export async function duplicateProduct(productId: string) {
             },
             documents: {
               create: v.documents.map((doc) => ({
-                title: doc.title,
-                type: doc.type,
-                url: doc.url,
+                documentId: doc.documentId,
+                sortOrder: doc.sortOrder,
               })),
             },
           })),

@@ -67,12 +67,13 @@ export default async function ProductPage({
         category: { include: { parent: true } },
         brand: true,
         tags: true,
+        documents: { include: { document: true } },
       },
     },
     images: {
       orderBy: [{ isMain: "desc" }, { sortOrder: "asc" }],
     },
-    documents: true,
+    documents: { include: { document: true } },
     tags: true,
   },
 });
@@ -95,6 +96,16 @@ for (const t of variant.product.tags) mergedTagsMap.set(t.id, t);
 for (const t of variant.tags) mergedTagsMap.set(t.id, t);
 const productTags = Array.from(mergedTagsMap.values());
 
+// документы товара (общие) + документы исполнения — с дедупликацией по documentId
+const documentsMap = new Map<string, { id: string; title: string; type: string; url: string }>();
+for (const d of variant.product.documents) {
+  documentsMap.set(d.documentId, { id: d.id, title: d.document.title, type: d.document.type, url: d.document.url });
+}
+for (const d of variant.documents) {
+  documentsMap.set(d.documentId, { id: d.id, title: d.document.title, type: d.document.type, url: d.document.url });
+}
+const documents = Array.from(documentsMap.values());
+
 const crumbs = [
   { label: "AKVERA", href: "/" },
   { label: "Каталог", href: "/catalog" },
@@ -111,6 +122,8 @@ const crumbs = [
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
   const description = variant.description || variant.product.description;
+  const applicationAreas = variant.applicationAreas.length > 0 ? variant.applicationAreas : variant.product.applicationAreas;
+  const advantages = variant.advantages.length > 0 ? variant.advantages : variant.product.advantages;
 
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",
@@ -222,17 +235,49 @@ const crumbs = [
         </div>
       )}
 
-      {variant.documents.length > 0 && (
+      {applicationAreas.length > 0 && (
+        <div className="mt-10 max-w-3xl">
+          <h2 className="text-lg font-semibold mb-4">Область применения</h2>
+          <ul className="space-y-2">
+            {applicationAreas.map((item, i) => (
+              <li key={i} className="flex items-start gap-2.5 text-sm text-gray-700">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-600 shrink-0 mt-0.5">
+                  <path d="M9 18l6-6-6-6" />
+                </svg>
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {advantages.length > 0 && (
+        <div className="mt-10 max-w-3xl">
+          <h2 className="text-lg font-semibold mb-4">Преимущества</h2>
+          <ul className="space-y-2">
+            {advantages.map((item, i) => (
+              <li key={i} className="flex items-start gap-2.5 text-sm text-gray-700">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-emerald-600 shrink-0 mt-0.5">
+                  <path d="M20 6L9 17l-5-5" />
+                </svg>
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {documents.length > 0 && (
         <div className="mt-10 max-w-3xl">
           <h2 className="text-lg font-semibold mb-4">Документация</h2>
           <ul className="space-y-2">
-            {variant.documents.map((doc) => (
+            {documents.map((doc) => (
               <li key={doc.id}>
-                <a 
+                <a
                   href={doc.url}
                   download
-                  className="inline-flex items-center gap-2 text-blue-600 hover:underline text-sm">
-                    
+                  className="inline-flex items-center gap-2 text-blue-600 hover:underline text-sm"
+                >
                   {doc.title}
                 </a>
               </li>

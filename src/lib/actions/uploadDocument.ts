@@ -4,11 +4,6 @@ import { writeFile, mkdir } from 'fs/promises'
 import { existsSync } from 'fs'
 import path from 'path'
 
-const ALLOWED_DOCUMENT_TYPES = [
-  'application/pdf',
-  'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-]
 const MAX_FILE_SIZE = 20 * 1024 * 1024 // 20 МБ
 
 export async function uploadDocument(formData: FormData): Promise<{ success: boolean; url?: string; error?: string }> {
@@ -18,10 +13,6 @@ export async function uploadDocument(formData: FormData): Promise<{ success: boo
     return { success: false, error: 'Файл не выбран' }
   }
 
-  if (!ALLOWED_DOCUMENT_TYPES.includes(file.type)) {
-    return { success: false, error: 'Разрешены только PDF и Word-документы' }
-  }
-
   if (file.size > MAX_FILE_SIZE) {
     return { success: false, error: 'Файл слишком большой (максимум 20 МБ)' }
   }
@@ -29,7 +20,7 @@ export async function uploadDocument(formData: FormData): Promise<{ success: boo
   const bytes = await file.arrayBuffer()
   const buffer = Buffer.from(bytes)
 
-  const ext = path.extname(file.name) || '.pdf'
+  const ext = path.extname(file.name) // пусто, если у файла нет расширения — это нормально
   const filename = `${crypto.randomUUID()}${ext}`
 
   const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'documents')
