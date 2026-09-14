@@ -1,21 +1,42 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { createUser } from '@/lib/actions/user'
 
 const inputCls =
-  'w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900 placeholder-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
-const labelCls = 'block text-sm font-medium text-gray-700 mb-1'
-const cardCls = 'bg-white border border-gray-200 rounded-lg p-5'
-const cardTitleCls = 'text-base font-semibold text-gray-900 mb-4'
+  'h-11 w-full rounded-xl border-0 bg-[#f4f5f7] px-3.5 text-sm text-[#28313d] outline-none ring-1 ring-transparent transition placeholder:text-[#a1a8b3] focus:bg-white focus:ring-2 focus:ring-[#28394c]/15 disabled:cursor-not-allowed disabled:opacity-60'
 
-export default function UserCreateModal({ onClose }: { onClose: () => void }) {
+const labelCls =
+  'mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-[#7b8592]'
+
+export default function UserCreateModal({
+  onClose,
+}: {
+  onClose: () => void
+}) {
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
 
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape' && !isPending) {
+        onClose()
+      }
+    }
+
+    globalThis.document.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      globalThis.document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [onClose, isPending])
+
   function handleSubmit(formData: FormData) {
+    setError(null)
+
     startTransition(async () => {
       const result = await createUser(formData)
+
       if (result.success) {
         onClose()
       } else {
@@ -25,67 +46,334 @@ export default function UserCreateModal({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-gray-50 z-50 overflow-y-auto text-gray-900">
-      <div className="sticky top-0 bg-white border-b z-10">
-        <div className="max-w-3xl mx-auto px-8 py-4 flex items-center justify-between">
-          <h1 className="text-xl font-bold text-gray-900">Новый пользователь</h1>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-700 text-xl leading-none">
-            ✕
-          </button>
-        </div>
-      </div>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[#18212b]/45 px-4 py-6 backdrop-blur-[3px]"
+      onClick={() => {
+        if (!isPending) onClose()
+      }}
+    >
+      <div
+        className="flex max-h-[90vh] w-full max-w-[600px] flex-col overflow-hidden rounded-2xl bg-[#f7f8fa] text-[#28313d] shadow-[0_24px_70px_rgba(24,33,43,0.18)] ring-1 ring-black/[0.06]"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <form action={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+          {/* Header */}
+          <div className="shrink-0 border-b border-[#e4e7eb] bg-white px-5 py-4">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#28394c] to-[#3d5570] text-white shadow-sm">
+                  <svg
+                    className="h-5 w-5"
+                    viewBox="0 0 20 20"
+                    fill="none"
+                  >
+                    <path
+                      d="M10 10C12.07 10 13.75 8.32 13.75 6.25C13.75 4.18 12.07 2.5 10 2.5C7.93 2.5 6.25 4.18 6.25 6.25C6.25 8.32 7.93 10 10 10Z"
+                      stroke="currentColor"
+                      strokeWidth="1.4"
+                    />
+                    <path
+                      d="M3.5 17C3.5 13.96 6.41 11.5 10 11.5C13.59 11.5 16.5 13.96 16.5 17"
+                      stroke="currentColor"
+                      strokeWidth="1.4"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </div>
 
-      <div className="max-w-3xl mx-auto p-8">
-        <form action={handleSubmit} className="space-y-5">
-          <div className={cardCls}>
-            <h2 className={cardTitleCls}>Данные аккаунта</h2>
-            <div className="space-y-4">
-              <div>
-                <label className={labelCls}>Email</label>
-                <input name="email" type="email" required className={inputCls} />
-              </div>
-              <div>
-                <label className={labelCls}>Пароль</label>
-                <input name="password" type="password" required minLength={8} className={inputCls} />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className={labelCls}>Имя</label>
-                  <input name="name" className={inputCls} />
-                </div>
-                <div>
-                  <label className={labelCls}>Телефон</label>
-                  <input name="phone" className={inputCls} />
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#929aa6]">
+                    Пользователи
+                  </p>
+
+                  <h2 className="mt-0.5 text-base font-semibold text-[#28313d]">
+                    Новый пользователь
+                  </h2>
+
+                  <p className="mt-0.5 text-xs text-[#929aa6]">
+                    Добавление новой учетной записи
+                  </p>
                 </div>
               </div>
-              <div>
-                <label className={labelCls}>Роль</label>
-                <select name="role" defaultValue="CUSTOMER" required className={inputCls}>
-                  <option value="CUSTOMER">Покупатель</option>
-                  <option value="ADMIN">Администратор</option>
-                </select>
-              </div>
+
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={isPending}
+                aria-label="Закрыть"
+                className="flex h-9 w-9 items-center justify-center rounded-xl text-[#89929d] transition hover:bg-[#f3f5f7] hover:text-[#28313d] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <svg
+                  className="h-5 w-5"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                >
+                  <path
+                    d="M5 5L15 15M15 5L5 15"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </button>
             </div>
           </div>
 
-          {error && (
-            <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">{error}</p>
-          )}
+          {/* Content */}
+          <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
+            <div className="space-y-5">
+              {/* Account data */}
+              <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/[0.04]">
+                <div className="mb-4 flex items-center gap-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#28394c] to-[#3d5570] text-white">
+                    <svg
+                      className="h-4 w-4"
+                      viewBox="0 0 20 20"
+                      fill="none"
+                    >
+                      <path
+                        d="M10 10C12.07 10 13.75 8.32 13.75 6.25C13.75 4.18 12.07 2.5 10 2.5C7.93 2.5 6.25 4.18 6.25 6.25C6.25 8.32 7.93 10 10 10Z"
+                        stroke="currentColor"
+                        strokeWidth="1.4"
+                      />
+                      <path
+                        d="M3.5 17C3.5 13.96 6.41 11.5 10 11.5C13.59 11.5 16.5 13.96 16.5 17"
+                        stroke="currentColor"
+                        strokeWidth="1.4"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </div>
 
-          <div className="flex justify-end gap-3">
-            <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900">
-              Отмена
-            </button>
-            <button
-              type="submit"
-              disabled={isPending}
-              className="bg-blue-600 text-white px-5 py-2 rounded-md text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
-            >
-              {isPending ? 'Создание...' : 'Создать пользователя'}
-            </button>
+                  <div>
+                    <h3 className="text-sm font-semibold text-[#28313d]">
+                      Данные аккаунта
+                    </h3>
+
+                    <p className="mt-0.5 text-xs text-[#929aa6]">
+                      Заполните основные данные пользователя
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  {/* Email */}
+                  <div>
+                    <label htmlFor="new-user-email" className={labelCls}>
+                      Email
+                    </label>
+
+                    <input
+                      id="new-user-email"
+                      name="email"
+                      type="email"
+                      required
+                      disabled={isPending}
+                      placeholder="user@example.com"
+                      className={inputCls}
+                    />
+                  </div>
+
+                  {/* Password */}
+                  <div>
+                    <label htmlFor="new-user-password" className={labelCls}>
+                      Пароль
+                    </label>
+
+                    <input
+                      id="new-user-password"
+                      name="password"
+                      type="password"
+                      required
+                      minLength={8}
+                      disabled={isPending}
+                      placeholder="Минимум 8 символов"
+                      className={inputCls}
+                    />
+
+                    <p className="mt-1.5 text-[11px] text-[#929aa6]">
+                      Пароль должен содержать не менее 8 символов.
+                    </p>
+                  </div>
+
+                  {/* Name + Phone */}
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                      <label htmlFor="new-user-name" className={labelCls}>
+                        Имя
+                      </label>
+
+                      <input
+                        id="new-user-name"
+                        name="name"
+                        disabled={isPending}
+                        placeholder="Имя пользователя"
+                        className={inputCls}
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="new-user-phone" className={labelCls}>
+                        Телефон
+                      </label>
+
+                      <input
+                        id="new-user-phone"
+                        name="phone"
+                        disabled={isPending}
+                        placeholder="+7 (___) ___-__-__"
+                        className={inputCls}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Role */}
+                  <div>
+                    <label htmlFor="new-user-role" className={labelCls}>
+                      Роль
+                    </label>
+
+                    <div className="relative">
+                      <select
+                        id="new-user-role"
+                        name="role"
+                        defaultValue="CUSTOMER"
+                        required
+                        disabled={isPending}
+                        className={`${inputCls} appearance-none pr-10`}
+                      >
+                        <option value="CUSTOMER">Покупатель</option>
+                        <option value="ADMIN">Администратор</option>
+                      </select>
+
+                      <svg
+                        className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#89929d]"
+                        viewBox="0 0 20 20"
+                        fill="none"
+                      >
+                        <path
+                          d="M6 8L10 12L14 8"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Access info */}
+              <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/[0.04]">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#eef1f4] text-[#596572]">
+                    <svg
+                      className="h-4 w-4"
+                      viewBox="0 0 20 20"
+                      fill="none"
+                    >
+                      <path
+                        d="M10 2.75L16 5V9.75C16 13.35 13.52 16.58 10 17.5C6.48 16.58 4 13.35 4 9.75V5L10 2.75Z"
+                        stroke="currentColor"
+                        strokeWidth="1.4"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M7.25 9.75L9.25 11.75L13 8"
+                        stroke="currentColor"
+                        strokeWidth="1.4"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </div>
+
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-[#7b8592]">
+                      Права доступа
+                    </p>
+
+                    <p className="mt-0.5 text-sm font-medium text-[#28313d]">
+                      По умолчанию — покупатель
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-3 rounded-xl bg-[#f4f5f7] px-3.5 py-3">
+                  <p className="text-xs leading-5 text-[#7b8592]">
+                    Администратору доступна административная часть системы.
+                    Для обычного клиента используется роль «Покупатель».
+                  </p>
+                </div>
+              </div>
+
+              {/* Error */}
+              {error && (
+                <div className="flex items-start gap-3 rounded-xl bg-[#fff7f7] px-3.5 py-3 ring-1 ring-[#f0d5d5]">
+                  <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#f9eaea] text-[#b33a3a]">
+                    <svg
+                      className="h-4 w-4"
+                      viewBox="0 0 20 20"
+                      fill="none"
+                    >
+                      <path
+                        d="M10 6.5V10.5M10 13.5H10.01"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                      />
+                      <path
+                        d="M8.75 3.9L2.9 14.1C2.37 15.02 3.04 15.02 4.1 15.02H15.9C16.96 15.02 17.63 14.1 17.1 14.1L11.25 3.9C10.72 2.98 9.28 2.98 8.75 3.9Z"
+                        stroke="currentColor"
+                        strokeWidth="1.4"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </div>
+
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-[#a83232]">
+                      Ошибка создания
+                    </p>
+
+                    <p className="mt-0.5 text-xs leading-5 text-[#b33a3a]">
+                      {error}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="shrink-0 border-t border-[#e4e7eb] bg-white px-5 py-3.5">
+            <div className="flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={isPending}
+                className="h-10 rounded-xl border border-[#dfe3e8] bg-white px-4 text-xs font-semibold text-[#596572] shadow-sm transition hover:border-[#cbd1d8] hover:bg-[#f4f5f7] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Отмена
+              </button>
+
+              <button
+                type="submit"
+                disabled={isPending}
+                className="inline-flex h-10 items-center gap-2 rounded-xl bg-[#28394c] px-4 text-xs font-semibold text-white shadow-sm transition hover:bg-[#1e2a38] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isPending && (
+                  <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                )}
+
+                {isPending ? 'Создание...' : 'Создать пользователя'}
+              </button>
+            </div>
           </div>
         </form>
       </div>
     </div>
   )
 }
+

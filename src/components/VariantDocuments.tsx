@@ -66,23 +66,24 @@ export default function VariantDocuments({
 
   return (
     <div>
-      <ul className="space-y-2 mb-3">
+      <ul className="mb-3 space-y-2">
         {documents.map((doc) => (
           <li
             key={doc.id}
-            className="flex items-center justify-between gap-3 text-sm bg-white border border-gray-200 rounded-md pl-3 pr-1.5 py-1.5"
+            className="flex items-center justify-between gap-3 rounded-md border border-gray-200 bg-white py-1.5 pl-3 pr-1.5 text-sm"
           >
             <a
               href={doc.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-600 hover:underline min-w-0 truncate"
+              className="min-w-0 truncate text-blue-600 hover:underline"
             >
               {doc.title}{' '}
               <span className="text-gray-400">
                 (
-                {DOC_TYPES.find((t) => t.value === doc.type)?.label ??
-                  doc.type}
+                {DOC_TYPES.find(
+                  (t) => t.value === doc.type
+                )?.label ?? doc.type}
                 )
               </span>
             </a>
@@ -92,7 +93,7 @@ export default function VariantDocuments({
               onClick={() => handleDelete(doc.id)}
               disabled={isPending}
               aria-label="Удалить документ"
-              className="shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 disabled:opacity-50"
+              className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-gray-400 transition hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <svg
                 width="16"
@@ -127,13 +128,13 @@ export default function VariantDocuments({
           name="title"
           placeholder="Название документа"
           required
-          className="border border-gray-300 rounded-md px-2 py-1.5 text-sm text-gray-900 placeholder-gray-400 bg-white"
+          className="rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm text-gray-900 placeholder-gray-400"
         />
 
         <select
           name="type"
           defaultValue="datasheet"
-          className="border border-gray-300 rounded-md px-2 py-1.5 text-sm text-gray-900 bg-white"
+          className="rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm text-gray-900"
         >
           {DOC_TYPES.map((t) => (
             <option key={t.value} value={t.value}>
@@ -159,7 +160,7 @@ export default function VariantDocuments({
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={isPending}
-          className="inline-flex items-center gap-1.5 text-sm text-gray-500 bg-white border border-gray-300 rounded-md px-3 py-1.5 hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-500 transition hover:bg-gray-50 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <svg
             width="16"
@@ -183,7 +184,7 @@ export default function VariantDocuments({
       </form>
 
       {error && (
-        <p className="text-xs text-red-600 mt-1">
+        <p className="mt-1 text-xs text-red-600">
           {error}
         </p>
       )}

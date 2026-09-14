@@ -1,6 +1,9 @@
 'use client'
 
-type Tag = { id: string; name: string }
+type Tag = {
+  id: string
+  name: string
+}
 
 export default function TagPicker({
   allTags,
@@ -12,7 +15,13 @@ export default function TagPicker({
   name: string
 }) {
   if (allTags.length === 0) {
-    return <p className="text-xs text-gray-400">Тегов пока нет — создайте их в разделе «Теги»</p>
+    return (
+      <div className="rounded-xl bg-[#f4f5f7] px-4 py-3">
+        <p className="text-xs leading-5 text-[#8a939f]">
+          Тегов пока нет — создайте их в разделе «Теги»
+        </p>
+      </div>
+    )
   }
 
   return (
@@ -20,16 +29,19 @@ export default function TagPicker({
       {allTags.map((tag) => (
         <label
           key={tag.id}
-          className="flex items-center gap-1 text-xs border rounded-full px-2 py-1 cursor-pointer hover:bg-gray-50"
+          className="group inline-flex cursor-pointer items-center gap-2 rounded-xl bg-white px-3 py-2 text-xs font-medium text-[#4d5866] ring-1 ring-black/[0.05] transition hover:bg-[#f4f5f7]"
         >
           <input
             type="checkbox"
             name={name}
             value={tag.id}
             defaultChecked={selectedIds.includes(tag.id)}
-            className="accent-black"
+            className="h-4 w-4 rounded border-[#cbd0d7] text-[#28394c] accent-[#28394c] focus:ring-[#28394c]/20"
           />
-          {tag.name}
+
+          <span className="transition group-hover:text-[#28313d]">
+            {tag.name}
+          </span>
         </label>
       ))}
     </div>

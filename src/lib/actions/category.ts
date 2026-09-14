@@ -62,3 +62,34 @@ export async function deleteCategory(id: string) {
     }
   }
 }
+
+type CategoryNode = {
+  id: string;
+  name: string;
+  slug: string;
+  children: CategoryNode[];
+};
+
+export async function getCategoryTree(): Promise<CategoryNode[]> {
+  const categories = await prisma.category.findMany({
+    orderBy: { name: 'asc' },
+    select: { id: true, name: true, slug: true, parentId: true },
+  });
+
+  const byId = new Map<string, CategoryNode>(
+    categories.map((c) => [c.id, { ...c, children: [] }])
+  );
+
+  const roots: CategoryNode[] = [];
+
+  for (const c of categories) {
+    const node = byId.get(c.id)!;
+    if (c.parentId) {
+      byId.get(c.parentId)?.children.push(node);
+    } else {
+      roots.push(node);
+    }
+  }
+
+  return roots;
+}

@@ -1,28 +1,32 @@
 'use client'
 
-import { useState, useTransition, useMemo } from 'react'
+import { useMemo, useState, useTransition } from 'react'
 import ProductCreateModal from './ProductCreateModal'
 import ProductEditModal from './ProductEditModal'
-import { deleteProduct, duplicateProduct } from '@/lib/actions/product'
-import { deleteVariant, duplicateVariant } from '@/lib/actions/productVariant'
 import BulkActionsToolbar from './BulkActionsToolbar'
 import CategoryTree from './CategoryTree'
+import { deleteProduct, duplicateProduct } from '@/lib/actions/product'
 
 type CategoryAttributeSchema = {
   key: string
   label: string
   fieldType: string
-  unit?: string | null
+  unit: string | null
 }
 
-type Variant = {
+type ProductImage = {
+  url: string
+  isMain: boolean
+}
+
+type ProductVariant = {
   id: string
   name: string
-  sku: string
+  sku: string | null
   price: number | null
   stock: number
   attributes: Record<string, unknown> | null
-  images: { url: string; isMain: boolean }[]
+  images: ProductImage[]
 }
 
 type Product = {
@@ -31,13 +35,33 @@ type Product = {
   categoryId: string
   brandId: string | null
   description: string | null
-  category: { name: string; attributes: CategoryAttributeSchema[] }
-  variants: Variant[]
+  category: {
+    name: string
+    attributes: CategoryAttributeSchema[]
+  }
+  variants: ProductVariant[]
   tagIds: string[]
+}
+
+type Category = {
+  id: string
+  name: string
+  parentId: string | null
+}
+
+type Brand = {
+  id: string
+  name: string
+}
+
+type Tag = {
+  id: string
+  name: string
 }
 
 function formatPrice(price: number | null) {
   if (price === null) return 'Цена по запросу'
+
   return new Intl.NumberFormat('ru-RU', {
     style: 'currency',
     currency: 'RUB',
@@ -45,273 +69,392 @@ function formatPrice(price: number | null) {
   }).format(price)
 }
 
-function getVariantAttributeEntries(variant: Variant, schema: CategoryAttributeSchema[]) {
-  const attrs = (variant.attributes ?? {}) as Record<string, unknown>
-  const entries: { label: string; value: string }[] = []
+function getProductImage(product: Product) {
+  for (const variant of product.variants) {
+    const mainImage = variant.images.find((image) => image.isMain)
 
-  for (const attr of schema) {
-    const raw = attrs[attr.key]
-    if (raw === undefined || raw === null || raw === '') continue
-    const value = Array.isArray(raw) ? raw.join(', ') : String(raw)
-    entries.push({ label: attr.unit ? `${attr.label}, ${attr.unit}` : attr.label, value })
-  }
+    if (mainImage) {
+      return mainImage.url
+    }
 
-  const custom = attrs.customAttributes as { label: string; value: string }[] | undefined
-  if (Array.isArray(custom)) {
-    for (const c of custom) {
-      if (c.label && c.value) entries.push({ label: c.label, value: c.value })
+    if (variant.images[0]) {
+      return variant.images[0].url
     }
   }
 
-  return entries
+  return null
 }
 
-function VariantDetails({
-  variant,
-  categoryAttributes,
-  onEdit,
-}: {
-  variant: Variant
-  categoryAttributes: CategoryAttributeSchema[]
-  onEdit: () => void
-}) {
-  const [isPending, startTransition] = useTransition()
-  const [error, setError] = useState<string | null>(null)
-  const attributeEntries = getVariantAttributeEntries(variant, categoryAttributes)
-  const mainImage = variant.images.find((img) => img.isMain) ?? variant.images[0]
+function getProductPrice(product: Product) {
+  const prices = product.variants
+    .map((variant) => variant.price)
+    .filter((price): price is number => price !== null)
 
-  function handleDelete() {
-    if (!confirm(`Удалить исполнение «${variant.name}»?`)) return
-    startTransition(async () => {
-      const result = await deleteVariant(variant.id)
-      if (!result.success) {
-        setError(result.error ?? 'Ошибка удаления')
-      }
-    })
-  }
+  if (prices.length === 0) return null
 
-  return (
-    <div className="flex items-center gap-3 py-2.5 px-3 border-t border-gray-100">
-      {mainImage ? (
-        <img src={mainImage.url} alt="" className="w-9 h-9 object-cover rounded border border-gray-200 shrink-0" />
-      ) : (
-        <div className="w-9 h-9 rounded border border-gray-200 bg-gray-50 shrink-0" />
-      )}
-      <div className="min-w-0 flex-1">
-        <p className="text-sm text-gray-900 font-medium truncate">{variant.name}</p>
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs text-gray-500">
-          <span>Артикул: {variant.sku || '—'}</span>
-          <span className="text-gray-900 font-medium">{formatPrice(variant.price)}</span>
-          <span className={variant.stock > 0 ? 'text-green-600' : 'text-gray-400'}>
-            {variant.stock > 0 ? `В наличии: ${variant.stock}` : 'Нет в наличии'}
-          </span>
-        </div>
-        {attributeEntries.length > 0 && (
-          <dl className="flex flex-wrap gap-x-4 gap-y-0.5 mt-1.5 text-xs">
-            {attributeEntries.map((e, i) => (
-              <div key={i} className="flex gap-1">
-                <dt className="text-gray-400">{e.label}:</dt>
-                <dd className="text-gray-700">{e.value}</dd>
-              </div>
-            ))}
-          </dl>
-        )}
-        {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
-      </div>
-      <div className="flex gap-3 shrink-0">
-        <button onClick={onEdit} className="text-xs text-blue-600 hover:underline">
-          Редактировать
-        </button>
-        <button onClick={handleDelete} disabled={isPending} className="text-xs text-red-600 hover:underline disabled:opacity-50">
-          Удалить
-        </button>
-      </div>
-    </div>
+  return Math.min(...prices)
+}
+
+function getProductStock(product: Product) {
+  return product.variants.reduce(
+    (sum, variant) => sum + (variant.stock || 0),
+    0
   )
 }
 
-type Category = { id: string; name: string; parentId: string | null }
-type Brand = { id: string; name: string }
-type Tag = { id: string; name: string }
+function getStockLabel(stock: number) {
+  if (stock <= 0) {
+    return {
+      label: 'Нет в наличии',
+      className: 'bg-[#fff7f7] text-[#b33a3a] ring-1 ring-[#f0d5d5]',
+    }
+  }
+
+  if (stock < 5) {
+    return {
+      label: `${stock} шт.`,
+      className: 'bg-[#fff9ed] text-[#9a6b19] ring-1 ring-[#f0dfb8]',
+    }
+  }
+
+  return {
+    label: `${stock} шт.`,
+    className: 'bg-[#f1f7f3] text-[#397653] ring-1 ring-[#d5e8dc]',
+  }
+}
 
 function ProductRow({
   product,
-  onEdit,
   selected,
-  onToggleSelect,
+  onSelect,
+  onEdit,
+  onDuplicate,
+  onDelete,
 }: {
   product: Product
-  onEdit: (p: Product, variantId?: string) => void
   selected: boolean
-  onToggleSelect: (id: string) => void
+  onSelect: (id: string) => void
+  onEdit: (product: Product) => void
+  onDuplicate: (product: Product) => void
+  onDelete: (product: Product) => void
 }) {
-  const [isPending, startTransition] = useTransition()
-  const [confirming, setConfirming] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const [expanded, setExpanded] = useState(false)
 
-  function handleDelete() {
-    startTransition(async () => {
-      const result = await deleteProduct(product.id)
-      if (!result.success) {
-        setError(result.error ?? 'Не удалось удалить товар')
-        setConfirming(false)
-      }
-    })
-  }
-
-  function handleDuplicate() {
-    startTransition(async () => {
-      const result = await duplicateProduct(product.id)
-      if (!result.success) {
-        setError(result.error ?? 'Не удалось скопировать товар')
-      }
-    })
-  }
-
-  const primaryVariant = product.variants[0]
-  const firstVariantImage = primaryVariant?.images.find((img) => img.isMain) ?? primaryVariant?.images[0]
-  const hasMultipleVariants = product.variants.length > 1
-
-  const totalStock = product.variants.reduce((sum, v) => sum + v.stock, 0)
-  const prices = product.variants.map((v) => v.price).filter((p): p is number => p !== null)
-  const priceLabel =
-    prices.length === 0
-      ? 'Цена по запросу'
-      : hasMultipleVariants && new Set(prices).size > 1
-        ? `от ${formatPrice(Math.min(...prices))}`
-        : formatPrice(prices[0])
-
-  const primaryAttributeEntries = primaryVariant
-    ? getVariantAttributeEntries(primaryVariant, product.category.attributes)
-    : []
+  const image = getProductImage(product)
+  const price = getProductPrice(product)
+  const stock = getProductStock(product)
+  const stockInfo = getStockLabel(stock)
 
   return (
-    <li className="bg-white border border-gray-200 rounded-lg hover:border-gray-300 transition-colors">
-      <div className="flex items-center justify-between gap-4 px-4 py-3">
-        <div className="flex items-center gap-3 min-w-0">
-          <input
-            type="checkbox"
-            checked={selected}
-            onChange={() => onToggleSelect(product.id)}
-            className="shrink-0"
-          />
-          {firstVariantImage ? (
-            <img
-              src={firstVariantImage.url}
-              alt=""
-              className="w-10 h-10 object-cover rounded-md border border-gray-200 shrink-0"
+    <div
+      className={`rounded-2xl bg-white ring-1 ring-black/[0.04] shadow-sm transition ${
+        selected ? 'ring-2 ring-[#28394c]/20' : ''
+      }`}
+    >
+      <div className="p-4 sm:p-5">
+        <div className="flex items-start gap-4">
+          <label className="mt-1 shrink-0 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={selected}
+              onChange={() => onSelect(product.id)}
+              className="h-4 w-4 rounded border-[#cbd1d8] text-[#28394c] focus:ring-[#28394c]/20"
             />
-          ) : (
-            <div className="w-10 h-10 rounded-md border border-gray-200 bg-gray-50 shrink-0" />
-          )}
-          <div className="min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">{product.name}</p>
+          </label>
 
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5 text-xs text-gray-500">
-              <span>{product.category.name}</span>
+          <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-[#f4f5f7] ring-1 ring-black/[0.04]">
+            {image ? (
+              <img
+                src={image}
+                alt={product.name}
+                className="h-full w-full object-contain"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center text-[#a1a8b3]">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  className="h-8 w-8"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M4 16l4.5-4.5a2 2 0 012.828 0L16 16m-2-2l1.5-1.5a2 2 0 012.828 0L20 16M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                  <circle cx="8.5" cy="8.5" r="1.5" />
+                </svg>
+              </div>
+            )}
+          </div>
 
-              {!hasMultipleVariants && primaryVariant && (
-                <span>Артикул: {primaryVariant.sku || '—'}</span>
-              )}
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="truncate text-sm font-semibold text-[#28313d] sm:text-base">
+                    {product.name}
+                  </h3>
 
-              <span className={(hasMultipleVariants ? totalStock : primaryVariant?.stock ?? 0) > 0 ? 'text-green-600' : 'text-gray-400'}>
-                {(hasMultipleVariants ? totalStock : primaryVariant?.stock ?? 0) > 0
-                  ? `В наличии: ${hasMultipleVariants ? totalStock : primaryVariant?.stock}`
-                  : 'Нет в наличии'}
-              </span>
+                  <span className="rounded-lg bg-[#eef1f4] px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-[#687382]">
+                    {product.category.name}
+                  </span>
+                </div>
 
-              <span className="text-gray-900 font-medium">{priceLabel}</span>
+                <p className="mt-1 text-xs text-[#8b949f]">
+                  ID: {product.id}
+                </p>
 
-              {hasMultipleVariants && (
-                <span>
-                  {product.variants.length} {product.variants.length === 1 ? 'исполнение' : 'исполнений'}
+                {product.description && (
+                  <p className="mt-2 line-clamp-2 max-w-3xl text-sm leading-5 text-[#687382]">
+                    {product.description}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex shrink-0 flex-wrap items-center gap-2">
+                <span
+                  className={`rounded-lg px-2.5 py-1.5 text-xs font-semibold ${stockInfo.className}`}
+                >
+                  {stockInfo.label}
                 </span>
-              )}
+
+                <span className="rounded-lg bg-[#f4f5f7] px-2.5 py-1.5 text-xs font-semibold text-[#5f6976]">
+                  {product.variants.length}{' '}
+                  {product.variants.length === 1
+                    ? 'вариант'
+                    : product.variants.length < 5
+                      ? 'варианта'
+                      : 'вариантов'}
+                </span>
+              </div>
             </div>
 
-            {!hasMultipleVariants && primaryAttributeEntries.length > 0 && (
-              <dl className="flex flex-wrap gap-x-4 gap-y-0.5 mt-1 text-xs">
-                {primaryAttributeEntries.map((e, i) => (
-                  <div key={i} className="flex gap-1">
-                    <dt className="text-gray-400">{e.label}:</dt>
-                    <dd className="text-gray-700">{e.value}</dd>
+            <div className="mt-4 flex flex-col gap-3 border-t border-[#edf0f2] pt-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+                <div>
+                  <div className="text-[10px] font-semibold uppercase tracking-wide text-[#8b949f]">
+                    Цена от
                   </div>
-                ))}
-              </dl>
-            )}
+                  <div className="mt-0.5 text-sm font-semibold text-[#28313d]">
+                    {formatPrice(price)}
+                  </div>
+                </div>
 
-            {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
+                <div>
+                  <div className="text-[10px] font-semibold uppercase tracking-wide text-[#8b949f]">
+                    Варианты
+                  </div>
+                  <div className="mt-0.5 text-sm font-semibold text-[#28313d]">
+                    {product.variants.length}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-[10px] font-semibold uppercase tracking-wide text-[#8b949f]">
+                    Остаток
+                  </div>
+                  <div className="mt-0.5 text-sm font-semibold text-[#28313d]">
+                    {stock}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                {product.variants.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setExpanded((value) => !value)}
+                    className="inline-flex h-9 items-center gap-2 rounded-xl bg-[#f4f5f7] px-3 text-xs font-semibold text-[#4f5a67] transition hover:bg-[#e9ecef]"
+                  >
+                    <svg
+                      viewBox="0 0 20 20"
+                      fill="none"
+                      className={`h-4 w-4 transition-transform ${
+                        expanded ? 'rotate-180' : ''
+                      }`}
+                      stroke="currentColor"
+                      strokeWidth="1.7"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M5 7.5l5 5 5-5"
+                      />
+                    </svg>
+                    {expanded ? 'Скрыть' : 'Варианты'}
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => onEdit(product)}
+                  className="inline-flex h-9 items-center gap-2 rounded-xl bg-[#eef1f4] px-3 text-xs font-semibold text-[#28394c] transition hover:bg-[#e3e7eb]"
+                >
+                  <svg
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    className="h-4 w-4"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M13.8 3.2a1.7 1.7 0 012.4 2.4L7 14.8l-3.2.8.8-3.2 7.8-9.2z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      d="M11.8 5.2l3 3"
+                    />
+                  </svg>
+                  Изменить
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => onDuplicate(product)}
+                  className="inline-flex h-9 items-center gap-2 rounded-xl bg-[#f4f5f7] px-3 text-xs font-semibold text-[#4f5a67] transition hover:bg-[#e9ecef]"
+                >
+                  <svg
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    className="h-4 w-4"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                  >
+                    <rect
+                      x="7"
+                      y="7"
+                      width="9"
+                      height="9"
+                      rx="1.5"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M13 7V5.5A1.5 1.5 0 0011.5 4h-6A1.5 1.5 0 004 5.5v6A1.5 1.5 0 005.5 13H7"
+                    />
+                  </svg>
+                  Дублировать
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => onDelete(product)}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[#fff7f7] text-[#b33a3a] ring-1 ring-[#f0d5d5] transition hover:bg-[#ffefef]"
+                  title="Удалить"
+                  aria-label="Удалить товар"
+                >
+                  <svg
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    className="h-4 w-4"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      d="M4 6h12"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      d="M8 3.5h4"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M6 6l.7 10.5h6.6L14 6"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      d="M8.5 9v5M11.5 9v5"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
-
-        <div className="flex items-center gap-3 shrink-0">
-          {hasMultipleVariants && (
-            <button
-              onClick={() => setExpanded((v) => !v)}
-              className="text-gray-400 hover:text-gray-600 p-1"
-              title={expanded ? 'Свернуть' : 'Показать исполнения'}
-            >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className={`transition-transform ${expanded ? 'rotate-180' : ''}`}
-              >
-                <path d="M6 9l6 6 6-6" />
-              </svg>
-            </button>
-          )}
-
-          {confirming ? (
-            <span className="flex items-center gap-2 text-sm">
-              <span className="text-gray-500">Удалить?</span>
-              <button
-                onClick={handleDelete}
-                disabled={isPending}
-                className="text-red-600 font-medium hover:underline disabled:opacity-50"
-              >
-                Да
-              </button>
-              <button onClick={() => setConfirming(false)} className="text-gray-500 hover:underline">
-                Отмена
-              </button>
-            </span>
-          ) : (
-            <>
-              <button onClick={() => onEdit(product)} className="text-sm text-blue-600 hover:underline">
-                Редактировать
-              </button>
-              <button
-                onClick={() => {
-                  setError(null)
-                  setConfirming(true)
-                }}
-                className="text-sm text-red-600 hover:underline"
-              >
-                Удалить
-              </button>
-            </>
-          )}
         </div>
       </div>
 
-      {hasMultipleVariants && expanded && (
-        <div className="divide-y divide-gray-100">
-          {product.variants.map((variant) => (
-            <VariantDetails
-              key={variant.id}
-              variant={variant}
-              categoryAttributes={product.category.attributes}
-              onEdit={() => onEdit(product, variant.id)}
-            />
-          ))}
+      {expanded && product.variants.length > 0 && (
+        <div className="border-t border-[#edf0f2] bg-[#fafbfc] px-4 py-4 sm:px-5">
+          <div className="mb-3 flex items-center justify-between">
+            <div>
+              <h4 className="text-xs font-semibold uppercase tracking-wide text-[#687382]">
+                Варианты товара
+              </h4>
+              <p className="mt-0.5 text-xs text-[#9aa2ac]">
+                SKU, цена, остаток и атрибуты исполнений
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            {product.variants.map((variant) => (
+              <div
+                key={variant.id}
+                className="rounded-xl bg-white p-3 ring-1 ring-black/[0.04]"
+              >
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-sm font-semibold text-[#28313d]">
+                        {variant.name}
+                      </span>
+
+                      {variant.sku && (
+                        <span className="rounded-md bg-[#f4f5f7] px-2 py-1 font-mono text-[10px] text-[#727c88]">
+                          {variant.sku}
+                        </span>
+                      )}
+                    </div>
+
+                    {variant.attributes &&
+                      Object.keys(variant.attributes).length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          {Object.entries(variant.attributes).map(
+                            ([key, value]) => (
+                              <span
+                                key={key}
+                                className="rounded-md bg-[#f4f5f7] px-2 py-1 text-[10px] text-[#6f7985]"
+                              >
+                                {key}: {String(value)}
+                              </span>
+                            )
+                          )}
+                        </div>
+                      )}
+                  </div>
+
+                  <div className="flex shrink-0 items-center gap-4">
+                    <div>
+                      <div className="text-[10px] font-semibold uppercase tracking-wide text-[#9aa2ac]">
+                        Цена
+                      </div>
+                      <div className="mt-0.5 text-sm font-semibold text-[#28313d]">
+                        {formatPrice(variant.price)}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="text-[10px] font-semibold uppercase tracking-wide text-[#9aa2ac]">
+                        Остаток
+                      </div>
+                      <div className="mt-0.5 text-sm font-semibold text-[#28313d]">
+                        {variant.stock}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
-    </li>
+    </div>
   )
 }
 
@@ -327,233 +470,516 @@ export default function ProductList({
   tags: Tag[]
 }) {
   const [creating, setCreating] = useState(false)
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [editingVariantId, setEditingVariantId] = useState<string | null>(null)
-  const [selectedIds, setSelectedIds] = useState<string[]>([])
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null)
-  const [selectedDescendantIds, setSelectedDescendantIds] = useState<string[] | null>(null)
-  const [search, setSearch] = useState('')
-  const [treeCollapsed, setTreeCollapsed] = useState(false)
-  const [sortBy, setSortBy] = useState<'name' | 'stock_asc' | 'stock_desc' | 'price_asc' | 'price_desc'>('name')
+  const [editing, setEditing] = useState<Product | null>(null)
 
-  const editingProduct = products.find((p) => p.id === editingId) ?? null
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
+    null
+  )
+
+  const [search, setSearch] = useState('')
+  const [sort, setSort] = useState<
+    'default' | 'name_asc' | 'name_desc' | 'price_asc' | 'price_desc' | 'stock'
+  >('default')
+
+  const [isPending, startTransition] = useTransition()
 
   const categoryCounts = useMemo(() => {
     const counts: Record<string, number> = {}
-    products.forEach((p) => {
-      counts[p.categoryId] = (counts[p.categoryId] ?? 0) + 1
-    })
+
+    for (const product of products) {
+      counts[product.categoryId] = (counts[product.categoryId] ?? 0) + 1
+    }
+
     return counts
   }, [products])
 
-  function toggleSelect(id: string) {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    )
-  }
+  const selectedCategoryDescendants = useMemo(() => {
+    if (!selectedCategoryId) return null
 
-  function handleCategorySelect(id: string | null, descendantIds: string[] | null) {
-    setSelectedCategoryId(id)
-    setSelectedDescendantIds(descendantIds)
-  }
+    const ids = new Set<string>([selectedCategoryId])
 
-  function getTotalStock(p: Product) {
-    return p.variants.reduce((sum, v) => sum + v.stock, 0)
-  }
+    function collect(parentId: string) {
+      for (const category of categories) {
+        if (category.parentId === parentId) {
+          ids.add(category.id)
+          collect(category.id)
+        }
+      }
+    }
 
-  function getMinPrice(p: Product) {
-    const prices = p.variants.map((v) => v.price).filter((price): price is number => price !== null)
-    return prices.length > 0 ? Math.min(...prices) : null
-  }
+    collect(selectedCategoryId)
+
+    return ids
+  }, [categories, selectedCategoryId])
 
   const filteredProducts = useMemo(() => {
-    let result = products
+    const query = search.trim().toLowerCase()
 
-    if (selectedDescendantIds) {
-      result = result.filter((p) => selectedDescendantIds.includes(p.categoryId))
-    }
+    let result = products.filter((product) => {
+      if (
+        selectedCategoryDescendants &&
+        !selectedCategoryDescendants.has(product.categoryId)
+      ) {
+        return false
+      }
 
-    if (search.trim()) {
-      const q = search.trim().toLowerCase()
-      result = result.filter((p) => {
-        if (p.name.toLowerCase().includes(q)) return true
-        return p.variants.some(
-          (v) => v.sku?.toLowerCase().includes(q) || v.name?.toLowerCase().includes(q)
-        )
-      })
-    }
+      if (!query) return true
+
+      const searchable = [
+        product.name,
+        product.description ?? '',
+        product.category.name,
+        ...product.variants.flatMap((variant) => [
+          variant.name,
+          variant.sku ?? '',
+        ]),
+      ]
+        .join(' ')
+        .toLowerCase()
+
+      return searchable.includes(query)
+    })
 
     result = [...result].sort((a, b) => {
-      switch (sortBy) {
-        case 'stock_asc':
-          return getTotalStock(a) - getTotalStock(b)
-        case 'stock_desc':
-          return getTotalStock(b) - getTotalStock(a)
-        case 'price_asc': {
-          const pa = getMinPrice(a)
-          const pb = getMinPrice(b)
-          if (pa === null) return 1
-          if (pb === null) return -1
-          return pa - pb
-        }
-        case 'price_desc': {
-          const pa = getMinPrice(a)
-          const pb = getMinPrice(b)
-          if (pa === null) return 1
-          if (pb === null) return -1
-          return pb - pa
-        }
-        default:
+      switch (sort) {
+        case 'name_asc':
           return a.name.localeCompare(b.name, 'ru')
+
+        case 'name_desc':
+          return b.name.localeCompare(a.name, 'ru')
+
+        case 'price_asc': {
+          const aPrice = getProductPrice(a)
+          const bPrice = getProductPrice(b)
+
+          if (aPrice === null && bPrice === null) return 0
+          if (aPrice === null) return 1
+          if (bPrice === null) return -1
+
+          return aPrice - bPrice
+        }
+
+        case 'price_desc': {
+          const aPrice = getProductPrice(a)
+          const bPrice = getProductPrice(b)
+
+          if (aPrice === null && bPrice === null) return 0
+          if (aPrice === null) return 1
+          if (bPrice === null) return -1
+
+          return bPrice - aPrice
+        }
+
+        case 'stock':
+          return getProductStock(b) - getProductStock(a)
+
+        default:
+          return 0
       }
     })
 
     return result
-  }, [products, selectedDescendantIds, search, sortBy])
+  }, [
+    products,
+    search,
+    sort,
+    selectedCategoryDescendants,
+  ])
 
-  function toggleSelectAll() {
+  const totalStock = useMemo(
+    () => products.reduce((sum, product) => sum + getProductStock(product), 0),
+    [products]
+  )
+
+  const productsWithStock = useMemo(
+    () =>
+      products.filter((product) => getProductStock(product) > 0).length,
+    [products]
+  )
+
+  const allFilteredSelected =
+    filteredProducts.length > 0 &&
+    filteredProducts.every((product) => selectedIds.includes(product.id))
+
+  function toggleSelect(id: string) {
     setSelectedIds((prev) =>
-      prev.length === filteredProducts.length && filteredProducts.length > 0
-        ? []
-        : filteredProducts.map((p) => p.id)
+      prev.includes(id)
+        ? prev.filter((item) => item !== id)
+        : [...prev, id]
     )
   }
 
-    return (
-    <div className="relative">
-      <aside
-        className={`fixed top-0 h-screen bg-white border-r border-gray-200 overflow-y-auto z-10 transition-all duration-200 ${
-          treeCollapsed ? 'w-12' : 'w-56'
-        }`}
-        style={{ left: 'var(--admin-nav-width, 224px)' }}
-      >
-        <div className="flex items-center justify-between px-2 pt-[68px] pb-2">
-          {!treeCollapsed && (
-            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Категории</span>
-          )}
-          <button
-            onClick={() => setTreeCollapsed((v) => !v)}
-            className="text-gray-400 hover:text-gray-600 p-1 shrink-0"
-            title={treeCollapsed ? 'Развернуть' : 'Свернуть'}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              {treeCollapsed ? <path d="M9 18l6-6-6-6" /> : <path d="M15 18l-6-6 6-6" />}
-            </svg>
-          </button>
+  function toggleSelectAll() {
+    if (allFilteredSelected) {
+      const filteredIds = new Set(filteredProducts.map((product) => product.id))
+
+      setSelectedIds((prev) =>
+        prev.filter((id) => !filteredIds.has(id))
+      )
+
+      return
+    }
+
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+
+      for (const product of filteredProducts) {
+        next.add(product.id)
+      }
+
+      return Array.from(next)
+    })
+  }
+
+  function handleDelete(product: Product) {
+    if (
+      !confirm(
+        `Удалить товар «${product.name}»? Это действие необратимо.`
+      )
+    ) {
+      return
+    }
+
+    startTransition(async () => {
+      await deleteProduct(product.id)
+
+      setSelectedIds((prev) =>
+        prev.filter((id) => id !== product.id)
+      )
+    })
+  }
+
+  function handleDuplicate(product: Product) {
+    startTransition(async () => {
+      await duplicateProduct(product.id)
+    })
+  }
+
+  function handleEdit(product: Product) {
+    setEditing(product)
+  }
+
+  function handleCategorySelect(id: string | null) {
+    setSelectedCategoryId(id)
+    setSelectedIds([])
+  }
+
+  return (
+    <div className="min-h-screen bg-[#f7f8fa] text-[#28313d]">
+      <div className="mx-auto max-w-[1500px] px-4 py-5 sm:px-6 sm:py-6">
+        <div className="mb-6">
+          <div className="mb-3 flex items-center gap-2 text-xs text-[#8a939e]">
+            <span>Каталог</span>
+            <span>/</span>
+            <span className="text-[#5f6976]">Товары</span>
+          </div>
+
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <h1 className="text-xl font-semibold tracking-tight text-[#28313d]">
+                Товары
+              </h1>
+
+              <p className="mt-1 max-w-2xl text-sm leading-5 text-[#7b8592]">
+                Управление товарами, категориями, вариантами, ценами и
+                остатками.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setCreating(true)}
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#28394c] px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-[#1e2a38]"
+            >
+              <svg
+                viewBox="0 0 20 20"
+                fill="none"
+                className="h-4 w-4"
+                stroke="currentColor"
+                strokeWidth="1.7"
+              >
+                <path
+                  strokeLinecap="round"
+                  d="M10 4v12M4 10h12"
+                />
+              </svg>
+              Добавить товар
+            </button>
+          </div>
         </div>
-        {!treeCollapsed && (
-          <div className="px-3 pb-3">
+
+        <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/[0.04]">
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-[#7b8592]">
+              Всего товаров
+            </div>
+
+            <div className="mt-2 text-2xl font-semibold tracking-tight text-[#28313d]">
+              {products.length}
+            </div>
+
+            <div className="mt-1 text-xs text-[#969faa]">
+              В каталоге
+            </div>
+          </div>
+
+          <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/[0.04]">
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-[#7b8592]">
+              Варианты
+            </div>
+
+            <div className="mt-2 text-2xl font-semibold tracking-tight text-[#28313d]">
+              {products.reduce(
+                (sum, product) => sum + product.variants.length,
+                0
+              )}
+            </div>
+
+            <div className="mt-1 text-xs text-[#969faa]">
+              Исполнения товаров
+            </div>
+          </div>
+
+          <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/[0.04]">
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-[#7b8592]">
+              Остаток
+            </div>
+
+            <div className="mt-2 text-2xl font-semibold tracking-tight text-[#28313d]">
+              {totalStock}
+            </div>
+
+            <div className="mt-1 text-xs text-[#969faa]">
+              Единиц на складе
+            </div>
+          </div>
+
+          <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/[0.04]">
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-[#7b8592]">
+              С остатком
+            </div>
+
+            <div className="mt-2 text-2xl font-semibold tracking-tight text-[#28313d]">
+              {productsWithStock}
+            </div>
+
+            <div className="mt-1 text-xs text-[#969faa]">
+              Из {products.length} товаров
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-5 xl:grid-cols-[270px_minmax(0,1fr)]">
+          <aside className="h-fit rounded-2xl bg-white p-3 shadow-sm ring-1 ring-black/[0.04] xl:sticky xl:top-5">
+            <div className="mb-3 px-2 pt-1">
+              <div className="text-[11px] font-semibold uppercase tracking-wide text-[#7b8592]">
+                Категории
+              </div>
+            </div>
+
             <CategoryTree
               categories={categories}
               selectedId={selectedCategoryId}
               onSelect={handleCategorySelect}
               productCounts={categoryCounts}
             />
-          </div>
-        )}
-      </aside>
+          </aside>
 
-      <div className="max-w-5xl mx-auto p-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">Товары</h1>
+          <main className="min-w-0">
+            <div className="mb-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/[0.04]">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+                <div className="relative min-w-0 flex-1">
+                  <svg
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9aa2ac]"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                  >
+                    <circle cx="8.5" cy="8.5" r="5.5" />
+                    <path
+                      strokeLinecap="round"
+                      d="M13 13l4 4"
+                    />
+                  </svg>
 
-        <BulkActionsToolbar
-          selectedIds={selectedIds}
+                  <input
+                    type="text"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Поиск по названию, SKU, описанию..."
+                    className="h-11 w-full rounded-xl border-0 bg-[#f4f5f7] pl-10 pr-3.5 text-sm text-[#28313d] outline-none ring-1 ring-transparent transition placeholder:text-[#a1a8b3] focus:bg-white focus:ring-2 focus:ring-[#28394c]/15"
+                  />
+                </div>
+
+                <select
+                  value={sort}
+                  onChange={(e) =>
+                    setSort(
+                      e.target.value as
+                        | 'default'
+                        | 'name_asc'
+                        | 'name_desc'
+                        | 'price_asc'
+                        | 'price_desc'
+                        | 'stock'
+                    )
+                  }
+                  className="h-11 rounded-xl border-0 bg-[#f4f5f7] px-3.5 text-sm text-[#4f5a67] outline-none ring-1 ring-transparent transition focus:bg-white focus:ring-2 focus:ring-[#28394c]/15"
+                >
+                  <option value="default">По умолчанию</option>
+                  <option value="name_asc">По названию А–Я</option>
+                  <option value="name_desc">По названию Я–А</option>
+                  <option value="price_asc">Сначала дешевле</option>
+                  <option value="price_desc">Сначала дороже</option>
+                  <option value="stock">По остатку</option>
+                </select>
+
+                <button
+                  type="button"
+                  onClick={toggleSelectAll}
+                  disabled={filteredProducts.length === 0}
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#f4f5f7] px-3.5 text-sm font-semibold text-[#4f5a67] transition hover:bg-[#e9ecef] disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <span className="flex h-4 w-4 items-center justify-center rounded border border-[#aeb6c0] bg-white">
+                    {allFilteredSelected && (
+                      <svg
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        className="h-3 w-3 text-[#28394c]"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M3 8l3 3 7-7"
+                        />
+                      </svg>
+                    )}
+                  </span>
+                  {allFilteredSelected
+                    ? 'Снять выбор'
+                    : 'Выбрать все'}
+                </button>
+              </div>
+
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-[#8b949f]">
+                <span>
+                  Показано:{' '}
+                  <span className="font-semibold text-[#5f6976]">
+                    {filteredProducts.length}
+                  </span>{' '}
+                  из {products.length}
+                </span>
+
+                {selectedCategoryId && (
+                  <button
+                    type="button"
+                    onClick={() => handleCategorySelect(null)}
+                    className="font-semibold text-[#28394c] hover:underline"
+                  >
+                    Сбросить категорию
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {selectedIds.length > 0 && (
+              <BulkActionsToolbar
+                selectedIds={selectedIds}
+                categories={categories}
+                brands={brands}
+                tags={tags}
+                onClear={() => setSelectedIds([])}
+              />
+            )}
+
+            {isPending && (
+              <div className="mb-4 rounded-xl bg-white px-4 py-3 text-sm text-[#687382] shadow-sm ring-1 ring-black/[0.04]">
+                Выполняется операция...
+              </div>
+            )}
+
+            {filteredProducts.length === 0 ? (
+              <div className="rounded-2xl bg-white p-8 text-center shadow-sm ring-1 ring-black/[0.04] sm:p-12">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#eef1f4] text-[#7d8792]">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    className="h-7 w-7"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M20 12H4M12 20V4"
+                    />
+                  </svg>
+                </div>
+
+                <h2 className="mt-4 text-base font-semibold text-[#28313d]">
+                  Товары не найдены
+                </h2>
+
+                <p className="mx-auto mt-1 max-w-md text-sm leading-5 text-[#8b949f]">
+                  {search || selectedCategoryId
+                    ? 'Измените параметры поиска или сбросьте фильтры.'
+                    : 'В каталоге пока нет товаров. Добавьте первый товар, чтобы начать работу.'}
+                </p>
+
+                {(search || selectedCategoryId) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearch('')
+                      setSelectedCategoryId(null)
+                    }}
+                    className="mt-5 rounded-xl bg-[#28394c] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1e2a38]"
+                  >
+                    Сбросить фильтры
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {filteredProducts.map((product) => (
+                  <ProductRow
+                    key={product.id}
+                    product={product}
+                    selected={selectedIds.includes(product.id)}
+                    onSelect={toggleSelect}
+                    onEdit={handleEdit}
+                    onDuplicate={handleDuplicate}
+                    onDelete={handleDelete}
+                  />
+                ))}
+              </div>
+            )}
+          </main>
+        </div>
+      </div>
+
+      {creating && (
+        <ProductCreateModal
           categories={categories}
           brands={brands}
           tags={tags}
-          onClear={() => setSelectedIds([])}
+          onClose={() => setCreating(false)}
         />
+      )}
 
-        <div className="flex items-center gap-4 mb-5 bg-white border border-gray-200 rounded-lg p-3">
-          <div className="flex items-center gap-3 shrink-0">
-            {filteredProducts.length > 0 && (
-              <input
-                type="checkbox"
-                checked={selectedIds.length === filteredProducts.length}
-                onChange={toggleSelectAll}
-              />
-            )}
-            <p className="text-sm text-gray-500 whitespace-nowrap">
-              {filteredProducts.length} {filteredProducts.length === 1 ? 'товар' : 'товаров'}
-            </p>
-          </div>
-
-          <div className="relative flex-1">
-            <svg
-              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
-              width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-            >
-              <circle cx="11" cy="11" r="8" />
-              <path d="M21 21l-4.35-4.35" />
-            </svg>
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Поиск по названию или артикулу..."
-              className="w-full border border-gray-300 rounded-lg pl-11 pr-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-            className="border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-900 shrink-0"
-          >
-            <option value="name">По названию</option>
-            <option value="stock_desc">Остаток: сначала больше</option>
-            <option value="stock_asc">Остаток: сначала меньше</option>
-            <option value="price_asc">Цена: сначала дешевле</option>
-            <option value="price_desc">Цена: сначала дороже</option>
-          </select>
-
-          <button
-            onClick={() => setCreating(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 shrink-0"
-          >
-            + Добавить товар
-          </button>
-        </div>
-
-        {filteredProducts.length === 0 ? (
-          <div className="text-center py-16 text-sm text-gray-400 border border-dashed border-gray-200 rounded-lg">
-            {products.length === 0 ? 'Товаров пока нет' : 'Ничего не найдено'}
-          </div>
-        ) : (
-          <ul className="space-y-2">
-            {filteredProducts.map((product) => (
-              <ProductRow
-                key={product.id}
-                product={product}
-                onEdit={(p, variantId) => {
-                  setEditingId(p.id)
-                  setEditingVariantId(variantId ?? null)
-                }}
-                selected={selectedIds.includes(product.id)}
-                onToggleSelect={toggleSelect}
-              />
-            ))}
-          </ul>
-        )}
-
-        {creating && (
-          <ProductCreateModal categories={categories} brands={brands} onClose={() => setCreating(false)} />
-        )}
-
-        {editingProduct && (
-          <ProductEditModal
-            product={editingProduct}
-            categories={categories}
-            brands={brands}
-            tags={tags}
-            initialVariantId={editingVariantId}
-            onClose={() => {
-              setEditingId(null)
-              setEditingVariantId(null)
-            }}
-          />
-        )}
-      </div>
+      {editing && (
+        <ProductEditModal
+          product={editing}
+          categories={categories}
+          brands={brands}
+          tags={tags}
+          onClose={() => setEditing(null)}
+        />
+      )}
     </div>
   )
 }

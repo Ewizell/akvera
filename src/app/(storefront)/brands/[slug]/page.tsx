@@ -16,14 +16,16 @@ export async function generateMetadata({
 
   const brand = await prisma.brand.findUnique({
     where: { slug },
-    select: { name: true },
+    select: { name: true, description: true },
   });
 
   if (!brand) return {};
 
   return {
     title: brand.name,
-    description: `Товары бренда ${brand.name} в каталоге Akvera.`,
+    description: brand.description
+      ? brand.description.replace(/<[^>]*>/g, '').slice(0, 160)
+      : `Товары бренда ${brand.name} в каталоге Akvera.`,
   };
 }
 
@@ -71,6 +73,10 @@ export default async function BrandPage({
         )}
         <h1 className="text-2xl font-semibold">{brand.name}</h1>
       </div>
+
+      {brand.description && (
+        <div className="prose prose-sm max-w-3xl mb-10" dangerouslySetInnerHTML={{ __html: brand.description }} />
+      )}
 
       {brand.products.length === 0 ? (
         <p className="text-gray-500">У этого бренда пока нет товаров.</p>

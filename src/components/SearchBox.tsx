@@ -31,7 +31,10 @@ export default function SearchBox() {
       try {
         const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`)
         const data = await res.json()
-        setSuggestions(data.results ?? [])
+        const unique = Array.from(
+          new Map((data.results ?? []).map((item: Suggestion) => [item.id, item])).values()
+        )
+        setSuggestions(unique)
         setOpen(true)
       } catch {
         setSuggestions([])
@@ -59,32 +62,36 @@ export default function SearchBox() {
   }
 
   return (
-    <div ref={containerRef} className="relative w-full max-w-md">
-      <form onSubmit={handleSubmit} className="flex">
+    <div ref={containerRef} className="relative w-full">
+      <form
+        onSubmit={handleSubmit}
+        className="flex items-center bg-[#f0f0f0] h-11 rounded-xl overflow-hidden shadow-[0px_8px_12px_rgba(15,23,42,0.05)]"
+      >
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => suggestions.length > 0 && setOpen(true)}
-          placeholder="Поиск по названию или артикулу..."
-          className="w-full border rounded-l-lg px-3 py-1.5 text-sm"
+          placeholder="Поиск по категориям, артикулам или брендам..."
+          className="flex-1 min-w-0 bg-transparent pl-3 text-[15px] text-[#475569] placeholder:text-[#969393] outline-none"
         />
-        <button
-          type="submit"
-          className="px-3 py-1.5 bg-black text-white rounded-r-lg text-sm hover:bg-gray-800"
-        >
-          Найти
-        </button>
+<button
+  type="submit"
+  aria-label="Найти"
+  className="flex items-center justify-center h-11 w-11 shrink-0 bg-[#179146] rounded-r-xl hover:bg-[#147a3b]"
+>
+  <Image src="/icons/fi-br-search.svg" alt="" width={16} height={16} />
+</button>
       </form>
 
       {open && suggestions.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-white border rounded-lg shadow-lg z-50 overflow-hidden">
+        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-100 rounded-xl shadow-lg z-50 overflow-hidden">
           {suggestions.map((item) => (
             <Link
               key={item.id}
               href={`/product/${item.slug}`}
               onClick={() => setOpen(false)}
-              className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 border-b last:border-b-0"
+              className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 border-b last:border-b-0 border-gray-100"
             >
               <div className="relative w-10 h-10 shrink-0 bg-gray-100 rounded overflow-hidden">
                 {item.imageUrl ? (
@@ -92,8 +99,8 @@ export default function SearchBox() {
                 ) : null}
               </div>
               <div className="min-w-0">
-                <p className="text-sm text-gray-900 truncate">{item.name}</p>
-                <p className="text-xs text-gray-500">
+                <p className="text-sm text-[#475569] truncate">{item.name}</p>
+                <p className="text-xs text-[#969393]">
                   {item.price ? `${item.price.toLocaleString('ru-RU')} ₽` : 'Цена по запросу'}
                 </p>
               </div>

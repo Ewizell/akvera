@@ -15,11 +15,29 @@ export default async function UsersPage() {
   })
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-5xl mx-auto p-8 text-gray-900">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">Пользователи</h1>
+    <div className="min-h-screen bg-[#f7f8fa]">
+      <div className="mx-auto w-full max-w-6xl p-6">
+        {/* Breadcrumbs */}
+        <div className="mb-7">
+          <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-[#929aa6]">
+            <span>Система</span>
+            <span className="text-[#c4c9cf]">/</span>
+            <span>Пользователи</span>
+          </div>
+
+          <h1 className="mt-1.5 text-xl font-semibold tracking-tight text-[#28313d]">
+            Пользователи
+          </h1>
+
+          <p className="mt-1.5 max-w-3xl text-sm leading-6 text-[#7b8592]">
+            Управление учетными записями пользователей, контактными данными и
+            правами доступа.
+          </p>
+        </div>
+
         <UsersList users={users} />
       </div>
     </div>
   )
 }
+

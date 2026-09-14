@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import Image from 'next/image'
 import { useCart } from '@/lib/cart-context'
 import CartPopup from './CartPopup'
 
@@ -24,29 +25,18 @@ export default function CartButton() {
     <div ref={ref} className="relative">
       <button
         onClick={() => (isOpen ? closeCart() : openCart())}
-        className="relative p-2 text-gray-700 hover:text-black"
+        className="flex flex-col items-center justify-center gap-0.5"
         aria-label="Открыть корзину"
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="22"
-          height="22"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <circle cx="9" cy="21" r="1" />
-          <circle cx="20" cy="21" r="1" />
-          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
-        </svg>
-        {totalCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-black text-white text-[10px] font-medium rounded-full w-4 h-4 flex items-center justify-center">
-            {totalCount > 9 ? '9+' : totalCount}
-          </span>
-        )}
+        <div className="relative">
+          <Image src="/icons/fi-br-shopping-cart.svg" alt="" width={24} height={24} />
+          {totalCount > 0 && (
+            <span className="absolute -top-1 -right-2 inline-flex items-center justify-center rounded-full bg-[#179146] text-white text-[10px] font-medium w-4 h-4">
+              {totalCount > 9 ? '9+' : totalCount}
+            </span>
+          )}
+        </div>
+        <span className="text-[#475569] text-sm font-medium">Корзина</span>
       </button>
       {isOpen && <CartPopup />}
     </div>
