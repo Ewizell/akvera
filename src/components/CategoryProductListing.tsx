@@ -76,37 +76,37 @@ export default async function CategoryProductListing({
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   return (
-    <main className="max-w-7xl mx-auto px-4 py-10">
-      <div className="grid md:grid-cols-[220px_1fr] gap-8">
-        <aside>
-          <CategoryFilterSidebar
-            basePath={basePath}
-            categoryNav={categoryNav}
-            categoryTree={categoryTree}
-            priceRange={priceRange}
-            brands={brands}
-            attributeOptions={attributeOptions}
-            q={q}
-            brand={brand}
-            tags={tags}
-            sort={sort}
-            priceMin={priceMin}
-            priceMax={priceMax}
-            inStock={inStock}
-            attrValues={attrValues}
-            attrRanges={attrRanges}
-          />
-        </aside>
+    <main className="max-w-[1440px] mx-auto px-20 py-10">
+      <Breadcrumbs items={crumbs} />
 
-        <div>
-          <Breadcrumbs items={crumbs} />
-          <div className="flex items-center justify-between mb-8">
-            <h1 className="text-2xl font-semibold">{title}</h1>
-            <Link href={backHref} className="text-sm text-gray-500 hover:underline">
-              ← Назад
-            </Link>
-          </div>
+      <h1 className="font-bold text-[#0f172a] text-[36px] leading-[1.2] mt-3 mb-6">{title}</h1>
 
+      <div className="grid grid-cols-[221px_1fr] gap-8">
+<aside>
+  <p className="font-manrope font-bold text-[#1c2126] text-base mb-4">
+    Найдено: {totalCount} {totalCount === 1 ? "товар" : "товаров"}
+  </p>
+  <div className="h-px bg-[#d9d9d9] mb-4" />
+  <CategoryFilterSidebar
+    basePath={basePath}
+    categoryNav={categoryNav}
+    categoryTree={categoryTree}
+    priceRange={priceRange}
+    brands={brands}
+    attributeOptions={attributeOptions}
+    q={q}
+    brand={brand}
+    tags={tags}
+    sort={sort}
+    priceMin={priceMin}
+    priceMax={priceMax}
+    inStock={inStock}
+    attrValues={attrValues}
+    attrRanges={attrRanges}
+  />
+</aside>
+
+        <div className="min-w-0">
           <CatalogFilterBar allTags={allTags} selectedTagSlugs={tags} basePath={basePath} filters={filters} />
 
           <CatalogGrid
@@ -122,6 +122,12 @@ export default async function CategoryProductListing({
             <p className="text-gray-500 text-center py-20">В этой категории пока нет товаров</p>
           )}
         </div>
+      </div>
+
+      <div className="mt-8 flex justify-end">
+        <Link href={backHref} className="text-sm text-[#475569] hover:underline">
+          ← Назад
+        </Link>
       </div>
     </main>
   );

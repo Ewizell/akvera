@@ -21,7 +21,7 @@ export function ProductGallery({
 
   if (images.length === 0) {
     return (
-      <div className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center text-gray-400">
+      <div className="relative aspect-square bg-gray-100 rounded-[12px] overflow-hidden flex items-center justify-center text-gray-400 w-full max-w-[604px]">
         Нет фото
       </div>
     )
@@ -30,43 +30,46 @@ export function ProductGallery({
   const active = images[activeIndex]
 
   return (
-    <div>
+    <div className="flex gap-[24px] items-start w-full max-w-[604px]">
+      {images.length > 1 && (
+        <div className="relative flex flex-col gap-[16px] shrink-0 w-[80px]">
+          {images.map((img, index) => (
+            <button
+              key={img.id}
+              type="button"
+              onClick={() => setActiveIndex(index)}
+              className="relative"
+            >
+              {index === activeIndex && (
+                <span className="absolute -left-2 top-1/2 -translate-y-1/2 h-[60%] w-[2px] rounded-[4px] bg-[#179146]" />
+              )}
+              <span className="block relative aspect-square h-[64px] rounded-[4px] overflow-hidden bg-gray-100">
+                <Image
+                  src={img.url}
+                  alt={img.alt || productName}
+                  fill
+                  className="object-contain p-1"
+                  sizes="80px"
+                />
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+
       <div
         onClick={() => setIsFullscreen(true)}
-        className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden cursor-zoom-in"
+        className="relative flex-1 aspect-[500/482] bg-white rounded-[12px] overflow-hidden cursor-zoom-in"
       >
         <Image
           src={active.url}
           alt={active.alt || productName}
           fill
           className="object-contain p-6"
-          sizes="(max-width: 768px) 100vw, 50vw"
+          sizes="(max-width: 768px) 100vw, 500px"
           priority
         />
       </div>
-
-      {images.length > 1 && (
-        <div className="mt-4 grid grid-cols-5 gap-2">
-          {images.map((img, index) => (
-            <button
-              key={img.id}
-              type="button"
-              onClick={() => setActiveIndex(index)}
-              className={`relative aspect-square bg-gray-100 rounded overflow-hidden border-2 transition-colors ${
-                index === activeIndex ? 'border-blue-600' : 'border-transparent hover:border-gray-300'
-              }`}
-            >
-              <Image
-                src={img.url}
-                alt={img.alt || productName}
-                fill
-                className="object-contain p-1"
-                sizes="100px"
-              />
-            </button>
-          ))}
-        </div>
-      )}
 
       {isFullscreen && (
         <div

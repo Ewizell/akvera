@@ -5,13 +5,14 @@ import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import type { Metadata } from "next";
 import AddToCartButton from "@/components/AddToCartButton";
-import CompareButton from "@/components/CompareButton";
+import CompareButtonWithLabel from "@/components/CompareButtonWithLabel";
 import { ProductGallery } from "@/components/ProductGallery";
 import { getRelatedVariants, getOtherVariants } from "@/lib/actions/product";
 import { RelatedProductsCarousel } from "@/components/RelatedProductsCarousel";
 import { RecentlyViewedCarousel } from "@/components/RecentlyViewedCarousel";
 import { OtherVariantsTile } from "@/components/OtherVariantsTile";
-import FavoriteButton from "@/components/FavoriteButton";
+import FavoriteButtonWithLabel from "@/components/FavoriteButtonWithLabel";
+import { CopyField } from "@/components/CopyField";
 
 export const revalidate = 3600;
 
@@ -64,7 +65,7 @@ export default async function ProductPage({
   include: {
     product: {
       include: {
-        category: { include: { parent: true } },
+        category: { include: { parent: true, attributes: true } },
         brand: true,
         tags: true,
         documents: { include: { document: true } },
@@ -83,7 +84,11 @@ if (!variant) {
 }
 
 const category = variant.product.category;
-
+const attrValues = variant.attributes as Record<string, unknown> | null;
+const specs = (category?.attributes ?? [])
+  .map((attr) => ({ label: attr.label, value: attrValues?.[attr.key] }))
+  .filter((s) => s.value !== undefined && s.value !== null && s.value !== "");
+  
 const relatedVariants = await getRelatedVariants(
   variant.product.categoryId,
   variant.id
@@ -156,8 +161,8 @@ const crumbs = [
     },
   };
 
-  return (
-    <main className="max-w-6xl mx-auto px-4 py-10">
+    return (
+    <main className="max-w-[1440px] mx-auto px-[80px] py-10">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
@@ -166,125 +171,246 @@ const crumbs = [
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
       />
+
       <Breadcrumbs items={crumbs} />
-      <div className="grid md:grid-cols-2 gap-10">
-        {/* Галерея */}
-        <ProductGallery images={variant.images} productName={variant.product.name} />
 
-        {/* Инфо */}
-      <div>
-        <h1 className="text-2xl font-semibold">{variant.product.name}</h1>
-        {productTags.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-1">
-            {productTags.map((tag) => (
-              <span
-                key={tag.id}
-                className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded"
-              >
-                {tag.name}
-              </span>
-            ))}
-          </div>
-        )}
-        {variant.product.brand && (
-          <Link
-            href={`/brands/${variant.product.brand.slug}`}
-            className="text-sm text-gray-500 mt-1 hover:underline inline-block"
-          >
-            {variant.product.brand.name}
-          </Link>
-        )}
-        {variant.name && (
-          <p className="text-gray-500 mt-1">{variant.name}</p>
-        )}
-
-        <p className="mt-4 text-3xl font-bold">
-          {variant.price
-            ? `${Number(variant.price).toLocaleString("ru-RU")} ₽`
-            : "Цена по запросу"}
-        </p>
-
-        <p className="mt-2 text-sm text-gray-500">
-          {variant.stock > 0 ? "В наличии" : "Под заказ"}
-        </p>
-
-        <AddToCartButton 
-          variantId={variant.id}
-          productName={variant.product.name}
-          variantName={variant.name}
-          slug={variant.product.slug}
-          sku={variant.sku}
-          price={variant.price ? Number(variant.price) : null}
-          image={variant.images[0]?.url || null}
-        />
-        <CompareButton variantId={variant.id} className="mt-3 w-full sm:w-auto" />
-        <FavoriteButton variantId={variant.id} className="mt-3 w-full sm:w-auto" />
-
-        <OtherVariantsTile variants={otherVariants} />
-    </div>
+      <div className="flex items-end justify-between gap-6">
+        <h1 className="flex-1 font-manrope font-bold text-[24px] text-[#1c2126]">
+          {variant.name || variant.product.name}
+        </h1>
       </div>
 
-      {/* Описание — HTML, чтобы можно было вставлять таблицы, списки и т.д. */}
-      {description && (
-        <div className="mt-14 max-w-3xl">
-          <h2 className="text-lg font-semibold mb-4">Описание</h2>
-          <div
-            className="prose prose-sm max-w-none"
-            dangerouslySetInnerHTML={{ __html: description }}
+      {productTags.length > 0 && (
+        <div className="flex flex-wrap gap-1 mt-2">
+          {productTags.map((tag) => (
+            <span key={tag.id} className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
+              {tag.name}
+            </span>
+          ))}
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_1px_328px] gap-[24px] mt-[16px] items-center">
+        <div className="flex gap-[16px] items-center">
+          {variant.sku && <CopyField label="Артикул:" value={variant.sku} />}
+          <CopyField label="Код товара:" value={variant.id} />
+        </div>
+        <div className="hidden lg:block" />
+        <div className="flex gap-[16px] items-center px-[8px]">
+          <FavoriteButtonWithLabel
+            variantId={variant.id}
+            className="text-[14px] font-manrope font-medium text-[#1c2116] cursor-pointer transition-colors duration-200 hover:text-[#179146]"
+          />
+          <CompareButtonWithLabel
+            variantId={variant.id}
+            className="text-[14px] font-manrope font-medium text-[#1c2116] cursor-pointer transition-colors duration-200 hover:text-[#179146]"
           />
         </div>
-      )}
+      </div>
 
-      {applicationAreas.length > 0 && (
-        <div className="mt-10 max-w-3xl">
-          <h2 className="text-lg font-semibold mb-4">Область применения</h2>
-          <ul className="space-y-2">
-            {applicationAreas.map((item, i) => (
-              <li key={i} className="flex items-start gap-2.5 text-sm text-gray-700">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-600 shrink-0 mt-0.5">
-                  <path d="M9 18l6-6-6-6" />
-                </svg>
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_1px_328px] gap-[24px] mt-[24px] items-start">
+        {/* Галерея + характеристики */}
+        <div className="flex flex-col lg:flex-row gap-[24px]">
+          <ProductGallery images={variant.images} productName={variant.product.name} />
+
+          {specs.length > 0 && (
+            <div className="flex flex-col gap-[14px] py-[12px] lg:border-l lg:border-[#f0f0f0] lg:pl-[24px] w-full lg:w-[312px]">
+              <p className="font-manrope font-semibold text-[18px] text-[#1c2126]">
+                Характеристики товара:
+              </p>
+              <div className="flex flex-col gap-[12px]">
+                {specs.map((spec, i) => (
+                  <div key={i} className="flex gap-[6px] items-start">
+                    <span className="bg-[#179146] rounded-[12px] w-[3px] h-[17px] shrink-0" />
+                    <span className="font-manrope font-medium text-[14px] text-[#484f55]">
+                      {spec.label}:
+                    </span>
+                    <span className="font-manrope font-medium text-[14px] text-[#1c2126]">
+                      {String(spec.value)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
-      )}
 
-      {advantages.length > 0 && (
-        <div className="mt-10 max-w-3xl">
-          <h2 className="text-lg font-semibold mb-4">Преимущества</h2>
-          <ul className="space-y-2">
-            {advantages.map((item, i) => (
-              <li key={i} className="flex items-start gap-2.5 text-sm text-gray-700">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-emerald-600 shrink-0 mt-0.5">
-                  <path d="M20 6L9 17l-5-5" />
-                </svg>
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+        {/* Разделитель между характеристиками и блоком цены */}
+        <div className="hidden lg:block bg-[#d9d9d9] w-px self-stretch" />
 
-      {documents.length > 0 && (
-        <div className="mt-10 max-w-3xl">
-          <h2 className="text-lg font-semibold mb-4">Документация</h2>
-          <ul className="space-y-2">
-            {documents.map((doc) => (
-              <li key={doc.id}>
-                <a
-                  href={doc.url}
-                  download
-                  className="inline-flex items-center gap-2 text-blue-600 hover:underline text-sm"
-                >
-                  {doc.title}
+        {/* Цена / действия */}
+        <div className="flex flex-col gap-[16px]">
+          <div className="flex flex-col gap-[4px] px-[8px]">
+            <p className="font-montserrat font-semibold text-[28px] text-[#1c2126]">
+              {variant.price
+                ? `${Number(variant.price).toLocaleString("ru-RU")} ₽`
+                : "Цена по запросу"}
+            </p>
+            <p className="font-manrope font-medium text-[14px] text-[#767d83]">
+              {variant.stock > 0 ? `${variant.stock} шт. на складе` : "Под заказ"}
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-[12px]">
+            <AddToCartButton
+              variantId={variant.id}
+              productName={variant.product.name}
+              variantName={variant.name}
+              slug={variant.product.slug}
+              sku={variant.sku}
+              price={variant.price ? Number(variant.price) : null}
+              image={variant.images[0]?.url || null}
+            />
+            <Link
+              href="/contacts"
+              className="w-full h-[44px] flex items-center justify-center bg-[#f0f0f0] hover:bg-[#e5e5e5] rounded-[12px] font-montserrat font-semibold text-[16px] text-[#1c2116] transition-colors"
+            >
+              Контакты менеджеров
+            </Link>
+          </div>
+
+          <div className="flex flex-col">
+            <div className="bg-[#d9d9d9] h-px w-full" />
+            <div className="flex flex-col gap-[8px] px-[8px] py-[16px]">
+              <div className="flex gap-[4px] items-center">
+                <Image src="/icons/fi-br-info.svg" alt="" width={16} height={16} className="shrink-0" />
+                <p className="font-montserrat font-semibold text-[16px] text-[#1c2116]">Внимание!</p>
+              </div>
+              <p className="font-manrope text-[14px] text-[#1c2116]">
+                Цены носят информационный характер и не являются публичной офертой
+              </p>
+            </div>
+            <div className="bg-[#d9d9d9] h-px w-full" />
+            <div className="flex flex-col gap-[8px] px-[8px] py-[12px] font-manrope text-[14px] text-[#1c2116]">
+              <p>
+                Также вы можете оформить заказ или задать вопрос по{" "}
+                <a href="mailto:info@akvera.ru" className="font-medium text-[#0082b2]">
+                  электронной почте.
                 </a>
-              </li>
-            ))}
-          </ul>
+              </p>
+              <p>
+                Наши{" "}
+                <Link href="/contacts" className="font-medium text-[#0082b2]">
+                  менеджеры
+                </Link>{" "}
+                предоставят информацию по обращению, проконсультируют по продукции и помогут с оформлением заказа.
+              </p>
+            </div>
+          </div>
+
+          <OtherVariantsTile variants={otherVariants} />
         </div>
-      )}
+      </div>
+
+      {/* Нижний блок: описание / применение / преимущества + бренд / документация */}
+      <div className="flex flex-col gap-[6px] mt-[24px]">
+        <div className="bg-[#d9d9d9] h-px w-full" />
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_1px_328px] gap-[24px] pt-[18px]">
+          <div className="flex flex-col gap-[16px] w-full">
+            {description && (
+              <div className="flex flex-col gap-[14px] pb-[12px] px-[12px] text-[#1c2126]">
+                <p className="font-montserrat font-semibold text-[18px]">Описание:</p>
+                <div
+                  className="prose prose-sm max-w-none font-manrope text-[14px]"
+                  dangerouslySetInnerHTML={{ __html: description }}
+                />
+              </div>
+            )}
+
+            {(applicationAreas.length > 0 || advantages.length > 0) && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-[12px] gap-y-[12px]">
+                {applicationAreas.length > 0 && (
+                  <div className="flex flex-col gap-[12px] pb-[12px] pl-[12px]">
+                    <p className="font-montserrat font-semibold text-[18px] text-[#1c2126]">
+                      Область применения:
+                    </p>
+                    <div className="flex flex-col gap-[10px]">
+                      {applicationAreas.map((item, i) => (
+                        <div key={i} className="flex gap-[6px] items-center">
+                          <span className="bg-[#179146] rounded-[12px] w-[3px] h-[17px] shrink-0" />
+                          <span className="font-manrope font-medium text-[14px] text-[#1c2126]">{item}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {advantages.length > 0 && (
+                  <div className="flex flex-col gap-[12px] pb-[12px] pl-[12px]">
+                    <p className="font-montserrat font-semibold text-[18px] text-[#1c2126]">
+                      Преимущества:
+                    </p>
+                    <div className="flex flex-col gap-[10px]">
+                      {advantages.map((item, i) => (
+                        <div key={i} className="flex gap-[6px] items-start">
+                          <span className="bg-[#179146] rounded-[12px] w-[3px] self-stretch shrink-0" />
+                          <span className="font-manrope font-medium text-[14px] text-[#1c2126]">{item}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="hidden lg:block bg-[#d9d9d9] w-px self-stretch" />
+
+          <div className="flex flex-col gap-[16px]">
+              {variant.product.brand && (
+                <div className="flex flex-col gap-[12px] pt-[12px] px-[7px]">
+                  <div className="flex flex-col gap-[8px] text-[#1c2126]">
+                    <div className="flex font-montserrat font-semibold gap-[4px] text-[16px]">
+                      <span>Бренд:</span>
+                      <span>{variant.product.brand.name}</span>
+                    </div>
+                    {variant.product.brand.description && (
+                      <p className="font-montserrat text-[14px] leading-[1.2]">
+                        {variant.product.brand.description}
+                      </p>
+                    )}
+                  </div>
+                  <Link
+                    href={`/brands/${variant.product.brand.slug}`}
+                    className="h-[44px] flex items-center justify-center bg-[#179146] hover:bg-[#147a3a] rounded-[10px] font-montserrat font-semibold text-[16px] text-white transition-colors"
+                  >
+                    Все товары бренда
+                  </Link>
+                </div>
+              )}
+
+              {documents.length > 0 && (
+                <>
+                  <div className="bg-[#d9d9d9] h-px w-full" />
+                  <div className="flex flex-col gap-[8px] px-[8px]">
+                    <p className="font-montserrat font-semibold text-[16px] text-[#1c2126] px-[8px]">
+                      Документация:
+                    </p>
+                    <div className="flex flex-col gap-[8px] px-[8px]">
+                      {documents.map((doc) => (
+                        <a
+                          key={doc.id}
+                          href={doc.url}
+                          download
+                          className="flex gap-[6px] items-center"
+                        >
+                          <span className="bg-[#179146] rounded-[12px] w-[3px] h-[17px] shrink-0" />
+                          <span className="flex gap-[4px] items-center font-manrope font-medium text-[14px] text-[#1c2126]">
+                            {doc.title}
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <circle cx="11" cy="11" r="8" />
+                              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                            </svg>
+                          </span>
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+        </div>
+      </div>
 
       <RelatedProductsCarousel variants={relatedVariants} />
 

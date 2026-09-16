@@ -22,10 +22,11 @@ export type CatalogCard = {
   sku: string;
   slug: string;
   name: string;
-  variantName: string | null; // название исполнения, если оно есть — показывается под названием товара
+  variantName: string | null;
   brandName: string | null;
   shortDescription: string | null;
   image: string | null;
+  images: string[]; // ← новое: все картинки варианта, для слайдера в карточке
   price: number | null;
   stock: number;
   attrs: { label: string; value: string }[];
@@ -40,13 +41,13 @@ export const cardInclude = {
       tags: true,
     },
   },
-  images: { orderBy: [{ isMain: "desc" as const }, { sortOrder: "asc" as const }], take: 1 },
+  images: { orderBy: [{ isMain: "desc" as const }, { sortOrder: "asc" as const }] }, // ← убрали take: 1
   tags: true,
 };
 
 export function buildCard(variant: any): CatalogCard {
   const product = variant.product;
-  const image = variant.images[0];
+  const images: string[] = (variant.images ?? []).map((img: any) => img.url);
   const attrSchema = product.category?.attributes ?? [];
   const attrs = attrSchema
     .filter((a: any) => {
@@ -72,7 +73,8 @@ export function buildCard(variant: any): CatalogCard {
     variantName: variant.name || null,
     brandName: product.brand?.name ?? null,
     shortDescription: product.shortDescription ?? null,
-    image: image?.url ?? null,
+    image: images[0] ?? null,
+    images,
     price: variant.price !== null ? Number(variant.price) : null,
     stock: variant.stock,
     attrs,

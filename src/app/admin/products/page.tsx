@@ -74,10 +74,13 @@ export default async function ProductsPage() {
       id: variant.id,
       name: variant.name,
       sku: variant.sku,
+      slug: variant.slug,
+
       price:
         variant.price !== null
           ? Number(variant.price)
           : null,
+
       stock: variant.stock,
 
       attributes:

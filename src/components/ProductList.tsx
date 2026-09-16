@@ -22,7 +22,8 @@ type ProductImage = {
 type ProductVariant = {
   id: string
   name: string
-  sku: string | null
+  sku: string
+  slug: string
   price: number | null
   stock: number
   attributes: Record<string, unknown> | null

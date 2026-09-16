@@ -1,15 +1,16 @@
 'use client'
 
 import { useEffect, useState, useTransition } from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
 import CartCardControl from './CartCardControl'
-import SortDropdown from './SortDropdown'
+import ProductImageHoverSlider from './ProductImageHoverSlider'
 import { loadMoreCatalogProducts } from '@/lib/actions/catalog'
 import type { CatalogFilters } from '@/lib/catalog-query'
 import CompareButton from './CompareButton'
 import CatalogPagination from './CatalogPagination'
 import FavoriteButton from './FavoriteButton'
+import ProductCard from './ProductCard'
+import ProductCardHorizontal from './ProductCardHorizontal'
 
 type CatalogCard = {
   id: string
@@ -21,12 +22,46 @@ type CatalogCard = {
   brandName: string | null
   shortDescription: string | null
   image: string | null
+  images: string[]
   price: number | null
   attrs: { label: string; value: string }[]
   tags: { id: string; name: string; slug: string }[]
 }
 
 const STORAGE_KEY = 'akvera_catalog_view'
+
+const SORT_OPTIONS: { value: string; label: string }[] = [
+  { value: '', label: 'По умолчанию' },
+  { value: 'price_desc', label: 'Сначала дороже' },
+  { value: 'price_asc', label: 'Сначала дешевле' },
+  { value: 'stock', label: 'Сначала в наличии' },
+]
+
+function buildSortHref(basePath: string, filters: CatalogFilters, sort: string) {
+  const params = new URLSearchParams()
+
+  if (filters.q) params.set('q', filters.q)
+  if (filters.brand) params.set('brand', filters.brand)
+  if (filters.tags && filters.tags.length > 0) params.set('tags', filters.tags.join(','))
+  if (sort) params.set('sort', sort)
+  if (filters.priceMin !== undefined) params.set('priceMin', String(filters.priceMin))
+  if (filters.priceMax !== undefined) params.set('priceMax', String(filters.priceMax))
+  if (filters.inStock) params.set('stock', '1')
+  if (filters.attrValues) {
+    for (const [key, values] of Object.entries(filters.attrValues)) {
+      if (values.length > 0) params.set(`attr_${key}`, values.join(','))
+    }
+  }
+  if (filters.attrRanges) {
+    for (const [key, range] of Object.entries(filters.attrRanges)) {
+      if (range.min !== undefined) params.set(`attr_${key}_min`, String(range.min))
+      if (range.max !== undefined) params.set(`attr_${key}_max`, String(range.max))
+    }
+  }
+
+  const qs = params.toString()
+  return qs ? `${basePath}?${qs}` : basePath
+}
 
 export default function CatalogGrid({
   products,
@@ -65,195 +100,82 @@ export default function CatalogGrid({
     localStorage.setItem(STORAGE_KEY, v)
   }
 
+  const currentSort = filters.sort ?? ''
+
   return (
     <div>
-      <div className="flex justify-between items-center mb-4">
-        <SortDropdown currentSort={filters.sort ?? ''} basePath={basePath} filters={filters} />
-        <div className="flex gap-1">
-        <button
-          onClick={() => setViewAndSave('grid')}
-          aria-label="Плиткой"
-          className={`p-2 rounded border ${view === 'grid' ? 'bg-blue-600 text-white border-blue-600' : 'text-gray-500 border-gray-300 hover:bg-gray-50'}`}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <rect x="3" y="3" width="7" height="7" />
-            <rect x="14" y="3" width="7" height="7" />
-            <rect x="3" y="14" width="7" height="7" />
-            <rect x="14" y="14" width="7" height="7" />
-          </svg>
-        </button>
-        <button
-          onClick={() => setViewAndSave('list')}
-          aria-label="Карточкой"
-          className={`p-2 rounded border ${view === 'list' ? 'bg-blue-600 text-white border-blue-600' : 'text-gray-500 border-gray-300 hover:bg-gray-50'}`}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <line x1="4" y1="6" x2="20" y2="6" />
-            <line x1="4" y1="12" x2="20" y2="12" />
-            <line x1="4" y1="18" x2="20" y2="18" />
-          </svg>
-        </button>
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center gap-3">
+          <span className="font-manrope font-bold text-[#1c2126] text-base">Сортировка:</span>
+          <div className="flex items-center gap-6">
+            {SORT_OPTIONS.map((opt) => {
+              const active = opt.value === currentSort
+              return (
+                <Link
+                  key={opt.value}
+                  href={buildSortHref(basePath, filters, opt.value)}
+                  className={`font-manrope text-base pb-1 border-b-2 ${
+                    active
+                      ? 'text-[#1c2126] font-medium border-[#179146]'
+                      : 'text-[#1c2126] font-normal border-transparent hover:border-[#e9e9e9]'
+                  }`}
+                >
+                  {opt.label}
+                </Link>
+              )
+            })}
+          </div>
+        </div>
+
+        <div className="flex gap-2">
+          <button
+            onClick={() => setViewAndSave('grid')}
+            aria-label="Плиткой"
+            className={view === 'grid' ? 'text-[#179146]' : 'text-[#969393] hover:text-[#1c2126]'}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="3" y="3" width="7" height="7" rx="1.5" />
+              <rect x="14" y="3" width="7" height="7" rx="1.5" />
+              <rect x="3" y="14" width="7" height="7" rx="1.5" />
+              <rect x="14" y="14" width="7" height="7" rx="1.5" />
+            </svg>
+          </button>
+          <button
+            onClick={() => setViewAndSave('list')}
+            aria-label="Списком"
+            className={view === 'list' ? 'text-[#179146]' : 'text-[#969393] hover:text-[#1c2126]'}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="4" y1="6" x2="20" y2="6" />
+              <line x1="4" y1="12" x2="20" y2="12" />
+              <line x1="4" y1="18" x2="20" y2="18" />
+            </svg>
+          </button>
         </div>
       </div>
 
       {view === 'grid' ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
           {items.map((product) => (
-            <Link
-              key={product.id}
-              href={`/product/${product.slug}`}
-              className="group border rounded-lg overflow-hidden hover:shadow-md transition-shadow bg-white"
-            >
-              <div className="relative aspect-square bg-gray-100">
-                {product.image ? (
-                  <Image
-                    src={product.image}
-                    alt={product.name}
-                    fill
-                    className="object-contain p-4"
-                    sizes="(max-width: 768px) 50vw, 25vw"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
-                    Нет фото
-                  </div>
-                )}
-              </div>
-              <div className="p-4">
-                {product.brandName && (
-                  <p className="text-xs text-gray-400 mb-1">{product.brandName}</p>
-                )}
-                <h2 className="text-sm font-medium text-gray-900 line-clamp-2 min-h-[2.5rem]">
-                  {product.name}
-                  {product.variantName && (
-                    <span className="block text-xs font-normal text-gray-500">{product.variantName}</span>
-                  )}
-                </h2>
-                {product.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {product.tags.map((tag) => (
-                      <span
-                        key={tag.id}
-                        className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded"
-                      >
-                        {tag.name}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                {product.price ? (
-                  <p className="mt-2 text-base font-semibold">
-                    {product.price.toLocaleString('ru-RU')} ₽
-                  </p>
-                ) : (
-                  <p className="mt-2 text-sm text-gray-400">Цена по запросу</p>
-                )}
-                <CartCardControl
-                  variantId={product.variantId}
-                  productName={product.name}
-                  slug={product.slug}
-                  sku={product.sku}
-                  price={product.price}
-                  image={product.image}
-                />
-                <CompareButton variantId={product.variantId} className="mt-2 w-full" />
-                <FavoriteButton variantId={product.variantId} className="mt-2 w-full" />
-              </div>
-            </Link>
+            <ProductCard key={product.id} product={product} />
           ))}
         </div>
       ) : (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 min-w-0">
           {items.map((product) => (
-            <Link
-              key={product.id}
-              href={`/product/${product.slug}`}
-              className="group border rounded-lg overflow-hidden hover:shadow-md transition-shadow bg-white flex flex-col sm:flex-row w-full"
-            >
-              <div className="relative w-full sm:w-48 aspect-square sm:aspect-auto shrink-0 bg-gray-100">
-                {product.image ? (
-                  <Image
-                    src={product.image}
-                    alt={product.name}
-                    fill
-                    className="object-contain p-4"
-                    sizes="192px"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
-                    Нет фото
-                  </div>
-                )}
-              </div>
-              <div className="p-4 flex-1 flex flex-col sm:flex-row sm:items-center gap-4">
-                <div className="flex-1 min-w-0">
-                  {product.brandName && (
-                    <p className="text-xs text-gray-400 mb-1">{product.brandName}</p>
-                  )}
-                  <h2 className="text-base font-medium text-gray-900">
-                    {product.name}
-                    {product.variantName && (
-                      <span className="block text-sm font-normal text-gray-500">{product.variantName}</span>
-                    )}
-                  </h2>
-                  {product.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {product.tags.map((tag) => (
-                        <span
-                          key={tag.id}
-                          className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded"
-                        >
-                          {tag.name}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  {product.shortDescription && (
-                    <p className="text-sm text-gray-500 mt-1 line-clamp-2">{product.shortDescription}</p>
-                  )}
-                  {product.attrs.length > 0 && (
-                    <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
-                      {product.attrs.map((attr, i) => (
-                        <li key={i}>
-                          <span className="text-gray-400">{attr.label}:</span> {attr.value}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-                <div className="shrink-0 sm:text-right sm:w-40">
-                  {product.price ? (
-                    <p className="text-lg font-semibold">
-                      {product.price.toLocaleString('ru-RU')} ₽
-                    </p>
-                  ) : (
-                    <p className="text-sm text-gray-400">Цена по запросу</p>
-                  )}
-                  <CartCardControl
-                    variantId={product.variantId}
-                    productName={product.name}
-                    slug={product.slug}
-                    sku={product.sku}
-                    price={product.price}
-                    image={product.image}
-                  />
-                  <CompareButton variantId={product.variantId} className="mt-2" />
-                  <FavoriteButton variantId={product.variantId} className="mt-2" />
-                </div>
-              </div>
-            </Link>
+            <ProductCardHorizontal key={product.id} product={product} />
           ))}
         </div>
       )}
 
       {currentPage < totalPages && (
         <div className="flex justify-center mt-8">
-          <button
+                    <button
             onClick={handleLoadMore}
             disabled={isPending}
-            className="px-6 py-2.5 border rounded-lg text-sm hover:bg-gray-50 disabled:opacity-50"
+            className="bg-[#f0f0f0] hover:bg-[#e5e5e5] flex items-center justify-center h-[44px] px-[20px] rounded-[12px] disabled:opacity-50 font-montserrat font-medium text-[15px] text-[#1c2116]"
           >
-            {isPending ? 'Загрузка...' : 'Показать ещё 40'}
+            {isPending ? 'Загрузка...' : 'Показать ещё'}
           </button>
         </div>
       )}

@@ -82,36 +82,38 @@ export default function CatalogPagination({
   }
 
   return (
-    <nav
-      className="flex justify-center items-center gap-1 mt-10"
-      aria-label="Пагинация"
-    >
+        <nav className="flex justify-center items-center gap-[12px] mt-7" aria-label="Пагинация">
       <Link
         href={buildHref(Math.max(1, currentPage - 1))}
         aria-disabled={currentPage === 1}
-        className={`px-3 py-1.5 rounded border text-sm ${
+        className={`shrink-0 ${
           currentPage === 1
-            ? "pointer-events-none opacity-40 border-gray-200 text-gray-400"
-            : "border-gray-300 hover:bg-gray-50"
+            ? "pointer-events-none opacity-30 text-[#1c2126]"
+            : "text-[#1c2126] hover:text-[#179146]"
         }`}
       >
-        ←
+        <svg className="rotate-180" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M6 3l5 5-5 5" />
+        </svg>
       </Link>
 
       {pageItems.map((item) =>
         item === "dots-left" || item === "dots-right" ? (
-          <span key={item} className="px-2 text-sm text-gray-400 select-none">
-            …
+          <span key={item} className="font-manrope text-[14px] text-[#1c2126] select-none">
+            ...
           </span>
+        ) : item === currentPage ? (
+          <div
+            key={item}
+            className="bg-[#179146] flex items-center justify-center rounded-[14px] size-[28px] shrink-0"
+          >
+            <span className="font-manrope text-[14px] text-white">{item}</span>
+          </div>
         ) : (
           <Link
             key={item}
             href={buildHref(item)}
-            className={`px-3 py-1.5 rounded border text-sm ${
-              item === currentPage
-                ? "bg-black text-white border-black"
-                : "border-gray-300 hover:bg-gray-50"
-            }`}
+            className="font-manrope text-[14px] text-[#1c2126] hover:text-[#179146]"
           >
             {item}
           </Link>
@@ -119,17 +121,17 @@ export default function CatalogPagination({
       )}
 
       <Link
-        href={buildHref(
-          Math.min(totalPages, currentPage + 1)
-        )}
+        href={buildHref(Math.min(totalPages, currentPage + 1))}
         aria-disabled={currentPage === totalPages}
-        className={`px-3 py-1.5 rounded border text-sm ${
+        className={`shrink-0 ${
           currentPage === totalPages
-            ? "pointer-events-none opacity-40 border-gray-200 text-gray-400"
-            : "border-gray-300 hover:bg-gray-50"
+            ? "pointer-events-none opacity-30 text-[#1c2126]"
+            : "text-[#1c2126] hover:text-[#179146]"
         }`}
       >
-        →
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M6 3l5 5-5 5" />
+        </svg>
       </Link>
     </nav>
   );

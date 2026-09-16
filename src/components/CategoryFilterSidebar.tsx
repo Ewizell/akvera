@@ -21,26 +21,29 @@ function BrandSelect({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between border rounded px-2 py-1.5 text-gray-900 bg-white hover:bg-gray-50"
+        className="w-full h-[35px] flex items-center justify-between bg-[#e9e9e9] rounded-xl px-2.5 text-sm font-manrope font-medium text-[#1c2126] hover:bg-[#e0e0e0]"
       >
-        <span className="truncate">{currentLabel}</span>
-        <span className={`text-xs text-gray-400 transition-transform shrink-0 ml-1 ${open ? 'rotate-180' : ''}`}>
-          ⌄
-        </span>
+        <span className="truncate underline decoration-from-font">{currentLabel}</span>
+        <svg
+          width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+          className={`shrink-0 ml-1 transition-transform text-[#1c2126] ${open ? 'rotate-180' : ''}`}
+        >
+          <path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
       </button>
 
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute left-0 top-full mt-1 w-full bg-white border rounded-lg shadow-lg py-1 z-20 max-h-64 overflow-y-auto">
+          <div className="absolute left-0 top-full mt-1 w-full bg-white border border-gray-100 rounded-xl shadow-lg py-1 z-20 max-h-64 overflow-y-auto">
             <button
               type="button"
               onClick={() => {
                 onChange(null)
                 setOpen(false)
               }}
-              className={`block w-full text-left px-3 py-1.5 text-sm hover:bg-gray-50 ${
-                !value ? 'text-black font-medium' : 'text-gray-700'
+              className={`block w-full text-left px-3 py-1.5 text-sm font-manrope hover:bg-gray-50 ${
+                !value ? 'text-[#1c2126] font-medium' : 'text-[#767d83]'
               }`}
             >
               Все бренды
@@ -53,8 +56,8 @@ function BrandSelect({
                   onChange(b.slug)
                   setOpen(false)
                 }}
-                className={`block w-full text-left px-3 py-1.5 text-sm hover:bg-gray-50 ${
-                  value === b.slug ? 'text-black font-medium' : 'text-gray-700'
+                className={`block w-full text-left px-3 py-1.5 text-sm font-manrope hover:bg-gray-50 ${
+                  value === b.slug ? 'text-[#1c2126] font-medium' : 'text-[#767d83]'
                 }`}
               >
                 {b.name}
@@ -103,32 +106,32 @@ function CategoryTreeItem({ node, depth = 0 }: { node: CategoryTreeNode; depth?:
 
   return (
     <li>
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1.5">
         {hasChildren ? (
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
-            className="text-gray-400 hover:text-gray-600 shrink-0 w-4 text-xs"
+            className="text-[#969393] hover:text-[#1c2126] shrink-0 w-4 text-xs"
           >
             {open ? '▾' : '▸'}
           </button>
         ) : (
           <span className="w-4 shrink-0" />
         )}
-        <Link href={node.allProductsHref} className="text-gray-700 hover:underline truncate text-sm">
+        <Link href={node.allProductsHref} className="font-manrope text-sm text-[#1c2126] hover:underline truncate">
           {node.name}
         </Link>
-        <span className="text-gray-400 text-xs shrink-0">({node.productCount})</span>
+        <span className="text-[#969393] text-xs shrink-0">({node.productCount})</span>
       </div>
 
       {node.ownProductsHref && (
-        <Link href={node.ownProductsHref} className="ml-5 text-xs text-blue-600 hover:underline">
+        <Link href={node.ownProductsHref} className="ml-5 text-xs text-[#179146] hover:underline font-manrope">
           Товары этого раздела
         </Link>
       )}
 
       {hasChildren && open && (
-        <ul className="ml-4 mt-1 space-y-1.5 border-l border-gray-100 pl-2">
+        <ul className="ml-4 mt-1 space-y-1.5 border-l border-[#e9e9e9] pl-2">
           {node.children.map((child) => (
             <CategoryTreeItem key={child.id} node={child} depth={depth + 1} />
           ))}
@@ -238,42 +241,53 @@ export function CategoryFilterSidebar({
   }
 
   return (
-    <div className="space-y-6 text-sm">
+    
+    <div className="w-[221px] divide-y divide-[#d9d9d9]">
       {/* Категории — плоский список (лист) */}
+      
       {categoryNav && (
-        <div>
-          <Link
-            href={categoryNav.allProductsLink.href}
-            className={`block mb-2 ${
-              categoryNav.activeSlug === null ? 'font-semibold text-black' : 'text-gray-600 hover:underline'
-            }`}
-          >
-            {categoryNav.allProductsLink.label}
-          </Link>
-          <ul className="space-y-1">
+        <div className="pb-6">
+          <h3 className="font-manrope font-bold text-base text-[#1c2126] mb-2">Категория</h3>
+          <div className="flex flex-col gap-2">
+            <Link href={categoryNav.allProductsLink.href} className="flex items-start gap-1.5">
+              <span
+                className={`w-[3px] h-[17px] rounded-xl shrink-0 ${
+                  categoryNav.activeSlug === null ? 'bg-[#179146]' : 'bg-[#969393]'
+                }`}
+              />
+              <span
+                className={`font-manrope text-sm text-[#1c2126] ${
+                  categoryNav.activeSlug === null ? 'font-medium' : 'font-normal'
+                }`}
+              >
+                {categoryNav.allProductsLink.label}
+              </span>
+            </Link>
             {categoryNav.items.map((item) => (
-              <li key={item.id}>
-                <Link
-                  href={item.href}
-                  className={
-                    item.slug === categoryNav.activeSlug
-                      ? 'font-semibold text-black'
-                      : 'text-gray-600 hover:underline'
-                  }
+              <Link key={item.id} href={item.href} className="flex items-start gap-1.5">
+                <span
+                  className={`w-[3px] h-[17px] rounded-xl shrink-0 ${
+                    item.slug === categoryNav.activeSlug ? 'bg-[#179146]' : 'bg-[#969393]'
+                  }`}
+                />
+                <span
+                  className={`font-manrope text-sm text-[#1c2126] ${
+                    item.slug === categoryNav.activeSlug ? 'font-medium' : 'font-normal'
+                  }`}
                 >
                   {item.name}
-                </Link>
-                <span className="text-gray-400 text-xs"> ({item.productCount})</span>
-              </li>
+                </span>
+                <span className="text-[#969393] text-xs shrink-0"> ({item.productCount})</span>
+              </Link>
             ))}
-          </ul>
+          </div>
         </div>
       )}
 
       {/* Категории — раскрывающееся дерево (режим "все товары") */}
       {categoryTree && (
-        <div>
-          <h3 className="font-semibold text-gray-900 mb-2">Категории</h3>
+        <div className="py-6">
+          <h3 className="font-manrope font-bold text-base text-[#1c2126] mb-2">Категории</h3>
           <ul className="space-y-1.5">
             <CategoryTreeItem node={categoryTree} />
           </ul>
@@ -282,8 +296,8 @@ export function CategoryFilterSidebar({
 
       {/* Цена */}
       {priceRange.max > priceRange.min && (
-        <div>
-          <h3 className="font-semibold text-gray-900 mb-2">Цена, ₽</h3>
+        <div className="py-6">
+          <h3 className="font-manrope font-bold text-base text-[#1c2126] mb-2">Цена, ₽</h3>
           <div className="flex items-center gap-2 mb-3">
             <input
               type="number"
@@ -291,21 +305,21 @@ export function CategoryFilterSidebar({
               onChange={(e) => setPriceFrom(e.target.value)}
               onBlur={applyPriceInputs}
               placeholder={String(priceRange.min)}
-              className="w-full border rounded px-2 py-1 text-gray-900"
+              className="w-24 h-[35px] bg-[#e9e9e9] rounded-xl px-2.5 text-sm font-manrope font-medium text-[#1c2126] outline-none"
             />
-            <span className="text-gray-400">—</span>
+            <span className="font-manrope font-bold text-[#1c2126]">—</span>
             <input
               type="number"
               value={priceTo}
               onChange={(e) => setPriceTo(e.target.value)}
               onBlur={applyPriceInputs}
               placeholder={String(priceRange.max)}
-              className="w-full border rounded px-2 py-1 text-gray-900"
+              className="w-24 h-[35px] bg-[#e9e9e9] rounded-xl px-2.5 text-sm font-manrope font-medium text-[#1c2126] outline-none"
             />
           </div>
-          <div className="relative h-1 bg-gray-200 rounded">
+          <div className="relative h-1 bg-[#e9e9e9] rounded">
             <div
-              className="absolute h-1 bg-blue-600 rounded"
+              className="absolute h-1 bg-[#179146] rounded"
               style={{
                 left: `${((sliderFrom - priceRange.min) / (priceRange.max - priceRange.min)) * 100}%`,
                 right: `${100 - ((sliderTo - priceRange.min) / (priceRange.max - priceRange.min)) * 100}%`,
@@ -319,7 +333,7 @@ export function CategoryFilterSidebar({
               onChange={(e) => applySlider(Math.min(Number(e.target.value), sliderTo), sliderTo)}
               onMouseUp={applyPriceInputs}
               onTouchEnd={applyPriceInputs}
-              className="absolute w-full top-1/2 -translate-y-1/2 appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-blue-600 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer"
+              className="absolute w-full top-1/2 -translate-y-1/2 appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-[#179146] [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer"
             />
             <input
               type="range"
@@ -329,7 +343,7 @@ export function CategoryFilterSidebar({
               onChange={(e) => applySlider(sliderFrom, Math.max(Number(e.target.value), sliderFrom))}
               onMouseUp={applyPriceInputs}
               onTouchEnd={applyPriceInputs}
-              className="absolute w-full top-1/2 -translate-y-1/2 appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-blue-600 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer"
+              className="absolute w-full top-1/2 -translate-y-1/2 appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-[#179146] [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer"
             />
           </div>
         </div>
@@ -337,17 +351,17 @@ export function CategoryFilterSidebar({
 
       {/* Бренд */}
       {brands.length > 0 && (
-        <div>
-          <h3 className="font-semibold text-gray-900 mb-2">Бренд</h3>
+        <div className="py-6">
+          <h3 className="font-manrope font-bold text-base text-[#1c2126] mb-2">Бренды</h3>
           <BrandSelect brands={brands} value={brand} onChange={(slug) => router.push(buildHref({ brand: slug }))} />
         </div>
       )}
 
       {/* Наличие */}
-      <div>
-        <h3 className="font-semibold text-gray-900 mb-2">Наличие</h3>
-        <div className="space-y-1.5">
-          <label className="flex items-center gap-2 cursor-pointer group">
+      <div className="py-6">
+        <h3 className="font-manrope font-bold text-base text-[#1c2126] mb-2">Наличие</h3>
+        <div className="space-y-2">
+          <label className="flex items-center gap-1.5 cursor-pointer group">
             <input
               type="radio"
               name="stock"
@@ -355,12 +369,17 @@ export function CategoryFilterSidebar({
               onChange={() => router.push(buildHref({ inStock: null }))}
               className="peer sr-only"
             />
-            <span className="relative w-4 h-4 shrink-0 rounded-full border border-gray-300 peer-checked:border-blue-600 transition-colors">
-              <span className="absolute inset-0.5 rounded-full bg-blue-600 scale-0 peer-checked:scale-100 transition-transform" />
+            <span className="relative w-[17px] h-[17px] shrink-0 rounded-full border-2 border-[#e9e9e9] peer-checked:border-[#179146] transition-colors flex items-center justify-center">
+              <svg
+                viewBox="0 0 16 16" fill="none"
+                className="w-[10px] h-[10px] text-[#179146] opacity-0 peer-checked:opacity-100 transition-opacity"
+              >
+                <path d="M3 8l3 3 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
             </span>
-            <span className="text-gray-900">Все товары</span>
+            <span className="font-manrope text-sm text-[#1c2126]">Все товары</span>
           </label>
-          <label className="flex items-center gap-2 cursor-pointer group">
+          <label className="flex items-center gap-1.5 cursor-pointer group">
             <input
               type="radio"
               name="stock"
@@ -368,28 +387,33 @@ export function CategoryFilterSidebar({
               onChange={() => router.push(buildHref({ inStock: true }))}
               className="peer sr-only"
             />
-            <span className="relative w-4 h-4 shrink-0 rounded-full border border-gray-300 peer-checked:border-blue-600 transition-colors">
-              <span className="absolute inset-0.5 rounded-full bg-blue-600 scale-0 peer-checked:scale-100 transition-transform" />
+            <span className="relative w-[17px] h-[17px] shrink-0 rounded-full border-2 border-[#e9e9e9] peer-checked:border-[#179146] transition-colors flex items-center justify-center">
+              <svg
+                viewBox="0 0 16 16" fill="none"
+                className="w-[10px] h-[10px] text-[#179146] opacity-0 peer-checked:opacity-100 transition-opacity"
+              >
+                <path d="M3 8l3 3 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
             </span>
-            <span className="text-gray-900">Только в наличии</span>
+            <span className="font-manrope text-sm text-[#1c2126]">Только в наличии</span>
           </label>
         </div>
       </div>
 
       {/* Динамические атрибуты категории */}
       {attributeOptions.map((attr) => (
-        <div key={attr.key}>
-          <h3 className="font-semibold text-gray-900 mb-2">
+        <div key={attr.key} className="py-6">
+          <h3 className="font-manrope font-bold text-base text-[#1c2126] mb-2">
             {attr.label}
             {attr.fieldType === 'number' && attr.unit ? `, ${attr.unit}` : ''}
           </h3>
 
           {attr.options.length > 0 && (
-            <div className="space-y-1.5 max-h-40 overflow-y-auto">
+            <div className="space-y-2 max-h-40 overflow-y-auto">
               {attr.options.map((opt) => {
                 const checked = (attrValues[attr.key] ?? []).includes(opt)
                 return (
-                  <label key={opt} className="flex items-center gap-2 cursor-pointer">
+                  <label key={opt} className="flex items-center gap-1.5 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={checked}
@@ -397,17 +421,19 @@ export function CategoryFilterSidebar({
                       className="sr-only"
                     />
                     <span
-                      className={`flex items-center justify-center w-4 h-4 shrink-0 rounded border transition-colors ${
-                        checked ? 'bg-blue-600 border-blue-600' : 'border-gray-300'
+                      className={`flex items-center justify-center w-[17px] h-[17px] shrink-0 rounded-[2px] transition-colors ${
+                        checked ? 'bg-[#179146]' : 'bg-[#e9e9e9]'
                       }`}
                     >
                       {checked && (
-                        <svg viewBox="0 0 16 16" fill="none" className="w-full h-full p-0.5 text-white">
+                        <svg viewBox="0 0 16 16" fill="none" className="w-[13px] h-[13px] text-white">
                           <path d="M3 8l3 3 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                       )}
                     </span>
-                    <span className="text-gray-900">{opt}</span>
+                    <span className={`font-manrope text-sm text-[#1c2126] ${checked ? 'underline decoration-from-font' : ''}`}>
+                      {opt}
+                    </span>
                   </label>
                 )
               })}

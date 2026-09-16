@@ -24,7 +24,7 @@ export default function AddToCartButton({
   return (
     <button
       onClick={() => addItem({ variantId, productName, variantName, slug, sku, price, image })}
-      className="mt-6 w-full md:w-auto px-8 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors"
+      className="w-full h-[44px] flex items-center justify-center bg-[#179146] text-white rounded-[12px] font-montserrat font-semibold text-[16px] hover:bg-[#147a3a] transition-colors"
     >
       В корзину
     </button>

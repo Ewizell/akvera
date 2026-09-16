@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useTransition, useRef } from 'react'
+import { useState, useTransition, useRef, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { addImage, deleteImage } from '@/lib/actions/productImage'
 
 type Image = {
@@ -11,13 +12,20 @@ type Image = {
 
 export default function VariantImages({
   variantId,
-  images,
+  images: initialImages,
 }: {
   variantId: string
   images: Image[]
 }) {
+  const [images, setImages] = useState(initialImages)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
+
+  // если родитель прислал новые данные (например, после закрытия/открытия модалки) — синхронизируемся
+  useEffect(() => {
+    setImages(initialImages)
+  }, [initialImages])
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const formRef = useRef<HTMLFormElement>(null)
@@ -26,12 +34,21 @@ export default function VariantImages({
     startTransition(async () => {
       const result = await addImage(variantId, formData)
 
-      if (result.success) {
+      if (result.success && result.image) {
         setError(null)
+
+        setImages((prev) => {
+          const updated = result.resetMain
+            ? prev.map((img) => ({ ...img, isMain: false }))
+            : prev
+          return [...updated, result.image!]
+        })
 
         if (fileInputRef.current) {
           fileInputRef.current.value = ''
         }
+
+        router.refresh()
       } else {
         setError(result.error ?? 'Ошибка загрузки')
       }
@@ -42,7 +59,10 @@ export default function VariantImages({
     startTransition(async () => {
       const result = await deleteImage(id)
 
-      if (!result.success) {
+      if (result.success) {
+        setImages((prev) => prev.filter((img) => img.id !== id))
+        router.refresh()
+      } else {
         setError(result.error ?? 'Ошибка удаления')
       }
     })

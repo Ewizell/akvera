@@ -22,7 +22,7 @@ export async function addImage(variantId: string, formData: FormData) {
     })
   }
 
-  await prisma.productImage.create({
+  const image = await prisma.productImage.create({
     data: {
       variantId,
       url: uploadResult.url,
@@ -31,7 +31,7 @@ export async function addImage(variantId: string, formData: FormData) {
   })
 
   revalidatePath('/admin/products')
-  return { success: true }
+  return { success: true, image, resetMain: isMain }
 }
 
 export async function deleteImage(id: string) {
@@ -48,5 +48,5 @@ export async function deleteImage(id: string) {
   await prisma.productImage.delete({ where: { id } })
 
   revalidatePath('/admin/products')
-  return { success: true }
+  return { success: true, id }
 }
