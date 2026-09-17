@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { updateProduct } from '@/lib/actions/product'
 import {
   createVariant,
@@ -910,6 +911,7 @@ function VariantRow({
   allTags: Tag[]
   startEditing?: boolean
 }) {
+  const router = useRouter()
   const [editing, setEditing] = useState(
     startEditing ?? false
   )
@@ -930,6 +932,7 @@ function VariantRow({
       if (result.success) {
         setEditing(false)
         setError(null)
+        router.refresh()
       } else {
         setError(
           result.error ?? 'Ошибка сохранения'
@@ -952,7 +955,9 @@ function VariantRow({
         variant.id
       )
 
-      if (!result.success) {
+      if (result.success) {
+        router.refresh()
+      } else {
         setError(
           result.error ?? 'Ошибка удаления'
         )
@@ -1336,6 +1341,7 @@ export default function ProductEditModal({
   onClose: () => void
   initialVariantId?: string | null
 }) {
+  const router = useRouter()
   const [topTab, setTopTab] =
     useState<TopTab>(
       initialVariantId
@@ -1403,6 +1409,7 @@ export default function ProductEditModal({
 
       if (result.success) {
         onClose()
+        router.refresh()
       } else {
         setError(
           'Не удалось сохранить изменения'
@@ -1424,6 +1431,7 @@ export default function ProductEditModal({
         setAddError(null)
         setAddFormKey((k) => k + 1)
         setAddingVariant(false)
+        router.refresh()
       } else {
         setAddError(
           result.error ?? 'Ошибка добавления'

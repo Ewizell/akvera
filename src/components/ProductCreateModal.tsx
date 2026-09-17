@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { createProduct } from '@/lib/actions/product'
 import { slugify } from '@/lib/slugify'
 import StringListEditor from './StringListEditor'
@@ -83,6 +84,7 @@ export default function ProductCreateModal({
   brands: Brand[]
   onClose: () => void
 }) {
+  const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
   const [name, setName] = useState('')
@@ -126,6 +128,7 @@ export default function ProductCreateModal({
 
       if (result.success) {
         onClose()
+        router.refresh()
       } else {
         setError(result.error ?? 'Ошибка создания')
       }

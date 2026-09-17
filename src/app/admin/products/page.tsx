@@ -15,6 +15,11 @@ export default async function ProductsPage() {
             },
           },
           brand: true,
+          documents: {
+            include: {
+              document: true,
+            },
+          },
           variants: {
             orderBy: {
               createdAt: 'asc',
@@ -25,7 +30,12 @@ export default async function ProductsPage() {
                   sortOrder: 'asc',
                 },
               },
-              documents: true,
+              documents: {
+                include: {
+                  document: true,
+                },
+              },
+              tags: true,
             },
           },
           tags: true,
@@ -57,6 +67,9 @@ export default async function ProductsPage() {
     categoryId: product.categoryId,
     brandId: product.brandId,
     description: product.description,
+    shortDescription: product.shortDescription,
+    applicationAreas: product.applicationAreas,
+    advantages: product.advantages,
 
     category: {
       name: product.category.name,
@@ -69,6 +82,16 @@ export default async function ProductsPage() {
         }),
       ),
     },
+
+    documents: product.documents.map((doc) => ({
+      id: doc.id,
+      documentId: doc.documentId,
+      document: {
+        title: doc.document.title,
+        type: doc.document.type,
+        url: doc.document.url,
+      },
+    })),
 
     variants: product.variants.map((variant) => ({
       id: variant.id,
@@ -86,16 +109,32 @@ export default async function ProductsPage() {
       attributes:
         variant.attributes &&
         typeof variant.attributes === 'object'
-          ? (variant.attributes as Record<
-              string,
-              unknown
-            >)
+          ? (variant.attributes as Record<string, unknown>)
           : null,
 
+      metaTitle: variant.metaTitle,
+      metaDescription: variant.metaDescription,
+      metaKeywords: variant.metaKeywords,
+      applicationAreas: variant.applicationAreas,
+      advantages: variant.advantages,
+
       images: variant.images.map((image) => ({
+        id: image.id,
         url: image.url,
         isMain: image.isMain,
       })),
+
+      documents: variant.documents.map((doc) => ({
+        id: doc.id,
+        documentId: doc.documentId,
+        document: {
+          title: doc.document.title,
+          type: doc.document.type,
+          url: doc.document.url,
+        },
+      })),
+
+      tagIds: variant.tags.map((tag) => tag.id),
     })),
 
     tagIds: product.tags.map((tag) => tag.id),

@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import ProductCreateModal from './ProductCreateModal'
 import ProductEditModal from './ProductEditModal'
 import BulkActionsToolbar from './BulkActionsToolbar'
@@ -100,6 +101,68 @@ function getProductStock(product: Product) {
   return product.variants.reduce(
     (sum, variant) => sum + (variant.stock || 0),
     0
+  )
+}
+
+function getProductSku(product: Product) {
+  if (product.variants.length !== 1) return null
+  return product.variants[0].sku || null
+}
+
+function CopyButton({ value }: { value: string }) {
+  const [copied, setCopied] = useState(false)
+
+  async function handleCopy(event: React.MouseEvent) {
+    event.stopPropagation()
+
+    try {
+      await navigator.clipboard.writeText(value)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    } catch {
+      // clipboard недоступен — молча игнорируем
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      title="Скопировать артикул"
+      aria-label="Скопировать артикул"
+      className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-[#9aa2ac] transition hover:bg-[#e9ecef] hover:text-[#28394c]"
+    >
+      {copied ? (
+        <svg
+          viewBox="0 0 20 20"
+          fill="none"
+          className="h-3.5 w-3.5 text-[#397653]"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M4 10.5l3.5 3.5L16 5.5"
+          />
+        </svg>
+      ) : (
+        <svg
+          viewBox="0 0 20 20"
+          fill="none"
+          className="h-3.5 w-3.5"
+          stroke="currentColor"
+          strokeWidth="1.6"
+        >
+          <rect x="7" y="7" width="9" height="9" rx="1.5" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M13 7V5.5A1.5 1.5 0 0011.5 4h-6A1.5 1.5 0 004 5.5v6A1.5 1.5 0 005.5 13H7"
+          />
+        </svg>
+      )}
+    </button>
   )
 }
 
@@ -203,9 +266,19 @@ function ProductRow({
                   </span>
                 </div>
 
-                <p className="mt-1 text-xs text-[#8b949f]">
-                  ID: {product.id}
-                </p>
+                <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#8b949f]">
+                  <span>ID: {product.id}</span>
+
+                  {getProductSku(product) && (
+                    <span className="inline-flex items-center gap-1">
+                      Артикул:{' '}
+                      <span className="rounded-md bg-[#f4f5f7] px-1.5 py-0.5 font-mono text-[10px] text-[#5f6976]">
+                        {getProductSku(product)}
+                      </span>
+                      <CopyButton value={getProductSku(product)!} />
+                    </span>
+                  )}
+                </div>
 
                 {product.description && (
                   <p className="mt-2 line-clamp-2 max-w-3xl text-sm leading-5 text-[#687382]">
@@ -407,8 +480,9 @@ function ProductRow({
                       </span>
 
                       {variant.sku && (
-                        <span className="rounded-md bg-[#f4f5f7] px-2 py-1 font-mono text-[10px] text-[#727c88]">
+                        <span className="inline-flex items-center gap-1 rounded-md bg-[#f4f5f7] px-2 py-1 font-mono text-[10px] text-[#727c88]">
                           {variant.sku}
+                          <CopyButton value={variant.sku} />
                         </span>
                       )}
                     </div>
@@ -470,6 +544,7 @@ export default function ProductList({
   brands: Brand[]
   tags: Tag[]
 }) {
+  const router = useRouter()
   const [creating, setCreating] = useState(false)
   const [editing, setEditing] = useState<Product | null>(null)
 
@@ -648,12 +723,15 @@ export default function ProductList({
       setSelectedIds((prev) =>
         prev.filter((id) => id !== product.id)
       )
+
+      router.refresh()
     })
   }
 
   function handleDuplicate(product: Product) {
     startTransition(async () => {
       await duplicateProduct(product.id)
+      router.refresh()
     })
   }
 

@@ -86,26 +86,45 @@ export default function SearchBox() {
 
       {open && suggestions.length > 0 && (
         <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-100 rounded-xl shadow-lg z-50 overflow-hidden">
-          {suggestions.map((item) => (
-            <Link
-              key={item.id}
-              href={`/product/${item.slug}`}
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 border-b last:border-b-0 border-gray-100"
-            >
-              <div className="relative w-10 h-10 shrink-0 bg-gray-100 rounded overflow-hidden">
-                {item.imageUrl ? (
-                  <Image src={item.imageUrl} alt={item.name} fill className="object-contain" sizes="40px" />
-                ) : null}
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm text-[#475569] truncate">{item.name}</p>
-                <p className="text-xs text-[#969393]">
-                  {item.price ? `${item.price.toLocaleString('ru-RU')} ₽` : 'Цена по запросу'}
-                </p>
-              </div>
-            </Link>
-          ))}
+          {suggestions.map((item, index) => {
+            const isBestMatch = index === 0
+
+            return (
+              <Link
+                key={item.id}
+                href={`/product/${item.slug}`}
+                onClick={() => setOpen(false)}
+                className={`flex items-center gap-3 px-3 py-2 border-b last:border-b-0 border-gray-100 ${
+                  isBestMatch
+                    ? ' hover:bg-[#eaf5ee]'
+                    : 'hover:bg-gray-50'
+                }`}
+              >
+                <div
+                  className={`relative w-10 h-10 shrink-0 bg-gray-100 rounded overflow-hidden ${
+                    isBestMatch ? 'ring-2 ring-[#179146]' : ''
+                  }`}
+                >
+                  {item.imageUrl ? (
+                    <Image src={item.imageUrl} alt={item.name} fill className="object-contain" sizes="40px" />
+                  ) : null}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm text-[#475569] truncate">{item.name}</p>
+                    {isBestMatch && (
+                      <span className="shrink-0 rounded-md bg-[#F0F0F0]/10 px-1.5 py-0.5 text-[10px] font-semibold text-[#179146]">
+                        Лучшее совпадение
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-[#969393]">
+                    {item.price ? `${item.price.toLocaleString('ru-RU')} ₽` : 'Цена по запросу'}
+                  </p>
+                </div>
+              </Link>
+            )
+          })}
         </div>
       )}
     </div>

@@ -91,19 +91,27 @@ export async function updateProduct(id: string, formData: FormData) {
   const applicationAreas = parseStringList(formData, 'applicationAreas')
   const advantages = parseStringList(formData, 'advantages')
 
-  await prisma.product.update({
-    where: { id },
-    data: {
-      name,
-      categoryId,
-      description: description || null,
-      shortDescription: shortDescription || null,
-      applicationAreas,
-      advantages,
-      brandId: brandId || null,
-      tags: { set: tagIds.map((id) => ({ id })) },
-    },
-  })
+  try {
+    await prisma.product.update({
+      where: { id },
+      data: {
+        name,
+        categoryId,
+        description: description || null,
+        shortDescription: shortDescription || null,
+        applicationAreas,
+        advantages,
+        brandId: brandId || null,
+        tags: { set: tagIds.map((id) => ({ id })) },
+      },
+    })
+  } catch (error) {
+    console.error('updateProduct error:', error)
+    return {
+      success: false,
+      error: 'Не удалось сохранить изменения товара.',
+    }
+  }
 
   revalidatePath('/admin/products')
   revalidatePath('/category', 'layout')

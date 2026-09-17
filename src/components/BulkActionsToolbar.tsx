@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import {
   bulkDeleteProducts,
   bulkUpdateCategory,
@@ -124,6 +125,7 @@ export default function BulkActionsToolbar({
   tags,
   onClear,
 }: BulkActionsToolbarProps) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   const [modal, setModal] = useState<ModalType>(null);
@@ -179,6 +181,7 @@ export default function BulkActionsToolbar({
     startTransition(async () => {
       await bulkDeleteProducts(selectedIds);
       onClear();
+      router.refresh();
     });
   }
 
@@ -194,6 +197,7 @@ export default function BulkActionsToolbar({
       setModal(null);
       setSelectedOptionId("");
       onClear();
+      router.refresh();
     });
   }
 
@@ -207,6 +211,7 @@ export default function BulkActionsToolbar({
       setModal(null);
       setSelectedOptionId("");
       onClear();
+      router.refresh();
     });
   }
 
@@ -229,6 +234,7 @@ export default function BulkActionsToolbar({
       setModal(null);
       setSelectedTagIds([]);
       onClear();
+      router.refresh();
     });
   }
 

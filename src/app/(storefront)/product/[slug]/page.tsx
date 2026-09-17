@@ -360,9 +360,22 @@ const crumbs = [
               {variant.product.brand && (
                 <div className="flex flex-col gap-[12px] pt-[12px] px-[7px]">
                   <div className="flex flex-col gap-[8px] text-[#1c2126]">
-                    <div className="flex font-montserrat font-semibold gap-[4px] text-[16px]">
-                      <span>Бренд:</span>
-                      <span>{variant.product.brand.name}</span>
+                    <div className="flex items-center justify-between gap-[8px]">
+                      <div className="flex font-montserrat font-semibold gap-[4px] text-[16px]">
+                        <span>Бренд:</span>
+                        <span>{variant.product.brand.name}</span>
+                      </div>
+                      {variant.product.brand.logoUrl && (
+                        <div className="relative w-[60px] h-[60px] shrink-0">
+                          <Image
+                            src={variant.product.brand.logoUrl}
+                            alt={variant.product.brand.name}
+                            fill
+                            className="object-contain"
+                            sizes="40px"
+                          />
+                        </div>
+                      )}
                     </div>
                     {variant.product.brand.description && (
                       <p className="font-montserrat text-[14px] leading-[1.2]">

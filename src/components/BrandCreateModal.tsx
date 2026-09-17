@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState, useTransition } from 'react'
-import { createBrand } from '@/lib/actions/brand'
+import { useEffect, useRef, useState, useTransition } from 'react'
+import { createBrand, uploadBrandLogo } from '@/lib/actions/brand'
 import { slugify } from '@/lib/slugify'
 
 const inputCls =
@@ -20,6 +20,36 @@ export default function BrandCreateModal({
   const [slug, setSlug] = useState('')
   const [slugEdited, setSlugEdited] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const [logoUrl, setLogoUrl] = useState('')
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false)
+  const [logoError, setLogoError] = useState<string | null>(null)
+  const logoInputRef = useRef<HTMLInputElement>(null)
+
+  function handleLogoFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    setLogoError(null)
+    setIsUploadingLogo(true)
+
+    const fd = new FormData()
+    fd.set('file', file)
+
+    uploadBrandLogo(fd).then((result) => {
+      setIsUploadingLogo(false)
+
+      if (result.success && result.url) {
+        setLogoUrl(result.url)
+      } else {
+        setLogoError(result.error ?? 'Не удалось загрузить логотип')
+      }
+
+      if (logoInputRef.current) {
+        logoInputRef.current.value = ''
+      }
+    })
+  }
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -218,21 +248,62 @@ export default function BrandCreateModal({
 
                   {/* Logo */}
                   <div>
-                    <label htmlFor="brand-logo" className={labelCls}>
-                      URL логотипа
+                    <label className={labelCls}>
+                      Логотип
                     </label>
 
                     <input
-                      id="brand-logo"
-                      name="logoUrl"
-                      placeholder="https://example.com/logo.svg"
-                      disabled={isPending}
-                      className={inputCls}
+                      ref={logoInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      disabled={isPending || isUploadingLogo}
+                      onChange={handleLogoFileChange}
                     />
 
-                    <p className="mt-1.5 text-[11px] text-[#929aa6]">
-                      Полный URL изображения логотипа. Поле необязательно.
-                    </p>
+                    <input type="hidden" name="logoUrl" value={logoUrl} />
+
+                    {logoUrl ? (
+                      <div className="flex items-center gap-3 rounded-xl bg-[#fafbfc] p-3 ring-1 ring-[#eef0f2]">
+                        <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white p-1.5 ring-1 ring-[#e3e6ea]">
+                          <img src={logoUrl} alt="" className="h-full w-full object-contain" />
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-medium text-[#596572]">Логотип загружен</p>
+                          <p className="mt-0.5 truncate text-[10px] text-[#929aa6]">{logoUrl}</p>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => setLogoUrl('')}
+                          disabled={isPending || isUploadingLogo}
+                          className="inline-flex h-8 items-center rounded-lg bg-[#f4f5f7] px-2.5 text-xs font-medium text-[#687382] transition hover:bg-[#e9ebee] hover:text-[#28313d] disabled:opacity-50"
+                        >
+                          Убрать
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => logoInputRef.current?.click()}
+                        disabled={isPending || isUploadingLogo}
+                        className="flex h-24 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[#d5d9de] bg-[#fafbfc] text-xs font-medium text-[#89929d] transition hover:border-[#28394c]/40 hover:text-[#596572] disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {isUploadingLogo ? (
+                          <>
+                            <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#89929d]/30 border-t-[#89929d]" />
+                            Загрузка...
+                          </>
+                        ) : (
+                          'Нажмите, чтобы загрузить логотип'
+                        )}
+                      </button>
+                    )}
+
+                    {logoError && (
+                      <p className="mt-1.5 text-[11px] text-[#b33a3a]">{logoError}</p>
+                    )}
                   </div>
 
                   {/* Description */}
