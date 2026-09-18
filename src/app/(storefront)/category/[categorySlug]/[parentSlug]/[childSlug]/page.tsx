@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Breadcrumbs } from "@/components/Breadcrumbs";
+import CategoryTileGrid from "@/components/CategoryTileGrid";
 import CategoryProductListing from "@/components/CategoryProductListing";
 import { parseCatalogSearchParams } from "@/lib/catalog-query";
 import type { CategoryNavData } from "@/components/CategoryFilterSidebar";
@@ -77,38 +77,43 @@ export default async function ChildCategoryPage({
     { label: category.name },
   ];
 
-  // Есть свои подкатегории (третий уровень) — показываем плитку
+    // Есть свои подкатегории (третий уровень) — показываем плитку
   if (category.children.length > 0) {
+    const tileItems = category.children.map((child) => ({
+      slug: child.slug,
+      name: child.name,
+      href: `/category/${parent.slug}/${category.slug}/${child.slug}`,
+      productCount: child._count.products,
+    }));
+
     return (
       <main className="max-w-7xl mx-auto px-4 py-10">
-        <Breadcrumbs items={crumbs} />
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-2xl font-semibold">{category.name}</h1>
-          <div className="flex items-center gap-4">
-            <Link
-              href={`/category/${parent.slug}/${category.slug}/all`}
-              className="text-sm text-blue-600 hover:underline"
-            >
-              Показать все товары →
-            </Link>
-            <Link href={`/category/${parent.slug}`} className="text-sm text-gray-500 hover:underline">
-              ← Назад
-            </Link>
-          </div>
+        <nav className="mb-5 flex flex-wrap items-center gap-3 text-[14px] font-semibold uppercase tracking-[2px] text-[#179146]">
+          {crumbs.map((c, i) => (
+            <span key={i} className="flex items-center gap-3">
+              {c.href ? (
+                <Link href={c.href} className="hover:opacity-80">
+                  {c.label}
+                </Link>
+              ) : (
+                <span>{c.label}</span>
+              )}
+              {i < crumbs.length - 1 && <span>/</span>}
+            </span>
+          ))}
+        </nav>
+
+        <div className="mb-8 flex items-end justify-between">
+          <h1 className="text-[36px] font-bold leading-[1.2] text-[#0f172a]">{category.name}</h1>
+          <Link
+            href={`/category/${parent.slug}/${category.slug}/all`}
+            className="text-sm text-blue-600 hover:underline"
+          >
+            Показать все товары →
+          </Link>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-          {category.children.map((child) => (
-            <Link
-              key={child.id}
-              href={`/category/${parent.slug}/${category.slug}/${child.slug}`}
-              className="border rounded-lg p-4 hover:shadow-md transition-shadow"
-            >
-              <p className="font-medium">{child.name}</p>
-              <p className="text-xs text-gray-400 mt-1">{child._count.products} товаров</p>
-            </Link>
-          ))}
-        </div>
+        <CategoryTileGrid items={tileItems} />
       </main>
     );
   }

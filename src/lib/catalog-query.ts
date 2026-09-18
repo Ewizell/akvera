@@ -453,13 +453,39 @@ export async function buildCategoryTree(
       name: cat.name,
       slug: cat.slug,
       productCount: cat._count.products,
-      // клик по узлу дерева всегда остаётся в режиме "все товары" этой ветки
       allProductsHref: hasChildren ? `${pagePath}/all` : pagePath,
-      // ссылка "товары этого раздела" имеет смысл только когда есть подкатегории
       ownProductsHref: hasChildren ? `${pagePath}/own` : null,
       children,
     };
   }
 
   return build(root, rootAncestorSlugs);
+}
+export type CategoryChildItem = {
+  id: string;
+  name: string;
+  slug: string;
+  href: string;
+  productCount: number;
+};
+
+export async function getCategoryChildren(
+  categoryId: string,
+  pathSlugs: string[] // цепочка slug'ов от корня до текущей категории (для построения href)
+): Promise<CategoryChildItem[]> {
+  const children = await prisma.category.findMany({
+    where: { parentId: categoryId },
+    select: { id: true, name: true, slug: true, _count: { select: { products: true } } },
+  });
+
+  return children
+    .slice()
+    .sort((a, b) => a.name.localeCompare(b.name, "ru"))
+    .map((c) => ({
+      id: c.id,
+      name: c.name,
+      slug: c.slug,
+      productCount: c._count.products,
+      href: `/category/${[...pathSlugs, c.slug].join("/")}`,
+    }));
 }

@@ -90,61 +90,18 @@ export type AttributeFilterOption =
 
 type Brand = { id: string; name: string; slug: string }
 
-export type CategoryTreeNode = {
-  id: string
-  name: string
-  slug: string
-  productCount: number
-  allProductsHref: string
-  ownProductsHref: string | null
-  children: CategoryTreeNode[]
+export type CategoryChildrenData = {
+  showAllHref: string | null
+  items: { id: string; name: string; slug: string; href: string; productCount: number }[]
+  activeSlug: string | null
 }
 
-function CategoryTreeItem({ node, depth = 0 }: { node: CategoryTreeNode; depth?: number }) {
-  const [open, setOpen] = useState(depth === 0)
-  const hasChildren = node.children.length > 0
 
-  return (
-    <li>
-      <div className="flex items-center gap-1.5">
-        {hasChildren ? (
-          <button
-            type="button"
-            onClick={() => setOpen((v) => !v)}
-            className="text-[#969393] hover:text-[#1c2126] shrink-0 w-4 text-xs"
-          >
-            {open ? '▾' : '▸'}
-          </button>
-        ) : (
-          <span className="w-4 shrink-0" />
-        )}
-        <Link href={node.allProductsHref} className="font-manrope text-sm text-[#1c2126] hover:underline truncate">
-          {node.name}
-        </Link>
-        <span className="text-[#969393] text-xs shrink-0">({node.productCount})</span>
-      </div>
-
-      {node.ownProductsHref && (
-        <Link href={node.ownProductsHref} className="ml-5 text-xs text-[#179146] hover:underline font-manrope">
-          Товары этого раздела
-        </Link>
-      )}
-
-      {hasChildren && open && (
-        <ul className="ml-4 mt-1 space-y-1.5 border-l border-[#e9e9e9] pl-2">
-          {node.children.map((child) => (
-            <CategoryTreeItem key={child.id} node={child} depth={depth + 1} />
-          ))}
-        </ul>
-      )}
-    </li>
-  )
-}
 
 export function CategoryFilterSidebar({
   basePath,
   categoryNav,
-  categoryTree,
+  categoryChildren,
   priceRange,
   brands,
   attributeOptions,
@@ -160,7 +117,7 @@ export function CategoryFilterSidebar({
 }: {
   basePath: string
   categoryNav?: CategoryNavData
-  categoryTree?: CategoryTreeNode
+  categoryChildren?: CategoryChildrenData
   priceRange: { min: number; max: number }
   brands: Brand[]
   attributeOptions: AttributeFilterOption[]
@@ -284,13 +241,39 @@ export function CategoryFilterSidebar({
         </div>
       )}
 
-      {/* Категории — раскрывающееся дерево (режим "все товары") */}
-      {categoryTree && (
+      {/* Категории — дочерние разделы текущей категории */}
+      {categoryChildren && categoryChildren.items.length > 0 && (
         <div className="py-6">
-          <h3 className="font-manrope font-bold text-base text-[#1c2126] mb-2">Категории</h3>
-          <ul className="space-y-1.5">
-            <CategoryTreeItem node={categoryTree} />
-          </ul>
+          <h3 className="font-manrope font-bold text-base text-[#1c2126] mb-2">Разделы</h3>
+
+          {categoryChildren.showAllHref && (
+            <Link
+              href={categoryChildren.showAllHref}
+              className="inline-block mb-3 text-sm font-manrope text-[#179146] hover:underline"
+            >
+              Показать все товары раздела
+            </Link>
+          )}
+
+          <div className="flex flex-col gap-2">
+            {categoryChildren.items.map((item) => (
+              <Link key={item.id} href={item.href} className="flex items-start gap-1.5">
+                <span
+                  className={`w-[3px] h-[17px] rounded-xl shrink-0 ${
+                    item.slug === categoryChildren.activeSlug ? 'bg-[#179146]' : 'bg-[#969393]'
+                  }`}
+                />
+                <span
+                  className={`font-manrope text-sm text-[#1c2126] ${
+                    item.slug === categoryChildren.activeSlug ? 'font-medium' : 'font-normal'
+                  }`}
+                >
+                  {item.name}
+                </span>
+                <span className="text-[#969393] text-xs shrink-0"> ({item.productCount})</span>
+              </Link>
+            ))}
+          </div>
         </div>
       )}
 

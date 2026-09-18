@@ -8,8 +8,6 @@ import HeaderAuthLink from "./HeaderAuthLink";
 import CatalogMenu from "./CatalogMenu";
 import { getCategoryTree } from "@/lib/actions/category";
 
-const topCategories = ["Насосы", "Автоматика", "Двигатели"];
-
 export default async function SiteHeader() {
   const categories = await getCategoryTree();
 
@@ -46,7 +44,7 @@ export default async function SiteHeader() {
         </div>
 
         {/* Центральный ряд */}
-        <div className="flex gap-8 items-center w-full">
+        <div className="relative flex gap-8 items-center w-full">
           <Link href="/" className="font-maven-pro font-bold text-[#179146] text-[40px] shrink-0">
             AKVERA
           </Link>
@@ -66,9 +64,12 @@ export default async function SiteHeader() {
 
         {/* Нижний ряд */}
         <nav className="flex items-center justify-between w-full text-[#475569] text-sm font-medium leading-none pt-1 whitespace-nowrap">
-          {topCategories.map((cat) => (
-            <Link key={cat} href={`/category/${cat.toLowerCase()}`}>
-              {cat}
+          {categories.map((cat) => (
+            <Link key={cat.id} href={`/category/${cat.slug}`} className="flex items-center gap-1.5">
+              {cat.iconUrl && (
+                <Image src={cat.iconUrl} alt="" width={18} height={18} className="shrink-0" />
+              )}
+              {cat.name}
             </Link>
           ))}
         </nav>

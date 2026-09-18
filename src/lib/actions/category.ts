@@ -2,6 +2,15 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { uploadImage } from '@/lib/actions/upload'
+
+type CategoryNode = {
+  id: string
+  name: string
+  slug: string
+  iconUrl: string | null
+  children: CategoryNode[]
+}
 
 export async function updateCategory(id: string, formData: FormData) {
   const name = formData.get('name') as string
@@ -9,20 +18,48 @@ export async function updateCategory(id: string, formData: FormData) {
   const parentId = formData.get('parentId') as string
 
   try {
+    let imageUrl: string | undefined
+    let iconUrl: string | undefined
+
+    const imageFile = formData.get('image') as File | null
+    if (imageFile && imageFile.size > 0) {
+      const uploadResult = await uploadImage(formData, 'categories')
+      if (uploadResult.success) {
+        imageUrl = uploadResult.url
+      }
+    }
+
+    const iconFile = formData.get('icon') as File | null
+    if (iconFile && iconFile.size > 0) {
+      const iconFormData = new FormData()
+      iconFormData.set('image', iconFile)
+      const uploadResult = await uploadImage(iconFormData, 'category-icons')
+      if (!uploadResult.success) {
+        return { success: false, error: uploadResult.error ?? 'Не удалось загрузить иконку' }
+      }
+      iconUrl = uploadResult.url
+    }
+
     await prisma.category.update({
       where: { id },
       data: {
         name,
         slug,
-        parentId: parentId || null,
+        parent: parentId ? { connect: { id: parentId } } : { disconnect: true },
+        ...(imageUrl !== undefined ? { imageUrl } : {}),
+        ...(iconUrl !== undefined ? { iconUrl } : {}),
       },
     })
+
     revalidatePath('/admin/categories')
+
     return { success: true }
   } catch (error) {
+    console.error('updateCategory error:', error)
+
     return {
       success: false,
-      error: 'Не удалось сохранить. Проверьте, что название и slug уникальны.',
+      error: error instanceof Error ? error.message : 'Неизвестная ошибка сохранения.',
     }
   }
 }
@@ -33,63 +70,110 @@ export async function createCategory(formData: FormData) {
   const parentId = formData.get('parentId') as string
 
   try {
+    let imageUrl: string | undefined
+    let iconUrl: string | undefined
+
+    const imageFile = formData.get('image') as File | null
+    if (imageFile && imageFile.size > 0) {
+      const uploadResult = await uploadImage(formData, 'categories')
+      if (!uploadResult.success) {
+        return { success: false, error: uploadResult.error ?? 'Не удалось загрузить изображение' }
+      }
+      imageUrl = uploadResult.url
+    }
+
+    const iconFile = formData.get('icon') as File | null
+    if (iconFile && iconFile.size > 0) {
+      const iconFormData = new FormData()
+      iconFormData.set('image', iconFile)
+      const uploadResult = await uploadImage(iconFormData, 'category-icons')
+      if (uploadResult.success) {
+        iconUrl = uploadResult.url
+      }
+    }
+
     await prisma.category.create({
       data: {
         name,
         slug,
-        parentId: parentId || null,
+        ...(parentId ? { parent: { connect: { id: parentId } } } : {}),
+        ...(imageUrl !== undefined ? { imageUrl } : {}),
+        ...(iconUrl !== undefined ? { iconUrl } : {}),
       },
     })
+
     revalidatePath('/admin/categories')
+
     return { success: true }
   } catch (error) {
+    console.error('createCategory error:', error)
+
     return {
       success: false,
-      error: 'Не удалось создать категорию. Проверьте, что название и slug уникальны.',
+      error:
+        'Не удалось создать категорию. Проверьте, что название и slug уникальны.',
     }
   }
 }
 
 export async function deleteCategory(id: string) {
   try {
-    await prisma.category.delete({ where: { id } })
+    await prisma.category.delete({
+      where: { id },
+    })
+
     revalidatePath('/admin/categories')
+
     return { success: true }
   } catch (error) {
+    console.error('deleteCategory error:', error)
+
     return {
       success: false,
-      error: 'Нельзя удалить категорию, у которой есть подкатегории или товары. Сначала удалите или перенесите их.',
+      error:
+        'Нельзя удалить категорию, у которой есть подкатегории или товары. Сначала удалите или перенесите их.',
     }
   }
 }
 
-type CategoryNode = {
-  id: string;
-  name: string;
-  slug: string;
-  children: CategoryNode[];
-};
-
 export async function getCategoryTree(): Promise<CategoryNode[]> {
   const categories = await prisma.category.findMany({
-    orderBy: { name: 'asc' },
-    select: { id: true, name: true, slug: true, parentId: true },
-  });
+    orderBy: {
+      name: 'asc',
+    },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      parentId: true,
+      iconUrl: true,
+    },
+  })
 
   const byId = new Map<string, CategoryNode>(
-    categories.map((c) => [c.id, { ...c, children: [] }])
-  );
+    categories.map((c) => [
+      c.id,
+      {
+        id: c.id,
+        name: c.name,
+        slug: c.slug,
+        iconUrl: c.iconUrl,
+        children: [],
+      },
+    ])
+  )
 
-  const roots: CategoryNode[] = [];
+  const roots: CategoryNode[] = []
 
-  for (const c of categories) {
-    const node = byId.get(c.id)!;
-    if (c.parentId) {
-      byId.get(c.parentId)?.children.push(node);
+  for (const category of categories) {
+    const node = byId.get(category.id)!
+
+    if (category.parentId) {
+      byId.get(category.parentId)?.children.push(node)
     } else {
-      roots.push(node);
+      roots.push(node)
     }
   }
 
-  return roots;
+  return roots
 }

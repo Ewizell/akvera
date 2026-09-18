@@ -31,6 +31,7 @@ export default function CategoryCreateModal({
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [slugEdited, setSlugEdited] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   function handleNameChange(value: string) {
     setName(value);
@@ -42,7 +43,13 @@ export default function CategoryCreateModal({
 
   function handleSubmit(formData: FormData) {
     startTransition(async () => {
-      await createCategory(formData);
+      const result = await createCategory(formData);
+
+      if (!result.success) {
+        setError(result.error ?? "Не удалось создать категорию.");
+        return;
+      }
+
       onClose();
     });
   }
@@ -216,6 +223,42 @@ export default function CategoryCreateModal({
 
               <p className="mt-1.5 text-[11px] text-[#9aa2ad]">
                 Выберите родителя, если это будет подкатегория
+              </p>
+            </div>
+
+            <div>
+              <label htmlFor="category-image" className={labelCls}>
+                Изображение
+              </label>
+
+              <input
+                id="category-image"
+                name="image"
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                className="block w-full text-sm text-[#28313d] file:mr-3 file:rounded-lg file:border-0 file:bg-[#f4f5f7] file:px-3.5 file:py-2 file:text-sm file:font-medium file:text-[#28313d] hover:file:bg-[#eceef0]"
+              />
+
+              <p className="mt-1.5 text-[11px] text-[#9aa2ad]">
+                Будет использоваться как фон карточки категории в каталоге
+              </p>
+            </div>
+
+            <div>
+              <label htmlFor="category-icon" className={labelCls}>
+                Иконка
+              </label>
+
+              <input
+                id="category-icon"
+                name="icon"
+                type="file"
+                accept="image/png,image/svg+xml,image/webp"
+                className="block w-full text-sm text-[#28313d] file:mr-3 file:rounded-lg file:border-0 file:bg-[#f4f5f7] file:px-3.5 file:py-2 file:text-sm file:font-medium file:text-[#28313d] hover:file:bg-[#eceef0]"
+              />
+
+              <p className="mt-1.5 text-[11px] text-[#9aa2ad]">
+                Небольшая иконка для меню категорий в шапке каталога
               </p>
             </div>
           </div>

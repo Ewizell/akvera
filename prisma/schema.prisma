@@ -16,6 +16,8 @@ model Category {
   id         String              @id @default(cuid())
   name       String
   slug       String              @unique
+  imageUrl   String?
+  iconUrl    String?
   attributes CategoryAttribute[]
   products   Product[]
 

@@ -1,13 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Breadcrumbs } from "@/components/Breadcrumbs";
+import CategoryTileGrid from "@/components/CategoryTileGrid";
 import CategoryProductListing from "@/components/CategoryProductListing";
 import {
   parseCatalogSearchParams,
   getCategoryAncestors,
   getDescendantCategoryIds,
-  buildCategoryTree,
+  getCategoryChildren,
 } from "@/lib/catalog-query";
 import type { CategoryNavData } from "@/components/CategoryFilterSidebar";
 import type { Metadata } from "next";
@@ -47,8 +47,7 @@ export default async function CategoryPage({
 
   const last = slug[slug.length - 1];
   const isAll = last === "all";
-  const isOwn = last === "own";
-  const categorySlug = isAll || isOwn ? slug[slug.length - 2] : last;
+  const categorySlug = isAll ? slug[slug.length - 2] : last;
   if (!categorySlug) notFound();
 
   const category = await prisma.category.findUnique({
@@ -65,7 +64,7 @@ export default async function CategoryPage({
   const expectedSlugs = [
     ...ancestors.map((a) => a.slug),
     category.slug,
-    ...(isAll ? ["all"] : isOwn ? ["own"] : []),
+    ...(isAll ? ["all"] : []),
   ];
   if (expectedSlugs.join("/") !== slug.join("/")) {
     notFound();
@@ -88,9 +87,9 @@ export default async function CategoryPage({
   // ── "Все товары" — рекурсивно, с деревом категорий в сайдбаре ──
   if (isAll) {
     const descendantIds = await getDescendantCategoryIds(category.id);
-    const tree = await buildCategoryTree(
+    const children = await getCategoryChildren(
       category.id,
-      ancestors.map((a) => a.slug)
+      [...ancestors.map((a) => a.slug), category.slug]
     );
 
     const crumbs = [
@@ -112,7 +111,11 @@ export default async function CategoryPage({
         page={page}
         crumbs={crumbs}
         backHref={tilePath}
-        categoryTree={tree ?? undefined}
+        categoryChildren={{
+          showAllHref: null, // мы уже на /all — кнопку "показать все" не дублируем
+          items: children,
+          activeSlug: null, // на /all-странице ни один дочерний раздел отдельно не выбран
+        }}
         priceMin={priceMin}
         priceMax={priceMax}
         inStock={inStock}
@@ -126,48 +129,48 @@ export default async function CategoryPage({
     { label: "Главная", href: "/" },
     { label: "Каталог", href: "/catalog" },
     ...ancestorCrumbs,
-    ...(isOwn
-      ? [{ label: category.name, href: tilePath }, { label: "Товары раздела" }]
-      : [{ label: category.name }]),
+    { label: category.name },
   ];
 
-  // ── Плитка подкатегорий (если есть дети и мы не в режиме "own") ──
-  if (category.children.length > 0 && !isOwn) {
+   // ── Плитка подкатегорий (есть дети → всегда тайл, листинг здесь не открывается) ──
+  if (category.children.length > 0) {
+    const tileItems = category.children.map((child) => ({
+      slug: child.slug,
+      name: child.name,
+      href: `${tilePath}/${child.slug}`,
+      productCount: child._count.products,
+    }));
+
     return (
       <main className="max-w-7xl mx-auto px-4 py-10">
-        <Breadcrumbs items={crumbs} />
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-2xl font-semibold">{category.name}</h1>
-          <div className="flex items-center gap-4">
-            <Link href={`${tilePath}/own`} className="text-sm text-blue-600 hover:underline">
-              Товары этого раздела →
-            </Link>
-            <Link href={`${tilePath}/all`} className="text-sm text-blue-600 hover:underline">
-              Показать все товары →
-            </Link>
-            <Link href={parentHref} className="text-sm text-gray-500 hover:underline">
-              ← Назад
-            </Link>
-          </div>
+        <nav className="mb-5 flex flex-wrap items-center gap-3 text-[14px] font-semibold uppercase tracking-[2px] text-[#179146]">
+          {crumbs.map((c, i) => (
+            <span key={i} className="flex items-center gap-3">
+              {c.href ? (
+                <Link href={c.href} className="hover:opacity-80">
+                  {c.label}
+                </Link>
+              ) : (
+                <span>{c.label}</span>
+              )}
+              {i < crumbs.length - 1 && <span>/</span>}
+            </span>
+          ))}
+        </nav>
+
+        <div className="mb-8 flex items-end justify-between">
+          <h1 className="text-[36px] font-bold leading-[1.2] text-[#0f172a]">{category.name}</h1>
+          <Link href={`${tilePath}/all`} className="text-sm text-blue-600 hover:underline">
+            Показать все товары →
+          </Link>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-          {category.children.map((child) => (
-            <Link
-              key={child.id}
-              href={`${tilePath}/${child.slug}`}
-              className="border rounded-lg p-4 hover:shadow-md transition-shadow"
-            >
-              <p className="font-medium">{child.name}</p>
-              <p className="text-xs text-gray-400 mt-1">{child._count.products} товаров</p>
-            </Link>
-          ))}
-        </div>
+        <CategoryTileGrid items={tileItems} />
       </main>
     );
   }
 
-  // ── Лист без подкатегорий, либо просмотр "товаров этого раздела" ветки ──
+  // ── Лист без подкатегорий — единственный случай, когда открывается листинг товаров ──
   const siblingsSource = parent
     ? (
         await prisma.category.findUnique({
@@ -199,15 +202,15 @@ export default async function CategoryPage({
 
   return (
     <CategoryProductListing
-      title={isOwn ? `Товары раздела: ${category.name}` : category.name}
-      basePath={isOwn ? `${tilePath}/own` : tilePath}
+      title={category.name}
+      basePath={tilePath}
       categoryId={category.id}
       brand={brand}
       tags={selectedTagSlugs}
       sort={sort}
       page={page}
       crumbs={crumbs}
-      backHref={isOwn ? tilePath : parentHref}
+      backHref={parentHref}
       categoryNav={categoryNav}
       priceMin={priceMin}
       priceMax={priceMax}

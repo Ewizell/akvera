@@ -18,6 +18,8 @@ type Category = {
   name: string;
   slug: string;
   parentId: string | null;
+  imageUrl: string | null;
+  iconUrl: string | null;
   attributes: Attribute[];
 };
 
@@ -79,13 +81,21 @@ function CategoryRow({
         >
           <div className="flex min-w-0 items-center gap-3">
             <div
-              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
-                depth === 0
+              className={`flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl ${
+                category.imageUrl
+                  ? "bg-[#f1f3f5]"
+                  : depth === 0
                   ? "bg-gradient-to-br from-[#28394c] to-[#3d5570] text-white shadow-sm"
                   : "bg-[#f1f3f5] text-[#687382]"
               }`}
             >
-              {hasChildren ? (
+              {category.imageUrl ? (
+                <img
+                  src={category.imageUrl}
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
+              ) : hasChildren ? (
                 <svg
                   width="17"
                   height="17"

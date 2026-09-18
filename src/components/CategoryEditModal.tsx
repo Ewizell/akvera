@@ -11,6 +11,8 @@ type Category = {
   name: string;
   slug: string;
   parentId: string | null;
+  imageUrl: string | null;
+  iconUrl: string | null;
 };
 
 const inputCls =
@@ -37,7 +39,13 @@ export default function CategoryEditModal({
 
   function handleSubmit(formData: FormData) {
     startTransition(async () => {
-      await updateCategory(category.id, formData);
+      const result = await updateCategory(category.id, formData);
+
+      if (!result.success) {
+        setDeleteError(result.error ?? "Не удалось сохранить категорию.");
+        return;
+      }
+
       onClose();
     });
   }
@@ -144,11 +152,15 @@ export default function CategoryEditModal({
           </button>
         </div>
 
+        {/* FORM */}
         <form action={handleSubmit}>
-          {/* FORM */}
           <div className="space-y-5 px-6 py-6">
+            {/* NAME */}
             <div>
-              <label htmlFor="edit-category-name" className={labelCls}>
+              <label
+                htmlFor="edit-category-name"
+                className={labelCls}
+              >
                 Название
               </label>
 
@@ -162,8 +174,12 @@ export default function CategoryEditModal({
               />
             </div>
 
+            {/* SLUG */}
             <div>
-              <label htmlFor="edit-category-slug" className={labelCls}>
+              <label
+                htmlFor="edit-category-slug"
+                className={labelCls}
+              >
                 Slug
               </label>
 
@@ -186,8 +202,12 @@ export default function CategoryEditModal({
               </p>
             </div>
 
+            {/* PARENT */}
             <div>
-              <label htmlFor="edit-category-parent" className={labelCls}>
+              <label
+                htmlFor="edit-category-parent"
+                className={labelCls}
+              >
                 Родительская категория
               </label>
 
@@ -221,6 +241,66 @@ export default function CategoryEditModal({
                   <path d="m6 9 6 6 6-6" />
                 </svg>
               </div>
+            </div>
+
+            {/* IMAGE */}
+            <div>
+              <label
+                htmlFor="edit-category-image"
+                className={labelCls}
+              >
+                Изображение
+              </label>
+
+              {category.imageUrl && (
+                <img
+                  src={category.imageUrl}
+                  alt=""
+                  className="mb-2 h-20 w-32 rounded-lg object-cover ring-1 ring-[#eef0f2]"
+                />
+              )}
+
+              <input
+                id="edit-category-image"
+                name="image"
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                className="block w-full text-sm text-[#28313d] file:mr-3 file:rounded-lg file:border-0 file:bg-[#f4f5f7] file:px-3.5 file:py-2 file:text-sm file:font-medium file:text-[#28313d] hover:file:bg-[#eceef0]"
+              />
+
+              <p className="mt-1.5 text-[11px] text-[#9aa2ad]">
+                Оставьте пустым, чтобы не менять текущее изображение
+              </p>
+            </div>
+
+            {/* ICON */}
+            <div>
+              <label
+                htmlFor="edit-category-icon"
+                className={labelCls}
+              >
+                Иконка
+              </label>
+
+              {category.iconUrl && (
+                <img
+                  src={category.iconUrl}
+                  alt=""
+                  className="mb-2 h-10 w-10 rounded-lg object-contain ring-1 ring-[#eef0f2]"
+                />
+              )}
+
+              <input
+                id="edit-category-icon"
+                name="icon"
+                type="file"
+                accept="image/png,image/svg+xml,image/webp"
+                className="block w-full text-sm text-[#28313d] file:mr-3 file:rounded-lg file:border-0 file:bg-[#f4f5f7] file:px-3.5 file:py-2 file:text-sm file:font-medium file:text-[#28313d] hover:file:bg-[#eceef0]"
+              />
+
+              <p className="mt-1.5 text-[11px] text-[#9aa2ad]">
+                Оставьте пустым, чтобы не менять текущую иконку
+              </p>
             </div>
 
             {/* ERROR */}
