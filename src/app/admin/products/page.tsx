@@ -46,6 +46,9 @@ export default async function ProductsPage() {
         orderBy: {
           name: 'asc',
         },
+        include: {
+          attributes: true,
+        },
       }),
 
       prisma.brand.findMany({
@@ -75,6 +78,7 @@ export default async function ProductsPage() {
       name: product.category.name,
       attributes: product.category.attributes.map(
         (attribute) => ({
+          id: attribute.id,
           key: attribute.key,
           label: attribute.label,
           fieldType: attribute.fieldType,
@@ -110,7 +114,7 @@ export default async function ProductsPage() {
         variant.attributes &&
         typeof variant.attributes === 'object'
           ? (variant.attributes as Record<string, unknown>)
-          : null,
+          : {},
 
       metaTitle: variant.metaTitle,
       metaDescription: variant.metaDescription,

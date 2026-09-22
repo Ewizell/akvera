@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState, useTransition } from 'react'
+import { Suspense, useEffect, useMemo, useState, useTransition } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useFavorites } from '@/lib/favorites-context'
@@ -13,7 +13,7 @@ import { getRecentlyViewed, type RecentlyViewedItem } from '@/lib/recently-viewe
 import { getFavoritesRecommendations } from '@/lib/actions/favorites-recommendations'
 import type { CarouselVariant } from '@/components/CarouselProductCard'
 
-export default function FavoritesPage() {
+function FavoritesContent() {
   const { variantIds, clear } = useFavorites()
   const [items, setItems] = useState<CatalogCard[]>([])
   const [isPending, startTransition] = useTransition()
@@ -26,6 +26,7 @@ export default function FavoritesPage() {
       setItems([])
       return
     }
+
     startTransition(async () => {
       const data = await getFavoriteVariants(variantIds)
       const order = new Map(variantIds.map((id, i) => [id, i]))
@@ -63,7 +64,11 @@ useEffect(() => {
   const priceMax = searchParams.get('priceMax') ? Number(searchParams.get('priceMax')) : undefined
   const inStock = searchParams.get('stock') === '1'
   const tags = searchParams.get('tags')?.split(',').filter(Boolean) ?? []
-  const sort = searchParams.get('sort') ?? ''
+  const sortParam = searchParams.get('sort')
+  const sort: 'price_asc' | 'price_desc' | 'stock' | '' =
+    sortParam === 'price_asc' || sortParam === 'price_desc' || sortParam === 'stock'
+      ? sortParam
+      : ''
 
   const filters = { brand, tags, sort: sort || undefined, priceMin, priceMax, inStock }
 
@@ -175,5 +180,13 @@ useEffect(() => {
       <ProductCarousel title="Вам может понравиться" variants={recommended} />
 <ProductCarousel title="Вы недавно просматривали" variants={recentlyViewed} />
     </main>
+  )
+}
+
+export default function FavoritesPage() {
+  return (
+    <Suspense fallback={<main className="max-w-7xl mx-auto px-4 py-20" />}>
+      <FavoritesContent />
+    </Suspense>
   )
 }

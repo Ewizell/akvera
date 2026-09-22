@@ -121,7 +121,11 @@ export default function DocumentFormModal({
     setSaving(false)
 
     if (!result.success) {
-      setError(result.error ?? 'Ошибка сохранения')
+      setError(
+        'error' in result && typeof result.error === 'string'
+          ? result.error
+          : 'Ошибка сохранения'
+      )
       return
     }
 

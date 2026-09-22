@@ -37,7 +37,7 @@ export async function resolveCategory(pathParts: string[]): Promise<string | nul
   let categoryId: string | null = null;
 
   for (const name of pathParts) {
-    let cat = await prisma.category.findFirst({ where: { name, parentId } });
+    let cat: import('@/generated/prisma/client').Category | null = await prisma.category.findFirst({ where: { name, parentId } });
     if (!cat) {
       const slug = await uniqueSlug(name, async (s) => !!(await prisma.category.findUnique({ where: { slug: s } })));
       cat = await prisma.category.create({ data: { name, slug, parentId } });

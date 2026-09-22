@@ -31,8 +31,12 @@ export default function SearchBox() {
       try {
         const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`)
         const data = await res.json()
-        const unique = Array.from(
-          new Map((data.results ?? []).map((item: Suggestion) => [item.id, item])).values()
+        const unique: Suggestion[] = Array.from(
+          new Map<string, Suggestion>(
+            (data.results ?? []).map(
+              (item: Suggestion): [string, Suggestion] => [item.id, item]
+            )
+          ).values()
         )
         setSuggestions(unique)
         setOpen(true)

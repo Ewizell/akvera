@@ -93,7 +93,7 @@ export default async function CategoryPage({
       [...ancestors.map((a) => a.slug), category.slug]
     );
 
-    const crumbs = [
+    const crumbs: { label: string; href?: string }[] = [
       { label: "Главная", href: "/" },
       { label: "Каталог", href: "/catalog" },
       ...ancestorCrumbs,
@@ -126,7 +126,7 @@ export default async function CategoryPage({
     );
   }
 
-  const crumbs = [
+  const crumbs: { label: string; href?: string }[] = [
     { label: "Главная", href: "/" },
     { label: "Каталог", href: "/catalog" },
     ...ancestorCrumbs,

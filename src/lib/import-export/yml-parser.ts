@@ -30,7 +30,7 @@ export function parseYmlImport(fileContent: string): ImportRow[] {
     const path: string[] = [];
     let cur: string | undefined = categoryId;
     while (cur && catMap.has(cur)) {
-      const node = catMap.get(cur)!;
+      const node: { name: string; parentId?: string } = catMap.get(cur)!;
       path.unshift(node.name);
       cur = node.parentId;
     }

@@ -24,15 +24,20 @@ export default async function CatalogPage({
   const selectedTagSlugs = tagsParam ? tagsParam.split(",").filter(Boolean) : [];
   const sort = sortParam === "price_asc" || sortParam === "price_desc" || sortParam === "stock" ? sortParam : undefined;
 
-  const [{ cards, totalCount }, categories, brands, activeCategory, activeBrand, allTags] = await Promise.all([
-    getCatalogProducts({ category, brand, q, tags: selectedTagSlugs, sort }, page),
+  const activeCategory = category
+    ? await prisma.category.findUnique({ where: { slug: category } })
+    : null
+  const [{ cards, totalCount }, categories, brands, activeBrand, allTags] = await Promise.all([
+    getCatalogProducts(
+      { categoryId: activeCategory?.id, brand, q, tags: selectedTagSlugs, sort },
+      page
+    ),
     prisma.category.findMany({
       where: { parentId: null },
       orderBy: { name: "asc" },
       include: { children: { orderBy: { name: "asc" } } },
     }),
     prisma.brand.findMany({ orderBy: { name: "asc" } }),
-    category ? prisma.category.findUnique({ where: { slug: category } }) : null,
     brand ? prisma.brand.findUnique({ where: { slug: brand } }) : null,
     prisma.tag.findMany({ orderBy: { name: "asc" } }),
   ]);
@@ -150,18 +155,31 @@ export default async function CatalogPage({
           <CatalogFilterBar
             allTags={allTags}
             selectedTagSlugs={selectedTagSlugs}
-            currentSort={sort ?? ""}
-            category={category}
-            brand={brand}
-            q={q}
+            basePath="/category"
+            filters={{
+              categoryId: activeCategory?.id,
+              categorySlug: category,
+              brand,
+              q,
+              tags: selectedTagSlugs,
+              sort,
+            }}
           />
 
           <CatalogGrid
             key={`${category ?? ""}|${brand ?? ""}|${q ?? ""}|${selectedTagSlugs.join(",")}|${sort ?? ""}|${page}`}
             products={cards}
-            filters={{ category, brand, q, tags: selectedTagSlugs, sort }}
+            filters={{
+              categoryId: activeCategory?.id,
+              categorySlug: category,
+              brand,
+              q,
+              tags: selectedTagSlugs,
+              sort,
+            }}
             page={page}
             totalPages={totalPages}
+            basePath="/category"
           />
 
           {totalCount === 0 && (
@@ -178,11 +196,15 @@ export default async function CatalogPage({
           <CatalogPagination
             currentPage={page}
             totalPages={totalPages}
-            category={category}
-            brand={brand}
-            q={q}
-            tags={selectedTagSlugs}
-            sort={sort}
+            basePath="/category"
+            filters={{
+              categoryId: activeCategory?.id,
+              categorySlug: category,
+              brand,
+              q,
+              tags: selectedTagSlugs,
+              sort,
+            }}
           />
           )}
         </div>

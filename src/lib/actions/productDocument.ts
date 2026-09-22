@@ -16,13 +16,11 @@ export async function addDocument(variantId: string, formData: FormData) {
   const title = formData.get('title') as string
   const type = formData.get('type') as string
 
-  await prisma.productDocument.create({
-    data: {
-      variantId,
-      title,
-      type,
-      url: uploadResult.url,
-    },
+  const document = await prisma.document.create({
+    data: { title, type, url: uploadResult.url },
+  })
+  await prisma.productVariantDocument.create({
+    data: { variantId, documentId: document.id },
   })
 
   revalidatePath('/admin/products')
@@ -30,17 +28,26 @@ export async function addDocument(variantId: string, formData: FormData) {
 }
 
 export async function deleteDocument(id: string) {
-  const doc = await prisma.productDocument.findUnique({ where: { id } })
-  if (!doc) {
+  const join = await prisma.productVariantDocument.findUnique({
+    where: { id },
+    include: {
+      document: {
+        include: { _count: { select: { products: true, variants: true } } },
+      },
+    },
+  })
+  if (!join) {
     return { success: false, error: 'Документ не найден' }
   }
 
-  const filePath = path.join(process.cwd(), 'public', doc.url)
-  if (existsSync(filePath)) {
-    await unlink(filePath)
+  await prisma.productVariantDocument.delete({ where: { id } })
+  if (join.document._count.products === 0 && join.document._count.variants === 1) {
+    const filePath = path.join(process.cwd(), 'public', join.document.url)
+    if (existsSync(filePath)) {
+      await unlink(filePath)
+    }
+    await prisma.document.delete({ where: { id: join.document.id } })
   }
-
-  await prisma.productDocument.delete({ where: { id } })
 
   revalidatePath('/admin/products')
   return { success: true }

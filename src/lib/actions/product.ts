@@ -163,7 +163,7 @@ export async function getPopularVariants(excludeVariantId?: string, take = 5) {
       ...(excludeVariantId ? { id: { not: excludeVariantId } } : {}),
     },
     include: {
-      product: { select: { name: true, slug: true } },
+      product: { select: { name: true } },
       images: { orderBy: [{ isMain: 'desc' }, { sortOrder: 'asc' }], take: 1 },
     },
     take,
@@ -434,7 +434,9 @@ export async function applyBulkCategoryChange(
 
         await tx.productVariant.update({
           where: { id: transfer.variantId },
-          data: { attributes: attrs },
+          data: {
+            attributes: attrs as import('@/generated/prisma/client').Prisma.InputJsonObject,
+          },
         })
       }
     })
@@ -482,7 +484,9 @@ export async function applyAttributeTransfers(
 
         await tx.productVariant.update({
           where: { id: transfer.variantId },
-          data: { attributes: attrs },
+          data: {
+            attributes: attrs as import('@/generated/prisma/client').Prisma.InputJsonObject,
+          },
         })
       }
     })

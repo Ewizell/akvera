@@ -5,6 +5,7 @@ export const PAGE_SIZE = 40;
 export type CatalogFilters = {
   categoryId?: string; // точное совпадение — лист/родитель-без-детей, либо конкретная подкатегория
   categoryIds?: string[]; // OR — используется для /category/[slug]/all (родитель + все дети)
+  categorySlug?: string; // URL-фильтр для сохранения текущего маршрута при навигации
   brand?: string;
   q?: string;
   tags?: string[]; // slugs, OR-логика
@@ -24,6 +25,7 @@ export type CatalogCard = {
   name: string;
   variantName: string | null;
   brandName: string | null;
+  brandSlug: string | null;
   shortDescription: string | null;
   image: string | null;
   images: string[]; // ← новое: все картинки варианта, для слайдера в карточке
@@ -72,6 +74,7 @@ export function buildCard(variant: any): CatalogCard {
     name: product.name,
     variantName: variant.name || null,
     brandName: product.brand?.name ?? null,
+    brandSlug: product.brand?.slug ?? null,
     shortDescription: product.shortDescription ?? null,
     image: images[0] ?? null,
     images,

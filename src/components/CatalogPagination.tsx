@@ -54,6 +54,7 @@ export default function CatalogPagination({
     const params = new URLSearchParams();
 
     if (filters.q) params.set("q", filters.q);
+    if (filters.categorySlug) params.set("category", filters.categorySlug);
     if (filters.brand) params.set("brand", filters.brand);
     if (filters.tags && filters.tags.length > 0) params.set("tags", filters.tags.join(","));
     if (filters.sort) params.set("sort", filters.sort);

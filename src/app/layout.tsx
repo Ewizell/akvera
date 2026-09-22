@@ -14,19 +14,19 @@ const geistMono = Geist_Mono({
 });
 
 const mavenPro = Maven_Pro({
-  subsets: ["latin", "cyrillic"],
+  subsets: ["latin"],
   variable: "--font-maven-pro",
   weight: ["500", "600", "700", "800"],
 });
 
 const montserrat = Montserrat({
-  subsets: ["latin", "cyrillic"],
+  subsets: ["latin"],
   variable: "--font-montserrat",
   weight: ["400", "500", "600", "700"],
 });
 
 const manrope = Manrope({
-  subsets: ["latin", "cyrillic"],
+  subsets: ["latin"],
   variable: "--font-manrope",
   weight: ["400", "500", "600", "700"],
 });

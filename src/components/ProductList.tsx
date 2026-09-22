@@ -9,6 +9,7 @@ import CategoryTree from './CategoryTree'
 import { deleteProduct, duplicateProduct } from '@/lib/actions/product'
 
 type CategoryAttributeSchema = {
+  id: string
   key: string
   label: string
   fieldType: string
@@ -16,6 +17,7 @@ type CategoryAttributeSchema = {
 }
 
 type ProductImage = {
+  id: string
   url: string
   isMain: boolean
 }
@@ -27,8 +29,19 @@ type ProductVariant = {
   slug: string
   price: number | null
   stock: number
-  attributes: Record<string, unknown> | null
+  attributes: Record<string, unknown>
   images: ProductImage[]
+  metaTitle: string | null
+  metaDescription: string | null
+  metaKeywords: string | null
+  applicationAreas: string[]
+  advantages: string[]
+  documents: {
+    id: string
+    documentId: string
+    document: { title: string; type: string; url: string }
+  }[]
+  tagIds: string[]
 }
 
 type Product = {
@@ -37,6 +50,14 @@ type Product = {
   categoryId: string
   brandId: string | null
   description: string | null
+  shortDescription: string | null
+  applicationAreas: string[]
+  advantages: string[]
+  documents: {
+    id: string
+    documentId: string
+    document: { title: string; type: string; url: string }
+  }[]
   category: {
     name: string
     attributes: CategoryAttributeSchema[]
@@ -49,6 +70,7 @@ type Category = {
   id: string
   name: string
   parentId: string | null
+  attributes: CategoryAttributeSchema[]
 }
 
 type Brand = {
@@ -1045,7 +1067,6 @@ export default function ProductList({
         <ProductCreateModal
           categories={categories}
           brands={brands}
-          tags={tags}
           onClose={() => setCreating(false)}
         />
       )}

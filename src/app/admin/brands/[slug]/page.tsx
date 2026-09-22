@@ -238,7 +238,7 @@ export default async function BrandPage({
 
                         <p className="mt-1.5 text-sm font-semibold text-[#28394c]">
                           {variant.price
-                            ? `${variant.price.toLocaleString('ru-RU')} ₽`
+                            ? `${Number(variant.price).toLocaleString('ru-RU')} ₽`
                             : 'Цена по запросу'}
                         </p>
                       </div>

@@ -13,7 +13,8 @@ export async function POST(req: NextRequest) {
   const downloadImages = formData.get('downloadImages') === 'true';
   const defaultStock = Number(formData.get('defaultStock') ?? 0);
   const modeParam = formData.get('mode');
-  const mode = (modeParam === 'update-only' || modeParam === 'create-only' ? modeParam : 'upsert') as const;
+  const mode: 'update-only' | 'create-only' | 'upsert' =
+    modeParam === 'update-only' || modeParam === 'create-only' ? modeParam : 'upsert';
 
   if (!file) {
     return NextResponse.json({ error: 'Файл не передан' }, { status: 400 });

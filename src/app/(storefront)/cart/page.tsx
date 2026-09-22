@@ -33,7 +33,18 @@ export default function CartPage({ popularVariants = [] }: CartPageProps) {
   const { items, removeItem, updateQuantity, clearCart, totalPrice, totalCount } = useCart()
   const { toggleFavorite } = useFavorites() // TODO: проверить реальную сигнатуру
   const [selected, setSelected] = useState<Set<string>>(new Set())
-  const [recentlyViewed] = useState<CarouselVariant[]>(() => getRecentlyViewed())
+  const [recentlyViewed] = useState<CarouselVariant[]>(() =>
+    getRecentlyViewed().map((item) => ({
+      id: item.id,
+      slug: item.slug,
+      sku: '',
+      name: item.name,
+      price: item.price,
+      stock: 0,
+      product: item.product,
+      images: item.images,
+    }))
+  )
 
   const hasRequestPriceItems = items.some((item) => item.price === null)
   const allSelected = items.length > 0 && selected.size === items.length

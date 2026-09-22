@@ -11,22 +11,7 @@ import CatalogPagination from './CatalogPagination'
 import FavoriteButton from './FavoriteButton'
 import ProductCard from './ProductCard'
 import ProductCardHorizontal from './ProductCardHorizontal'
-
-type CatalogCard = {
-  id: string
-  variantId: string
-  sku: string
-  slug: string
-  name: string
-  variantName: string | null
-  brandName: string | null
-  shortDescription: string | null
-  image: string | null
-  images: string[]
-  price: number | null
-  attrs: { label: string; value: string }[]
-  tags: { id: string; name: string; slug: string }[]
-}
+import type { CatalogCard } from '@/lib/catalog-query'
 
 const STORAGE_KEY = 'akvera_catalog_view'
 
@@ -41,6 +26,7 @@ function buildSortHref(basePath: string, filters: CatalogFilters, sort: string) 
   const params = new URLSearchParams()
 
   if (filters.q) params.set('q', filters.q)
+  if (filters.categorySlug) params.set('category', filters.categorySlug)
   if (filters.brand) params.set('brand', filters.brand)
   if (filters.tags && filters.tags.length > 0) params.set('tags', filters.tags.join(','))
   if (sort) params.set('sort', sort)

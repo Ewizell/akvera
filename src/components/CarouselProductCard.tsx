@@ -18,7 +18,11 @@ export type CarouselVariant = {
   images: { url: string; alt: string | null }[]
 }
 
-export default function CarouselProductCard({ variant }: { variant: CarouselVariant }) {
+export default function CarouselProductCard({
+  variant,
+}: {
+  variant: CarouselVariant
+}) {
   const [copied, setCopied] = useState(false)
   const { addItem } = useCart()
   const image = variant.images[0]
@@ -26,14 +30,17 @@ export default function CarouselProductCard({ variant }: { variant: CarouselVari
   function copySku(e: React.MouseEvent) {
     e.preventDefault()
     e.stopPropagation()
+
     navigator.clipboard.writeText(variant.sku)
     setCopied(true)
+
     setTimeout(() => setCopied(false), 1500)
   }
 
   function handleAddToCart(e: React.MouseEvent) {
     e.preventDefault()
     e.stopPropagation()
+
     addItem({
       variantId: variant.id,
       productName: variant.product.name,
@@ -56,7 +63,7 @@ export default function CarouselProductCard({ variant }: { variant: CarouselVari
             src={image.url}
             alt={image.alt ?? variant.name}
             fill
-            className="object-contain "
+            className="object-contain"
             sizes="302px"
           />
         ) : (
@@ -74,7 +81,9 @@ export default function CarouselProductCard({ variant }: { variant: CarouselVari
       <div className="flex flex-col gap-3 p-3 flex-1 min-h-0">
         <div>
           <p className="font-manrope font-bold text-[#1c2126] text-xl">
-            {variant.price ? `${variant.price.toLocaleString('ru-RU')} ₽` : 'Цена по запросу'}
+            {variant.price !== null
+              ? `${variant.price.toLocaleString('ru-RU')} ₽`
+              : 'Цена по запросу'}
           </p>
 
           <p className="font-manrope font-medium text-[#1c2126] text-sm mt-3 line-clamp-2">
@@ -85,8 +94,11 @@ export default function CarouselProductCard({ variant }: { variant: CarouselVari
         <div className="mt-auto flex flex-col gap-3">
           <div className="flex items-center gap-2 w-full min-w-0">
             <p className="font-manrope font-medium text-[#767d83] text-[14px] truncate min-w-0 flex-1">
-              {variant.stock > 0 ? `${variant.stock} шт. на складе` : 'По запросу'}
+              {variant.stock > 0
+                ? `${variant.stock} шт. на складе`
+                : 'По запросу'}
             </p>
+
             <div className="relative shrink-0">
               <button
                 onClick={copySku}
@@ -96,8 +108,16 @@ export default function CarouselProductCard({ variant }: { variant: CarouselVari
                 <span className="font-manrope font-medium text-[#767d83] text-sm truncate group-hover/sku:text-[#1c2126] group-hover/sku:underline">
                   {variant.sku}
                 </span>
-                <Image src="/icons/fi-rr-copy-alt.svg" alt="" width={14} height={14} className="shrink-0" />
+
+                <Image
+                  src="/icons/fi-rr-copy-alt.svg"
+                  alt=""
+                  width={14}
+                  height={14}
+                  className="shrink-0"
+                />
               </button>
+
               {copied && (
                 <div className="absolute right-0 bottom-full mb-1 whitespace-nowrap bg-gray-900 text-white text-xs px-2 py-1 rounded font-manrope z-20">
                   Скопировано

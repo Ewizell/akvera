@@ -30,6 +30,7 @@ export default function CatalogFilterBar({
     const searchParams = new URLSearchParams()
 
     if (filters.q) searchParams.set('q', filters.q)
+    if (filters.categorySlug) searchParams.set('category', filters.categorySlug)
     if (filters.brand) searchParams.set('brand', filters.brand)
     if (filters.sort) searchParams.set('sort', filters.sort)
 

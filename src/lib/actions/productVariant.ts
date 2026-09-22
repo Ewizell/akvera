@@ -80,7 +80,7 @@ export async function createVariant(productId: string, formData: FormData) {
         tags: { connect: variantTagIds.map((tagId) => ({ id: tagId })) },
         applicationAreas,
         advantages,
-        attributes,
+        attributes: attributes as import('@/generated/prisma/client').Prisma.InputJsonObject,
       },
     })
     revalidatePath('/admin/products')
@@ -125,7 +125,7 @@ export async function updateVariant(id: string, formData: FormData) {
         metaKeywords: metaKeywords || null,
         applicationAreas,
         advantages,
-        attributes,
+        attributes: attributes as import('@/generated/prisma/client').Prisma.InputJsonObject,
       },
     })
     revalidatePath('/admin/products')

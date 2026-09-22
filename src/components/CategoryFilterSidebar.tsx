@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import type { AttributeFilterOption } from '@/lib/catalog-query'
 
 function BrandSelect({
   brands,
@@ -83,10 +84,6 @@ export type CategoryNavData = {
   items: CategoryNavItem[]
   activeSlug: string | null
 }
-
-export type AttributeFilterOption =
-  | { key: string; label: string; unit: string | null; fieldType: 'number'; min: number; max: number }
-  | { key: string; label: string; unit: string | null; fieldType: 'select'; options: string[] }
 
 type Brand = { id: string; name: string; slug: string }
 

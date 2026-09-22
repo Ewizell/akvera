@@ -3,7 +3,7 @@ export default function CategoriesLayout({
   modal,
 }: {
   children: React.ReactNode
-  modal: React.ReactNode
+  modal?: React.ReactNode
 }) {
   return (
     <>
