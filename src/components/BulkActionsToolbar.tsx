@@ -4,11 +4,29 @@ import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   bulkDeleteProducts,
-  bulkUpdateCategory,
   bulkUpdateBrand,
   bulkAddTags,
   bulkRemoveTags,
+  previewBulkCategoryChange,
+  applyBulkCategoryChange,
 } from "@/lib/actions/product";
+
+type CategoryPreviewVariant = {
+  variantId: string;
+  variantName: string;
+  matchedKeys: string[];
+  missingAttributes: { key: string; label: string; fieldType: string; unit: string | null }[];
+  unmatchedAttributes: { key: string; label: string; value: unknown }[];
+};
+
+type CategoryPreviewItem = {
+  productId: string;
+  productName: string;
+  oldCategoryName: string;
+  variants: CategoryPreviewVariant[];
+  hasUnmatched: boolean;
+  hasMissing: boolean;
+};
 
 type Option = {
   id: string;
@@ -130,11 +148,19 @@ export default function BulkActionsToolbar({
 
   const [modal, setModal] = useState<ModalType>(null);
 
-  const [selectedOptionId, setSelectedOptionId] = useState("");
+  const [selectedOptionId, setSelectedOptionId] =
+    useState("");
 
-  const [selectedTagIds, setSelectedTagIds] = useState<string[]>(
-    []
-  );
+  const [selectedTagIds, setSelectedTagIds] =
+    useState<string[]>([]);
+
+  const [categoryStep, setCategoryStep] = useState<"select" | "review">("select");
+  const [categoryPreview, setCategoryPreview] = useState<{
+    newCategoryName: string;
+    items: CategoryPreviewItem[];
+  } | null>(null);
+  // ключ — variantId, значение — набор ключей атрибутов, отмеченных для переноса в customAttributes
+  const [transferChoices, setTransferChoices] = useState<Record<string, Set<string>>>({});
 
   const hasSelection = selectedIds.length > 0;
   const disabled = isPending || !hasSelection;
@@ -145,6 +171,9 @@ export default function BulkActionsToolbar({
     setModal(null);
     setSelectedOptionId("");
     setSelectedTagIds([]);
+    setCategoryStep("select");
+    setCategoryPreview(null);
+    setTransferChoices({});
   }
 
   useEffect(() => {
@@ -185,17 +214,67 @@ export default function BulkActionsToolbar({
     });
   }
 
-  function handleApplyCategory() {
+  function handlePreviewCategory() {
     if (!selectedOptionId) return;
 
     startTransition(async () => {
-      await bulkUpdateCategory(
-        selectedIds,
-        selectedOptionId
-      );
+      const result = await previewBulkCategoryChange(selectedIds, selectedOptionId);
 
-      setModal(null);
-      setSelectedOptionId("");
+      if (!result.success) {
+        alert(result.error);
+        return;
+      }
+
+      // по умолчанию переносим все несовпадающие атрибуты в собственные —
+      // админ может снять галочку там, где перенос не нужен
+      const defaults: Record<string, Set<string>> = {};
+      for (const item of result.items) {
+        for (const variant of item.variants) {
+          defaults[variant.variantId] = new Set(variant.unmatchedAttributes.map((a) => a.key));
+        }
+      }
+
+      setTransferChoices(defaults);
+      setCategoryPreview({ newCategoryName: result.newCategoryName, items: result.items });
+      setCategoryStep("review");
+    });
+  }
+
+  function toggleTransfer(variantId: string, key: string) {
+    setTransferChoices((prev) => {
+      const next = { ...prev };
+      const set = new Set(next[variantId] ?? []);
+      if (set.has(key)) {
+        set.delete(key);
+      } else {
+        set.add(key);
+      }
+      next[variantId] = set;
+      return next;
+    });
+  }
+
+  function handleConfirmCategoryChange() {
+    if (!categoryPreview) return;
+
+    const transfers = categoryPreview.items.flatMap((item) =>
+      item.variants.map((variant) => ({
+        variantId: variant.variantId,
+        keys: variant.unmatchedAttributes.filter((a) =>
+          transferChoices[variant.variantId]?.has(a.key)
+        ),
+      }))
+    );
+
+    startTransition(async () => {
+      const result = await applyBulkCategoryChange(selectedIds, selectedOptionId, transfers);
+
+      if (!result.success) {
+        alert(result.error);
+        return;
+      }
+
+      closeModal();
       onClear();
       router.refresh();
     });
@@ -438,7 +517,7 @@ export default function BulkActionsToolbar({
             }
           }}
         >
-          <div className="flex max-h-[90vh] w-full max-w-[520px] flex-col overflow-hidden rounded-2xl bg-[#f7f8fa] shadow-2xl ring-1 ring-black/[0.08]">
+          <div className="flex max-h-[90vh] w-full max-w-[640px] flex-col overflow-hidden rounded-2xl bg-[#f7f8fa] shadow-2xl ring-1 ring-black/[0.08]">
             <div className="flex items-start justify-between border-b border-[#e7eaed] bg-white px-5 py-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#28394c] to-[#3d5570] text-white">
@@ -447,11 +526,13 @@ export default function BulkActionsToolbar({
 
                 <div>
                   <h3 className="text-base font-semibold text-[#28313d]">
-                    Сменить категорию
+                    {categoryStep === "select" ? "Сменить категорию" : "Проверьте атрибуты"}
                   </h3>
 
                   <p className="mt-0.5 text-xs text-[#8b949f]">
-                    Изменить категорию выбранных товаров
+                    {categoryStep === "select"
+                      ? "Изменить категорию выбранных товаров"
+                      : "У некоторых товаров атрибуты не совпадают с новой категорией"}
                   </p>
                 </div>
               </div>
@@ -463,76 +544,127 @@ export default function BulkActionsToolbar({
                 className="flex h-9 w-9 items-center justify-center rounded-xl text-[#8b949f] transition hover:bg-[#f4f5f7] hover:text-[#28313d] disabled:opacity-40"
                 aria-label="Закрыть"
               >
-                <svg
-                  viewBox="0 0 20 20"
-                  fill="none"
-                  className="h-5 w-5"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
-                >
-                  <path
-                    strokeLinecap="round"
-                    d="M5 5l10 10M15 5L5 15"
-                  />
+                <svg viewBox="0 0 20 20" fill="none" className="h-5 w-5" stroke="currentColor" strokeWidth="1.6">
+                  <path strokeLinecap="round" d="M5 5l10 10M15 5L5 15" />
                 </svg>
               </button>
             </div>
 
             <div className="overflow-y-auto p-5">
-              <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/[0.04]">
-                <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-[#7b8592]">
-                  Категория
-                </label>
+              {categoryStep === "select" ? (
+                <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/[0.04]">
+                  <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-[#7b8592]">
+                    Категория
+                  </label>
 
-                <select
-                  value={selectedOptionId}
-                  onChange={(event) =>
-                    setSelectedOptionId(event.target.value)
-                  }
-                  className={inputClassName}
-                  autoFocus
-                >
-                  <option value="">
-                    Выберите категорию
-                  </option>
-
-                  {categories.map((category) => (
-                    <option
-                      key={category.id}
-                      value={category.id}
-                    >
-                      {category.name}
+                  <select
+                    value={selectedOptionId}
+                    onChange={(event) => setSelectedOptionId(event.target.value)}
+                    className={inputClassName}
+                    autoFocus
+                  >
+                    <option value="" disabled>
+                      — Выберите категорию —
                     </option>
+
+                    {categories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+
+                  <p className="mt-2 text-xs leading-5 text-[#969faa]">
+                    Категория обязательна для товара. На следующем шаге покажем,
+                    какие атрибуты перенесутся автоматически, а какие потребуют
+                    решения.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {categoryPreview?.items.map((item) => (
+                    <div key={item.productId} className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/[0.04]">
+                      <div className="mb-2 flex items-center justify-between">
+                        <span className="text-sm font-semibold text-[#28313d]">{item.productName}</span>
+                        <span className="text-xs text-[#9aa2ac]">
+                          {item.oldCategoryName} → {categoryPreview.newCategoryName}
+                        </span>
+                      </div>
+
+                      {!item.hasUnmatched && !item.hasMissing && (
+                        <p className="text-xs text-[#397653]">
+                          Атрибуты полностью совпадают с новой категорией.
+                        </p>
+                      )}
+
+                      {item.variants.map((variant) =>
+                        variant.unmatchedAttributes.length === 0 && variant.missingAttributes.length === 0 ? null : (
+                          <div key={variant.variantId} className="mt-2 rounded-xl bg-[#fafbfc] p-3 ring-1 ring-black/[0.03]">
+                            <div className="mb-1.5 text-xs font-semibold text-[#5f6976]">{variant.variantName}</div>
+
+                            {variant.unmatchedAttributes.length > 0 && (
+                              <div className="mb-2 space-y-1.5">
+                                <p className="text-[11px] font-semibold uppercase tracking-wide text-[#b3861f]">
+                                  Не входят в новую категорию — перенести в собственные атрибуты?
+                                </p>
+
+                                {variant.unmatchedAttributes.map((attr) => (
+                                  <label key={attr.key} className="flex cursor-pointer items-center gap-2 text-xs text-[#5f6976]">
+                                    <input
+                                      type="checkbox"
+                                      checked={transferChoices[variant.variantId]?.has(attr.key) ?? false}
+                                      onChange={() => toggleTransfer(variant.variantId, attr.key)}
+                                      className="h-3.5 w-3.5 rounded border-[#cbd1d8] text-[#28394c] focus:ring-[#28394c]/20"
+                                    />
+                                    {attr.label}: <span className="font-medium">{String(attr.value)}</span>
+                                  </label>
+                                ))}
+                              </div>
+                            )}
+
+                            {variant.missingAttributes.length > 0 && (
+                              <p className="text-[11px] leading-4 text-[#9aa2ac]">
+                                Требуют заполнения в новой категории:{" "}
+                                {variant.missingAttributes.map((a) => a.label).join(", ")}
+                              </p>
+                            )}
+                          </div>
+                        )
+                      )}
+                    </div>
                   ))}
-                </select>
-              </div>
+                </div>
+              )}
             </div>
 
-            <div className="flex items-center justify-end gap-2 border-t border-[#e7eaed] bg-white px-5 py-4">
-              <button
-                type="button"
-                onClick={closeModal}
-                disabled={isPending}
-                className={secondaryButtonClassName}
-              >
-                Отмена
-              </button>
+            <div className="flex items-center justify-between gap-2 border-t border-[#e7eaed] bg-white px-5 py-4">
+              {categoryStep === "review" ? (
+                <button type="button" onClick={() => setCategoryStep("select")} disabled={isPending} className={secondaryButtonClassName}>
+                  Назад
+                </button>
+              ) : (
+                <span />
+              )}
 
-              <button
-                type="button"
-                onClick={handleApplyCategory}
-                disabled={
-                  !selectedOptionId || isPending
-                }
-                className={primaryButtonClassName}
-              >
-                {isPending && (
-                  <span className="mr-2">
-                    <Spinner />
-                  </span>
-                )}
-                Применить
-              </button>
+              <div className="flex items-center gap-2">
+                <button type="button" onClick={closeModal} disabled={isPending} className={secondaryButtonClassName}>
+                  Отмена
+                </button>
+
+                <button
+                  type="button"
+                  onClick={categoryStep === "select" ? handlePreviewCategory : handleConfirmCategoryChange}
+                  disabled={isPending || (categoryStep === "select" && !selectedOptionId)}
+                  className={primaryButtonClassName}
+                >
+                  {isPending && (
+                    <span className="mr-2">
+                      <Spinner />
+                    </span>
+                  )}
+                  {categoryStep === "select" ? "Далее" : "Применить"}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -596,7 +728,9 @@ export default function BulkActionsToolbar({
                 <select
                   value={selectedOptionId}
                   onChange={(event) =>
-                    setSelectedOptionId(event.target.value)
+                    setSelectedOptionId(
+                      event.target.value
+                    )
                   }
                   className={inputClassName}
                   autoFocus
@@ -616,8 +750,9 @@ export default function BulkActionsToolbar({
                 </select>
 
                 <p className="mt-2 text-xs leading-5 text-[#969faa]">
-                  Выберите бренд или оставьте «Без бренда»,
-                  чтобы убрать текущий бренд.
+                  Выберите бренд или оставьте
+                  «Без бренда», чтобы убрать текущий
+                  бренд.
                 </p>
               </div>
             </div>
@@ -643,6 +778,7 @@ export default function BulkActionsToolbar({
                     <Spinner />
                   </span>
                 )}
+
                 Применить
               </button>
             </div>
@@ -741,7 +877,9 @@ export default function BulkActionsToolbar({
                   <div className="max-h-64 space-y-1.5 overflow-y-auto pr-1">
                     {tags.map((tag) => {
                       const checked =
-                        selectedTagIds.includes(tag.id);
+                        selectedTagIds.includes(
+                          tag.id
+                        );
 
                       return (
                         <label
@@ -808,6 +946,7 @@ export default function BulkActionsToolbar({
                     <Spinner />
                   </span>
                 )}
+
                 Применить
               </button>
             </div>

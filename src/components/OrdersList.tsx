@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { OrderStatus } from "@/generated/prisma";
+import { OrderStatus } from "@/generated/prisma/enums";
 import { OrderStatusBadge } from "./OrderStatusBadge";
 import { OrderDetailModal } from "./OrderDetailModal";
 import { getOrders } from "@/lib/actions/order";
@@ -377,7 +377,7 @@ export function OrdersList({
 
                         <div>
                           <div className="font-mono text-xs font-semibold text-[#28394c]">
-                            #{order.id.slice(0, 8)}
+                            №{order.orderNumber}
                           </div>
 
                           <div className="mt-0.5 text-[11px] text-[#a0a7b1] opacity-0 transition group-hover:opacity-100">

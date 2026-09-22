@@ -31,8 +31,8 @@ model Category {
 
 model CategoryAttribute {
   id         String   @id @default(cuid())
-  categoryId String
-  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
   key        String   // техническое имя поля, например "power_kw"
   label      String   // отображаемое название, например "Мощность (кВт)"
@@ -219,6 +219,10 @@ enum OrderStatus {
 model Order {
   id            String      @id @default(cuid())
 
+  // человекочитаемый номер заказа — начинается с 100000, растёт на 1
+  // (стартовое значение сиквенса задаётся вручную в миграции, см. ниже)
+  orderNumber   Int         @unique @default(autoincrement())
+
   // связь с аккаунтом — необязательная (гибридный чекаут)
   userId        String?
   user          User?       @relation(fields: [userId], references: [id])
@@ -227,6 +231,13 @@ model Order {
   contactName   String
   contactPhone  String
   contactEmail  String?
+  organization  String?
+
+  // способ получения и оплаты (значения см. CheckoutForm: DeliveryMethod/PaymentMethod/PrepaymentType)
+  deliveryMethod   String?
+  deliveryAddress  String?
+  paymentMethod    String?
+  prepaymentType   String?
 
   status        OrderStatus @default(NEW)
   comment       String?

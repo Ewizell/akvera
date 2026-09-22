@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { OrderStatus } from "@/generated/prisma";
+import { OrderStatus } from "@/generated/prisma/enums";
 import {
   getOrderById,
   updateOrderStatus,
@@ -149,7 +149,7 @@ export function OrderDetailModal({
     if (!order) return;
 
     const lines = [
-      `Заказ ${order.id}`,
+      `Заказ №${order.orderNumber}`,
       `Статус: ${STATUS_LABELS[order.status]}`,
       `Клиент: ${order.contactName}`,
       `Телефон: ${order.contactPhone}`,
@@ -231,7 +231,7 @@ export function OrderDetailModal({
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <span className="font-mono text-sm font-semibold text-[#28394c]">
-                  #{order.id.slice(0, 8)}
+                  №{order.orderNumber}
                 </span>
 
                 <OrderStatusBadge status={order.status} />
@@ -563,6 +563,49 @@ export function OrderDetailModal({
                       </div>
                     )}
 
+                    {order.organization && (
+                      <div>
+                        <p className={labelCls}>Организация</p>
+                        <p className="text-sm text-[#4c5663]">{order.organization}</p>
+                      </div>
+                    )}
+
+                    {order.deliveryMethod && (
+                      <div>
+                        <p className={labelCls}>Способ получения</p>
+                        <p className="text-sm text-[#4c5663]">
+                          {order.deliveryMethod === "delivery" ? "Доставка по России" : "Самовывоз со склада"}
+                        </p>
+                      </div>
+                    )}
+
+                    {order.deliveryAddress && (
+                      <div>
+                        <p className={labelCls}>Адрес доставки</p>
+                        <p className="text-sm text-[#4c5663]">{order.deliveryAddress}</p>
+                      </div>
+                    )}
+
+                    {order.paymentMethod && (
+                      <div>
+                        <p className={labelCls}>Способ оплаты</p>
+                        <p className="text-sm text-[#4c5663]">
+                          {{ invoice: "Оплата по счету", card: "Банковской картой", sbp: "СБП" }[order.paymentMethod] ??
+                            order.paymentMethod}
+                        </p>
+                      </div>
+                    )}
+
+                    {order.prepaymentType && (
+                      <div>
+                        <p className={labelCls}>Условия оплаты</p>
+                        <p className="text-sm text-[#4c5663]">
+                          {{ prepay: "Предоплата", half: "50/50", postpay: "Постоплата" }[order.prepaymentType] ??
+                            order.prepaymentType}
+                        </p>
+                      </div>
+                    )}
+
                     <div>
                       <p className={labelCls}>
                         Статус заказа
@@ -846,11 +889,11 @@ export function OrderDetailModal({
               <div className="divide-y divide-[#f2f3f5]">
                 <div className="flex items-center justify-between px-5 py-3">
                   <span className="text-xs text-[#929aa6]">
-                    ID заказа
+                    Номер заказа
                   </span>
 
                   <span className="font-mono text-xs font-medium text-[#4c5663]">
-                    {order.id.slice(0, 8)}
+                    №{order.orderNumber}
                   </span>
                 </div>
 

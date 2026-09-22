@@ -1,7 +1,8 @@
-import { OrderStatus } from "@/generated/prisma";
+import { OrderStatus } from "@/generated/prisma/enums";
 
 export type OrderListItem = {
   id: string;
+  orderNumber: number;
   status: OrderStatus;
   createdAt: Date;
   contactName: string;

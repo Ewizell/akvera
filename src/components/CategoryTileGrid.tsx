@@ -55,7 +55,7 @@ export default function CategoryTileGrid({ items }: { items: CategoryTileItem[] 
           <div className="absolute inset-0 bg-[#0f172a]/30" />
 
           <div className="relative flex items-start justify-between gap-3">
-            <h3 className="max-w-[220px] text-[20px] font-bold leading-normal text-white [word-break:break-word]">
+            <h3 className="max-w-[220px] text-[16px] font-semibold leading-normal text-white [word-break:break-word]">
               {item.name}
             </h3>
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl bg-white/[0.13] transition-colors group-hover:bg-white/25">

@@ -6,6 +6,7 @@ import CategoryProductListing from "@/components/CategoryProductListing";
 import { parseCatalogSearchParams } from "@/lib/catalog-query";
 import type { CategoryNavData } from "@/components/CategoryFilterSidebar";
 import type { Metadata } from "next";
+import ShowAllProductsButton from "@/components/ShowAllProductsButton";
 
 export const revalidate = 3600;
 
@@ -84,6 +85,7 @@ export default async function ChildCategoryPage({
       name: child.name,
       href: `/category/${parent.slug}/${category.slug}/${child.slug}`,
       productCount: child._count.products,
+      imageUrl: child.imageUrl,
     }));
 
     return (
@@ -105,12 +107,7 @@ export default async function ChildCategoryPage({
 
         <div className="mb-8 flex items-end justify-between">
           <h1 className="text-[36px] font-bold leading-[1.2] text-[#0f172a]">{category.name}</h1>
-          <Link
-            href={`/category/${parent.slug}/${category.slug}/all`}
-            className="text-sm text-blue-600 hover:underline"
-          >
-            Показать все товары →
-          </Link>
+          <ShowAllProductsButton href={`/category/${parent.slug}/${category.slug}/all`} />
         </div>
 
         <CategoryTileGrid items={tileItems} />

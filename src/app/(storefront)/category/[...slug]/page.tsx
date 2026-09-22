@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import CategoryTileGrid from "@/components/CategoryTileGrid";
 import CategoryProductListing from "@/components/CategoryProductListing";
+import ShowAllProductsButton from "@/components/ShowAllProductsButton";
 import {
   parseCatalogSearchParams,
   getCategoryAncestors,
@@ -139,6 +140,7 @@ export default async function CategoryPage({
       name: child.name,
       href: `${tilePath}/${child.slug}`,
       productCount: child._count.products,
+      imageUrl: child.imageUrl,
     }));
 
     return (
@@ -160,9 +162,7 @@ export default async function CategoryPage({
 
         <div className="mb-8 flex items-end justify-between">
           <h1 className="text-[36px] font-bold leading-[1.2] text-[#0f172a]">{category.name}</h1>
-          <Link href={`${tilePath}/all`} className="text-sm text-blue-600 hover:underline">
-            Показать все товары →
-          </Link>
+          <ShowAllProductsButton href={`${tilePath}/all`} />
         </div>
 
         <CategoryTileGrid items={tileItems} />

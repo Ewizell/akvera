@@ -9,6 +9,7 @@ type CategoryNode = {
   name: string
   slug: string
   iconUrl: string | null
+  productCount: number
   children: CategoryNode[]
 }
 
@@ -147,6 +148,7 @@ export async function getCategoryTree(): Promise<CategoryNode[]> {
       slug: true,
       parentId: true,
       iconUrl: true,
+      _count: { select: { products: true } },
     },
   })
 
@@ -158,6 +160,7 @@ export async function getCategoryTree(): Promise<CategoryNode[]> {
         name: c.name,
         slug: c.slug,
         iconUrl: c.iconUrl,
+        productCount: c._count.products,
         children: [],
       },
     ])

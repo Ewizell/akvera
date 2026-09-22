@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import Link from "next/link";
+import ShowAllProductsButton from "@/components/ShowAllProductsButton";
 import type { Metadata } from "next";
 import CategoryTileGrid from "@/components/CategoryTileGrid";
 
@@ -60,9 +60,7 @@ export default async function CatalogPage() {
 
         <div className="mb-8 flex items-end justify-between">
           <h1 className="text-[36px] font-bold leading-[1.2] text-[#0f172a]">Каталог</h1>
-          <Link href="/catalog/all" className="text-sm text-blue-600 hover:underline">
-            Показать все товары →
-          </Link>
+          <ShowAllProductsButton href="/catalog/all" />
         </div>
 
         {categories.length > 0 ? (

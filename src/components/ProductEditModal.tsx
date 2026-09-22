@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { updateProduct } from '@/lib/actions/product'
+import { updateProduct, applyAttributeTransfers } from '@/lib/actions/product'
+import { computeAttributeMigration } from '@/lib/attribute-migration'
 import {
   createVariant,
   updateVariant,
@@ -65,7 +66,7 @@ type Variant = {
 type Product = {
   id: string
   name: string
-  categoryId: string
+  categoryId: string | null
   brandId: string | null
   description: string | null
   shortDescription: string | null
@@ -146,7 +147,14 @@ function Spinner() {
 function SectionIcon({
   type,
 }: {
-  type: 'product' | 'attributes' | 'content' | 'seo' | 'images' | 'documents' | 'tags'
+  type:
+    | 'product'
+    | 'attributes'
+    | 'content'
+    | 'seo'
+    | 'images'
+    | 'documents'
+    | 'tags'
 }) {
   if (type === 'product') {
     return (
@@ -247,7 +255,11 @@ function SectionIcon({
           height="14"
           rx="2"
         />
-        <circle cx="7.5" cy="7.5" r="1.2" />
+        <circle
+          cx="7.5"
+          cy="7.5"
+          r="1.2"
+        />
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -304,8 +316,6 @@ function SectionIcon({
     </svg>
   )
 }
-
-// ── Атрибуты категории ─────────────────────────────────────────
 
 function AttributeFields({
   schema,
@@ -392,8 +402,6 @@ function AttributeFields({
     </>
   )
 }
-
-// ── Собственные атрибуты ───────────────────────────────────────
 
 function CustomAttributesEditor({
   initial,
@@ -532,8 +540,6 @@ function CustomAttributesEditor({
   )
 }
 
-// ── Цена ───────────────────────────────────────────────────────
-
 function PriceField({
   defaultValue,
 }: {
@@ -571,8 +577,6 @@ function PriceField({
     </div>
   )
 }
-
-// ── Редактор варианта ──────────────────────────────────────────
 
 const VARIANT_TABS = [
   'Общее',
@@ -634,7 +638,6 @@ function VariantFormFields({
         ))}
       </div>
 
-      {/* Все поля остаются в DOM, чтобы FormData не теряла значения */}
       <div
         className={
           tab === 'Общее'
@@ -896,8 +899,6 @@ function VariantFormFields({
   )
 }
 
-// ── Строка варианта ────────────────────────────────────────────
-
 function VariantRow({
   variant,
   isOnlyVariant,
@@ -1037,6 +1038,7 @@ function VariantRow({
                   <Spinner />
                 </span>
               )}
+
               {isPending
                 ? 'Сохранение...'
                 : 'Сохранить'}
@@ -1317,8 +1319,6 @@ function VariantRow({
   )
 }
 
-// ── Модальное окно ─────────────────────────────────────────────
-
 const TOP_TABS = [
   'Основное',
   'Исполнения',
@@ -1342,6 +1342,7 @@ export default function ProductEditModal({
   initialVariantId?: string | null
 }) {
   const router = useRouter()
+
   const [topTab, setTopTab] =
     useState<TopTab>(
       initialVariantId
@@ -1356,7 +1357,7 @@ export default function ProductEditModal({
     useState<string | null>(null)
 
   const [categoryId, setCategoryId] =
-    useState(product.categoryId)
+    useState(product.categoryId ?? '')
 
   const [addError, setAddError] =
     useState<string | null>(null)
@@ -1374,6 +1375,49 @@ export default function ProductEditModal({
 
   const attrSchema =
     currentCategory?.attributes ?? []
+
+  const categoryChanged = categoryId !== (product.categoryId ?? '')
+
+  const [transferChoices, setTransferChoices] = useState<Record<string, Set<string>>>({})
+
+  const migrationPreview = categoryChanged
+    ? product.variants.map((v) => {
+        const oldSchema =
+          categories.find((c) => c.id === product.categoryId)?.attributes ?? []
+        const plan = computeAttributeMigration(oldSchema, attrSchema, v.attributes)
+        return { variantId: v.id, variantName: v.name, ...plan }
+      })
+    : null
+
+  useEffect(() => {
+    if (!categoryChanged || !migrationPreview) return
+
+    setTransferChoices((prev) => {
+      // не перетираем уже сделанный админом выбор, только добавляем новые варианты по умолчанию
+      const next = { ...prev }
+      for (const v of migrationPreview) {
+        if (!next[v.variantId]) {
+          next[v.variantId] = new Set(v.unmatchedAttributes.map((a) => a.key))
+        }
+      }
+      return next
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categoryId])
+
+  function toggleTransfer(variantId: string, key: string) {
+    setTransferChoices((prev) => {
+      const next = { ...prev }
+      const set = new Set(next[variantId] ?? [])
+      if (set.has(key)) {
+        set.delete(key)
+      } else {
+        set.add(key)
+      }
+      next[variantId] = set
+      return next
+    })
+  }
 
   useEffect(() => {
     function handleKeyDown(
@@ -1407,14 +1451,26 @@ export default function ProductEditModal({
         formData
       )
 
-      if (result.success) {
-        onClose()
-        router.refresh()
-      } else {
+      if (!result.success) {
         setError(
           'Не удалось сохранить изменения'
         )
+        return
       }
+
+      if (categoryChanged && migrationPreview) {
+        const transfers = migrationPreview.map((v) => ({
+          variantId: v.variantId,
+          keys: v.unmatchedAttributes.filter((a) => transferChoices[v.variantId]?.has(a.key)),
+        }))
+
+        if (transfers.some((t) => t.keys.length > 0)) {
+          await applyAttributeTransfers(transfers)
+        }
+      }
+
+      onClose()
+      router.refresh()
     })
   }
 
@@ -1457,7 +1513,6 @@ export default function ProductEditModal({
       onMouseDown={handleBackdropClick}
     >
       <div className="flex h-full max-h-[94vh] w-full max-w-[1100px] flex-col overflow-hidden rounded-2xl bg-[#f7f8fa] shadow-2xl ring-1 ring-black/[0.08]">
-        {/* Header */}
         <div className="shrink-0 border-b border-[#e7eaed] bg-white">
           <div className="px-4 py-4 sm:px-6">
             <div className="flex items-start justify-between gap-4">
@@ -1499,7 +1554,6 @@ export default function ProductEditModal({
               </button>
             </div>
 
-            {/* Tabs */}
             <div className="mt-4 flex gap-1 overflow-x-auto">
               {TOP_TABS.map((t) => (
                 <button
@@ -1531,7 +1585,6 @@ export default function ProductEditModal({
           </div>
         </div>
 
-        {/* Content */}
         <div className="min-h-0 flex-1 overflow-y-auto">
           <div className="mx-auto w-full max-w-[900px] p-4 sm:p-6">
             {topTab === 'Основное' && (
@@ -1589,44 +1642,60 @@ export default function ProductEditModal({
                           required
                           className={inputCls}
                         >
-                          {categories.map(
-                            (c) => (
-                              <option
-                                key={c.id}
-                                value={c.id}
-                              >
-                                {c.name}
-                              </option>
-                            )
-                          )}
+                          {categories.map((c) => (
+                            <option
+                              key={c.id}
+                              value={c.id}
+                            >
+                              {c.name}
+                            </option>
+                          ))}
                         </select>
 
-                        {categoryId !==
-                          product.categoryId && (
-                          <div className="mt-2 flex items-start gap-2 rounded-xl bg-[#fff9ed] px-3 py-2.5 text-xs leading-5 text-[#9a6b19] ring-1 ring-[#f0dfb8]">
-                            <svg
-                              viewBox="0 0 20 20"
-                              fill="none"
-                              className="mt-0.5 h-4 w-4 shrink-0"
-                              stroke="currentColor"
-                              strokeWidth="1.6"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M10 3.5l7 12.5H3L10 3.5z"
-                              />
-                              <path
-                                strokeLinecap="round"
-                                d="M10 8v3.5M10 14.2v.1"
-                              />
-                            </svg>
+                        {categoryChanged && migrationPreview && (
+                          <div className="mt-2 space-y-2">
+                            {migrationPreview.every(
+                              (v) => v.unmatchedAttributes.length === 0 && v.missingAttributes.length === 0
+                            ) ? (
+                              <div className="rounded-xl bg-[#f1f7f3] px-3 py-2.5 text-xs leading-5 text-[#397653] ring-1 ring-[#d5e8dc]">
+                                Атрибуты совпадают с новой категорией, ничего переносить не нужно.
+                              </div>
+                            ) : (
+                              migrationPreview.map((v) =>
+                                v.unmatchedAttributes.length === 0 && v.missingAttributes.length === 0 ? null : (
+                                  <div
+                                    key={v.variantId}
+                                    className="rounded-xl bg-[#fff9ed] px-3 py-2.5 text-xs leading-5 text-[#9a6b19] ring-1 ring-[#f0dfb8]"
+                                  >
+                                    <p className="mb-1.5 font-semibold">{v.variantName}</p>
 
-                            <span>
-                              Атрибуты вариантов не
-                              пересчитываются автоматически
-                              при смене категории.
-                            </span>
+                                    {v.unmatchedAttributes.length > 0 && (
+                                      <div className="mb-1.5 space-y-1">
+                                        <p>Не входят в новую категорию — перенести в собственные атрибуты?</p>
+                                        {v.unmatchedAttributes.map((attr) => (
+                                          <label key={attr.key} className="flex cursor-pointer items-center gap-2">
+                                            <input
+                                              type="checkbox"
+                                              checked={transferChoices[v.variantId]?.has(attr.key) ?? false}
+                                              onChange={() => toggleTransfer(v.variantId, attr.key)}
+                                              className="h-3.5 w-3.5 rounded border-[#cbd1d8] text-[#28394c] focus:ring-[#28394c]/20"
+                                            />
+                                            {attr.label}: <span className="font-medium">{String(attr.value)}</span>
+                                          </label>
+                                        ))}
+                                      </div>
+                                    )}
+
+                                    {v.missingAttributes.length > 0 && (
+                                      <p>
+                                        Потребуют заполнения (вкладка «Исполнения»):{' '}
+                                        {v.missingAttributes.map((a) => a.label).join(', ')}
+                                      </p>
+                                    )}
+                                  </div>
+                                )
+                              )
+                            )}
                           </div>
                         )}
                       </div>
@@ -2064,7 +2133,6 @@ export default function ProductEditModal({
           </div>
         </div>
 
-        {/* Bottom status */}
         {isPending && (
           <div className="flex shrink-0 items-center gap-2 border-t border-[#e7eaed] bg-white px-4 py-2.5 text-xs font-medium text-[#687382] sm:px-6">
             <Spinner />

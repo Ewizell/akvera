@@ -1,4 +1,4 @@
-import { OrderStatus } from "@/generated/prisma";
+import { OrderStatus } from "@/generated/prisma/enums";
 import { STATUS_LABELS } from "@/lib/orderTypes";
 
 const COLORS: Record<OrderStatus, string> = {
