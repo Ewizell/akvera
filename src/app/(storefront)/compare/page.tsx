@@ -1,10 +1,11 @@
 'use client'
 
-import { useEffect, useMemo, useState, useTransition } from 'react'
+import { Fragment, useEffect, useMemo, useState, useTransition } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useCompare } from '@/lib/compare-context'
 import { getCompareVariants, type CompareVariant } from '@/lib/actions/compare'
+import CompareProductCard from '@/components/CompareProductCard'
 
 function formatAttrValue(value: unknown): string {
   if (value === undefined || value === null || value === '') return '—'
@@ -21,6 +22,7 @@ export default function ComparePage() {
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [diffOnly, setDiffOnly] = useState(false)
   const [pinnedKeys, setPinnedKeys] = useState<Set<string>>(new Set())
+  const [pinnedVariantId, setPinnedVariantId] = useState<string | null>(null)
 
   useEffect(() => {
     if (variantIds.length === 0) {
@@ -51,6 +53,7 @@ export default function ComparePage() {
 
   useEffect(() => {
     setPinnedKeys(new Set())
+    setPinnedVariantId(null)
   }, [activeCategory])
 
   function togglePinned(key: string) {
@@ -68,7 +71,23 @@ export default function ComparePage() {
   }
 
   const activeItems = activeCategory === ALL_TAB ? items : items.filter((i) => i.categoryId === activeCategory)
-  const attrSchema = activeItems[0]?.categoryAttributes ?? []
+
+  const attrSchema =
+    activeCategory === ALL_TAB
+      ? Array.from(
+          new Map(
+            activeItems.flatMap((i) => i.categoryAttributes).map((a) => [a.key, a])
+          ).values()
+        )
+      : activeItems[0]?.categoryAttributes ?? []
+
+  useEffect(() => {
+    if (pinnedVariantId && !activeItems.some((i) => i.variantId === pinnedVariantId)) {
+      setPinnedVariantId(null)
+    }
+  }, [activeItems, pinnedVariantId])
+
+  const DEFAULT_GROUP = 'Характеристики'
 
   const baseAttrs = diffOnly
     ? attrSchema.filter((attr) => {
@@ -79,6 +98,32 @@ export default function ComparePage() {
 
   const pinnedAttrs = baseAttrs.filter((a) => pinnedKeys.has(a.key))
   const restAttrs = baseAttrs.filter((a) => !pinnedKeys.has(a.key))
+
+  // группируем оставшиеся (не закреплённые) атрибуты по разделам, сохраняя первое появление раздела
+  const groupOrder: string[] = []
+  const groupedRestAttrs = new Map<string, typeof restAttrs>()
+  for (const attr of restAttrs) {
+    const groupName = attr.group || DEFAULT_GROUP
+    if (!groupedRestAttrs.has(groupName)) {
+      groupOrder.push(groupName)
+      groupedRestAttrs.set(groupName, [])
+    }
+    groupedRestAttrs.get(groupName)!.push(attr)
+  }
+
+  // собственные (кастомные) атрибуты вариантов — блок "Дополнительно" в конце, без группировки по разделам
+  const customAttrLabels = diffOnly
+    ? Array.from(
+        new Set(
+          activeItems.flatMap((i) => i.customAttributes.map((a) => a.label))
+        )
+      ).filter((label) => {
+        const values = activeItems.map(
+          (i) => i.customAttributes.find((a) => a.label === label)?.value ?? '—'
+        )
+        return new Set(values).size > 1
+      })
+    : Array.from(new Set(activeItems.flatMap((i) => i.customAttributes.map((a) => a.label))))
 
   if (variantIds.length === 0) {
     return (
@@ -95,7 +140,7 @@ export default function ComparePage() {
   function renderAttrRow(attr: (typeof attrSchema)[number], pinned: boolean) {
     return (
       <tr key={attr.key} className="border-t border-[#e5e7e8]">
-        <td className="py-3 pr-4 text-sm text-[#767d83]">
+        <td className="sticky left-0 z-10 bg-white py-3 pr-4 text-sm text-[#767d83]">
           <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
@@ -110,7 +155,13 @@ export default function ComparePage() {
           </label>
         </td>
         {activeItems.map((item) => (
-          <td key={item.variantId} className="py-3 px-4 text-sm text-[#1c2126]">
+          <td
+            key={item.variantId}
+            className={`py-3 px-4 text-sm text-[#1c2126] break-words ${
+              pinnedVariantId === item.variantId ? 'sticky z-[5] bg-white shadow-[4px_0_8px_-4px_rgba(0,0,0,0.08)]' : ''
+            }`}
+            style={pinnedVariantId === item.variantId ? { left: 160 } : undefined}
+          >
             {formatAttrValue(item.attributes[attr.key])}
           </td>
         ))}
@@ -119,7 +170,7 @@ export default function ComparePage() {
   }
 
   return (
-    <main className="max-w-7xl mx-auto px-4 py-10">
+    <main className="max-w-7xl mx-auto px-4 py-10 ">
       <nav className="mb-5 flex flex-wrap items-center gap-3 text-[14px] font-semibold uppercase tracking-[2px] text-[#179146]">
         <Link href="/" className="hover:opacity-80">Главная</Link>
         <span>/</span>
@@ -168,102 +219,115 @@ export default function ComparePage() {
             </div>
           )}
 
-          {activeCategory !== ALL_TAB && (
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-6">
-                <label className="flex items-center gap-2 text-sm text-[#1c2126] cursor-pointer">
-                  <input
-                    type="radio"
-                    name="compare-mode"
-                    checked={!diffOnly}
-                    onChange={() => setDiffOnly(false)}
-                    className="accent-[#179146]"
-                  />
-                  Все характеристики
-                </label>
-                <label className="flex items-center gap-2 text-sm text-[#1c2126] cursor-pointer">
-                  <input
-                    type="radio"
-                    name="compare-mode"
-                    checked={diffOnly}
-                    onChange={() => setDiffOnly(true)}
-                    className="accent-[#179146]"
-                  />
-                  Показать различия
-                </label>
-              </div>
-              <button onClick={clearCategory} className="flex items-center gap-2 text-sm text-[#767d83] hover:text-[#1c2126]">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6" />
-                </svg>
-                Очистить категорию
-              </button>
-            </div>
-          )}
+          <div className="overflow-x-auto pt-4">
 
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
+
+            <table className="w-full border-collapse table-fixed">
               <thead>
                 <tr>
-                  <th className="text-left text-sm text-gray-400 font-normal w-40 pb-4 align-bottom">&nbsp;</th>
-                  {activeItems.map((item) => (
-                    <th key={item.variantId} className="px-4 pb-4 align-bottom min-w-[220px]">
-                      <div className="relative">
-                        <button
-                          onClick={() => removeVariant(item.variantId)}
-                          aria-label="Убрать из сравнения"
-                          className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-white border text-gray-400 hover:text-gray-700 text-sm"
-                        >
-                          ×
-                        </button>
-                        <Link href={`/product/${item.slug}`} className="block">
-                          <div className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden mb-3">
-                            {item.image ? (
-                              <Image
-                                src={item.image}
-                                alt={item.productName}
-                                fill
-                                className="object-contain p-4"
-                                sizes="220px"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
-                                Нет фото
-                              </div>
-                            )}
-                          </div>
-                          {item.brandName && <p className="text-xs text-gray-400">{item.brandName}</p>}
-                          <p className="text-sm font-medium text-gray-900 line-clamp-2">{item.productName}</p>
-                        </Link>
-
-                        {item.siblingVariants.length > 1 ? (
-                          <select
-                            value={item.variantId}
-                            onChange={(e) => replaceVariant(item.variantId, e.target.value)}
-                            className="mt-2 w-full text-xs border rounded px-2 py-1"
-                          >
-                            {item.siblingVariants.map((sv) => (
-                              <option key={sv.id} value={sv.id}>
-                                {sv.name}
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
-                          <p className="mt-2 text-xs text-gray-400">{item.variantName}</p>
-                        )}
-
-                        <p className="mt-2 text-base font-semibold">
-                          {item.price ? `${item.price.toLocaleString('ru-RU')} ₽` : 'Цена по запросу'}
-                        </p>
+                  <th
+                    className="sticky left-0 z-20 bg-white text-left pb-4 align-top text-sm text-[#767d83] font-normal"
+                    style={{ width: 160, height: 1 }}
+                  >
+                    <div className="flex h-full flex-col items-start justify-between gap-2">
+                      <div className="flex flex-col items-start gap-2">
+                        <label className="flex items-center gap-2 text-sm text-[#1c2126] cursor-pointer">
+                          <input
+                            type="radio"
+                            name="compare-mode"
+                            checked={!diffOnly}
+                            onChange={() => setDiffOnly(false)}
+                            className="accent-[#179146]"
+                          />
+                          Все характеристики
+                        </label>
+                        <label className="flex items-center gap-2 text-sm text-[#1c2126] cursor-pointer">
+                          <input
+                            type="radio"
+                            name="compare-mode"
+                            checked={diffOnly}
+                            onChange={() => setDiffOnly(true)}
+                            className="accent-[#179146]"
+                          />
+                          Показать различия
+                        </label>
                       </div>
-                    </th>
-                  ))}
+
+                      {activeCategory !== ALL_TAB && (
+                        <button
+                          onClick={clearCategory}
+                          className="flex items-center gap-2 text-sm text-[#767d83] hover:text-[#1c2126]"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6" />
+                          </svg>
+                          Очистить категорию
+                        </button>
+                      )}
+                    </div>
+                  </th>
+                  {activeItems.map((item) => {
+                    const isPinned = pinnedVariantId === item.variantId
+                    return (
+                      <th
+                        key={item.variantId}
+                        className={`px-2 pb-4 align-top ${
+                          isPinned ? 'sticky z-10 bg-white shadow-[4px_0_8px_-4px_rgba(0,0,0,0.08)]' : ''
+                        }`}
+                        style={{ width: 240, height: 1, ...(isPinned ? { left: 160 } : {}) }}
+                      >
+                        <CompareProductCard
+                          item={item}
+                          isPinned={isPinned}
+                          onTogglePin={() =>
+                            setPinnedVariantId((prev) => (prev === item.variantId ? null : item.variantId))
+                          }
+                          onRemove={() => removeVariant(item.variantId)}
+                        />
+                      </th>
+                    )
+                  })}
                 </tr>
+
+                {activeItems.some((item) => item.siblingVariants.length > 1) && (
+                  <tr>
+                    <th className="sticky left-0 z-20 bg-white text-left text-sm text-gray-400 font-normal pb-4 align-top">
+                      Исполнение
+                    </th>
+                    {activeItems.map((item) => {
+                      const isPinned = pinnedVariantId === item.variantId
+                      return (
+                        <th
+                          key={item.variantId}
+                          className={`px-2 pb-4 align-top ${
+                            isPinned ? 'sticky z-10 bg-white shadow-[4px_0_8px_-4px_rgba(0,0,0,0.08)]' : ''
+                          }`}
+                          style={isPinned ? { left: 160 } : undefined}
+                        >
+                          {item.siblingVariants.length > 1 ? (
+                            <select
+                              value={item.variantId}
+                              onChange={(e) => replaceVariant(item.variantId, e.target.value)}
+                              className="w-full text-xs border border-[#e5e7e8] rounded px-2 py-1.5 bg-white"
+                            >
+                              {item.siblingVariants.map((sv) => (
+                                <option key={sv.id} value={sv.id}>
+                                  {sv.name}
+                                </option>
+                              ))}
+                            </select>
+                          ) : (
+                            <p className="text-xs text-[#767d83]">{item.variantName}</p>
+                          )}
+                        </th>
+                      )
+                    })}
+                  </tr>
+                )}
               </thead>
 
-              {activeCategory !== ALL_TAB && (
-                <tbody>
-                  {baseAttrs.length === 0 ? (
+              <tbody>
+                  {baseAttrs.length === 0 && customAttrLabels.length === 0 ? (
                     <tr>
                       <td colSpan={activeItems.length + 1} className="text-center text-gray-400 py-8">
                         {diffOnly ? 'Различий не найдено' : 'Для этой категории не заданы характеристики'}
@@ -271,28 +335,58 @@ export default function ComparePage() {
                     </tr>
                   ) : (
                     <>
-                      <tr>
-                        <td colSpan={activeItems.length + 1} className="pt-6 pb-2">
-                          <p className="text-base font-manrope font-bold text-[#1c2126]">Важные характеристики</p>
-                          {pinnedAttrs.length === 0 && (
-                            <p className="text-sm text-[#767d83] mt-1">
-                              Отметьте галочкой характеристики ниже, чтобы закрепить их здесь
-                            </p>
-                          )}
-                        </td>
-                      </tr>
-                      {pinnedAttrs.map((attr) => renderAttrRow(attr, true))}
+                      {pinnedAttrs.length > 0 && (
+                        <>
+                          <tr>
+                            <td colSpan={activeItems.length + 1} className="pt-6 pb-2">
+                              <p className="text-base font-manrope font-bold text-[#1c2126]">Важные характеристики</p>
+                            </td>
+                          </tr>
+                          {pinnedAttrs.map((attr) => renderAttrRow(attr, true))}
+                        </>
+                      )}
 
-                      <tr>
-                        <td colSpan={activeItems.length + 1} className="pt-6 pb-2">
-                          <p className="text-base font-manrope font-bold text-[#1c2126]">Характеристики</p>
-                        </td>
-                      </tr>
-                      {restAttrs.map((attr) => renderAttrRow(attr, false))}
+                      {groupOrder.map((groupName) => (
+                        <Fragment key={groupName}>
+                          <tr>
+                            <td colSpan={activeItems.length + 1} className="pt-6 pb-2">
+                              <p className="text-base font-manrope font-bold text-[#1c2126]">{groupName}</p>
+                            </td>
+                          </tr>
+                          {groupedRestAttrs.get(groupName)!.map((attr) => renderAttrRow(attr, false))}
+                        </Fragment>
+                      ))}
+
+                      {customAttrLabels.length > 0 && (
+                        <>
+                          <tr>
+                            <td colSpan={activeItems.length + 1} className="pt-6 pb-2">
+                              <p className="text-base font-manrope font-bold text-[#1c2126]">Дополнительно</p>
+                            </td>
+                          </tr>
+                          {customAttrLabels.map((label) => (
+                            <tr key={`custom-${label}`} className="border-t border-[#e5e7e8]">
+                              <td className="sticky left-0 z-10 bg-white py-3 pr-4 text-sm text-[#767d83]">{label}</td>
+                              {activeItems.map((item) => (
+                                <td
+                                  key={item.variantId}
+                                  className={`py-3 px-4 text-sm text-[#1c2126] ${
+                                    pinnedVariantId === item.variantId
+                                      ? 'sticky z-[5] bg-white shadow-[4px_0_8px_-4px_rgba(0,0,0,0.08)]'
+                                      : ''
+                                  }`}
+                                  style={pinnedVariantId === item.variantId ? { left: 160 } : undefined}
+                                >
+                                  {item.customAttributes.find((a) => a.label === label)?.value ?? '—'}
+                                </td>
+                              ))}
+                            </tr>
+                          ))}
+                        </>
+                      )}
                     </>
                   )}
                 </tbody>
-              )}
             </table>
           </div>
         </>

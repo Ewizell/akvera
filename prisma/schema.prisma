@@ -38,6 +38,7 @@ model CategoryAttribute {
   label      String   // отображаемое название, например "Мощность (кВт)"
   fieldType  String   // тип поля: "number" | "string" | "select" | "boolean" и т.д.
   unit       String?  // единица измерения, например "кВт" (необязательное поле)
+  group      String?  // раздел для группировки в сравнении, например "Общие характеристики"
   sortOrder  Int      @default(0)
 
   createdAt  DateTime @default(now())

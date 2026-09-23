@@ -229,7 +229,7 @@ export function CheckoutForm() {
           )}
 
           <FormField label="Комментарий">
-            <input name="comment" className={inputClass} placeholder="Укажите удобное время доставки" />
+            <input name="comment" className={inputClass} placeholder="Укажите удобное время" />
           </FormField>
         </div>
 

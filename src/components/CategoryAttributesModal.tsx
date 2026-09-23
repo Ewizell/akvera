@@ -13,6 +13,7 @@ type Attribute = {
   label: string
   fieldType: string
   unit: string | null
+  group: string | null
 }
 
 const FIELD_TYPES = [
@@ -40,8 +41,10 @@ function FieldTypeLabel({ value }: { value: string }) {
 
 function AttributeFormFields({
   attribute,
+  existingGroups,
 }: {
   attribute?: Attribute
+  existingGroups: string[]
 }) {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -111,14 +114,38 @@ function AttributeFormFields({
           className={inputCls}
         />
       </div>
+
+      <div className="sm:col-span-2">
+        <label className={labelCls}>Раздел (для сравнения)</label>
+
+        <input
+          name="group"
+          list="attribute-groups-list"
+          defaultValue={attribute?.group ?? ''}
+          placeholder="Например: Наличие и способы получения"
+          className={inputCls}
+        />
+
+        <datalist id="attribute-groups-list">
+          {existingGroups.map((g) => (
+            <option key={g} value={g} />
+          ))}
+        </datalist>
+
+        <p className="mt-1.5 text-[11px] text-[#9aa2ad]">
+          Атрибуты с одинаковым разделом группируются вместе на странице сравнения. Оставьте пустым для общего раздела «Характеристики».
+        </p>
+      </div>
     </div>
   )
 }
 
 function AttributeRow({
   attribute,
+  existingGroups,
 }: {
   attribute: Attribute
+  existingGroups: string[]
 }) {
   const [editing, setEditing] = useState(false)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
@@ -192,7 +219,7 @@ function AttributeRow({
             </div>
 
             <div className="p-4 sm:p-5">
-              <AttributeFormFields attribute={attribute} />
+              <AttributeFormFields attribute={attribute} existingGroups={existingGroups} />
 
               {error && (
                 <div className="mt-4 rounded-xl border border-[#f0d5d5] bg-[#fff7f7] px-3.5 py-3 text-xs text-[#b33a3a]">
@@ -281,6 +308,15 @@ function AttributeRow({
               <span className="h-1 w-1 rounded-full bg-[#c9ced5]" />
 
               <FieldTypeLabel value={attribute.fieldType} />
+
+              {attribute.group && (
+                <>
+                  <span className="h-1 w-1 rounded-full bg-[#c9ced5]" />
+                  <span className="rounded-full bg-[#eef4ff] px-2 py-0.5 text-[10px] font-medium text-[#3a5fb3]">
+                    {attribute.group}
+                  </span>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -396,6 +432,10 @@ export default function CategoryAttributesModal({
 }) {
   const [isPending, startTransition] = useTransition()
   const [addError, setAddError] = useState<string | null>(null)
+
+  const existingGroups = Array.from(
+    new Set(attributes.map((a) => a.group).filter((g): g is string => Boolean(g)))
+  ).sort()
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -567,6 +607,7 @@ export default function CategoryAttributesModal({
                     <AttributeRow
                       key={attribute.id}
                       attribute={attribute}
+                      existingGroups={existingGroups}
                     />
                   ))}
                 </ul>
@@ -608,7 +649,7 @@ export default function CategoryAttributesModal({
               action={handleAdd}
               className="p-4 sm:p-5"
             >
-              <AttributeFormFields />
+              <AttributeFormFields existingGroups={existingGroups} />
 
               {addError && (
                 <div className="mt-4 rounded-xl border border-[#f0d5d5] bg-[#fff7f7] px-3.5 py-3 text-xs text-[#b33a3a]">

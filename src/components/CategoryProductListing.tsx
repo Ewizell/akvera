@@ -123,12 +123,6 @@ export default async function CategoryProductListing({
           )}
         </div>
       </div>
-
-      <div className="mt-8 flex justify-end">
-        <Link href={backHref} className="text-sm text-[#475569] hover:underline">
-          ← Назад
-        </Link>
-      </div>
     </main>
   );
 }

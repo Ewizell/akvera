@@ -1,6 +1,7 @@
 export type RecentlyViewedItem = {
   id: string
   slug: string
+  sku: string
   name: string
   price: number | null
   product: { name: string }

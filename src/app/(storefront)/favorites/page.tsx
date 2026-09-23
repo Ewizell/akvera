@@ -49,7 +49,7 @@ useEffect(() => {
     viewed.map((item: RecentlyViewedItem) => ({
       id: item.id,
       slug: item.slug,
-      sku: '', // см. примечание выше про recently-viewed.ts
+      sku: item.sku,
       name: item.name,
       price: item.price,
       stock: 0,

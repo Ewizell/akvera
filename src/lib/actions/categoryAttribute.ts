@@ -8,6 +8,7 @@ export async function createAttribute(categoryId: string, formData: FormData) {
   const label = formData.get('label') as string
   const fieldType = formData.get('fieldType') as string
   const unit = formData.get('unit') as string
+  const group = formData.get('group') as string
 
   try {
     await prisma.categoryAttribute.create({
@@ -17,6 +18,7 @@ export async function createAttribute(categoryId: string, formData: FormData) {
         label,
         fieldType,
         unit: unit || null,
+        group: group?.trim() || null,
       },
     })
     revalidatePath('/admin/categories')
@@ -34,6 +36,7 @@ export async function updateAttribute(id: string, formData: FormData) {
   const label = formData.get('label') as string
   const fieldType = formData.get('fieldType') as string
   const unit = formData.get('unit') as string
+  const group = formData.get('group') as string
 
   try {
     await prisma.categoryAttribute.update({
@@ -43,6 +46,7 @@ export async function updateAttribute(id: string, formData: FormData) {
         label,
         fieldType,
         unit: unit || null,
+        group: group?.trim() || null,
       },
     })
     revalidatePath('/admin/categories')

@@ -11,6 +11,7 @@ type Attribute = {
   label: string;
   fieldType: string;
   unit: string | null;
+  group: string | null;
 };
 
 type Category = {

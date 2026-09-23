@@ -431,6 +431,7 @@ const crumbs = [
         current={{
           id: variant.id,
           slug: variant.slug,
+          sku: variant.sku,
           name: variant.name,
           price: variant.price ? Number(variant.price) : null,
           product: { name: variant.product.name },

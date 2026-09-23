@@ -20,7 +20,9 @@ export type CompareVariant = {
     label: string
     fieldType: string
     unit: string | null
+    group: string | null
   }[]
+  customAttributes: { label: string; value: string }[]
   siblingVariants: { id: string; name: string; sku: string }[]
 }
 
@@ -65,7 +67,12 @@ export async function getCompareVariants(variantIds: string[]): Promise<CompareV
       label: a.label,
       fieldType: a.fieldType,
       unit: a.unit,
+      group: a.group,
     })),
+    customAttributes:
+      (v.attributes as Record<string, unknown> | null)?.customAttributes as
+        | { label: string; value: string }[]
+        | undefined ?? [],
     siblingVariants: v.product.variants.map((sv) => ({ id: sv.id, name: sv.name, sku: sv.sku })),
   }))
 }

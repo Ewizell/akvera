@@ -23,7 +23,7 @@ export function RecentlyViewedCarousel({
       .map((item): CarouselVariant => ({
         id: item.id,
         slug: item.slug,
-        sku: '',
+        sku: item.sku,
         name: item.name,
         price: item.price,
         stock: 0,
