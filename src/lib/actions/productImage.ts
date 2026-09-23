@@ -2,13 +2,15 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
-import { unlink } from 'fs/promises'
-import { existsSync } from 'fs'
-import path from 'path'
-import { uploadImage } from './upload'
+import { uploadImageServer, deleteFromS3 } from './upload'
 
 export async function addImage(variantId: string, formData: FormData) {
-  const uploadResult = await uploadImage(formData)
+  const file = formData.get('image') as File | null
+  if (!file || file.size === 0) {
+    return { success: false, error: 'Файл не выбран' }
+  }
+
+  const uploadResult = await uploadImageServer(file, 'products')
   if (!uploadResult.success || !uploadResult.url) {
     return { success: false, error: uploadResult.error ?? 'Ошибка загрузки' }
   }
@@ -40,10 +42,7 @@ export async function deleteImage(id: string) {
     return { success: false, error: 'Изображение не найдено' }
   }
 
-  const filePath = path.join(process.cwd(), 'public', image.url)
-  if (existsSync(filePath)) {
-    await unlink(filePath)
-  }
+  await deleteFromS3(image.url)
 
   await prisma.productImage.delete({ where: { id } })
 

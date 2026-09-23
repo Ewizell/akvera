@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
-import { uploadImage } from '@/lib/actions/upload'
+import { uploadImageServer } from '@/lib/actions/upload'
 
 type CategoryNode = {
   id: string
@@ -24,7 +24,7 @@ export async function updateCategory(id: string, formData: FormData) {
 
     const imageFile = formData.get('image') as File | null
     if (imageFile && imageFile.size > 0) {
-      const uploadResult = await uploadImage(formData, 'categories')
+      const uploadResult = await uploadImageServer(imageFile, 'categories')
       if (uploadResult.success) {
         imageUrl = uploadResult.url
       }
@@ -32,9 +32,7 @@ export async function updateCategory(id: string, formData: FormData) {
 
     const iconFile = formData.get('icon') as File | null
     if (iconFile && iconFile.size > 0) {
-      const iconFormData = new FormData()
-      iconFormData.set('image', iconFile)
-      const uploadResult = await uploadImage(iconFormData, 'category-icons')
+      const uploadResult = await uploadImageServer(iconFile, 'category-icons')
       if (!uploadResult.success) {
         return { success: false, error: uploadResult.error ?? 'Не удалось загрузить иконку' }
       }
@@ -76,7 +74,7 @@ export async function createCategory(formData: FormData) {
 
     const imageFile = formData.get('image') as File | null
     if (imageFile && imageFile.size > 0) {
-      const uploadResult = await uploadImage(formData, 'categories')
+      const uploadResult = await uploadImageServer(imageFile, 'categories')
       if (!uploadResult.success) {
         return { success: false, error: uploadResult.error ?? 'Не удалось загрузить изображение' }
       }
@@ -85,9 +83,7 @@ export async function createCategory(formData: FormData) {
 
     const iconFile = formData.get('icon') as File | null
     if (iconFile && iconFile.size > 0) {
-      const iconFormData = new FormData()
-      iconFormData.set('image', iconFile)
-      const uploadResult = await uploadImage(iconFormData, 'category-icons')
+      const uploadResult = await uploadImageServer(iconFile, 'category-icons')
       if (uploadResult.success) {
         iconUrl = uploadResult.url
       }
