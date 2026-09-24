@@ -2,15 +2,13 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
-import { unlink } from 'fs/promises'
-import { existsSync } from 'fs'
-import path from 'path'
-import { uploadDocument } from './uploadDocument'
+import { uploadDocumentServer } from './uploadDocument'
+import { deleteFromS3 } from './upload'
 
 // --- Медиатека: сама сущность Document ---
 
 export async function createDocument(formData: FormData) {
-  const uploadResult = await uploadDocument(formData)
+  const uploadResult = await uploadDocumentServer(formData)
   if (!uploadResult.success || !uploadResult.url) {
     return { success: false, error: uploadResult.error ?? 'Ошибка загрузки' }
   }
@@ -54,8 +52,7 @@ export async function deleteDocument(id: string) {
     }
   }
 
-  const filePath = path.join(process.cwd(), 'public', doc.url)
-  if (existsSync(filePath)) await unlink(filePath)
+  await deleteFromS3(doc.url)
 
   await prisma.document.delete({ where: { id } })
   revalidatePath('/admin/documents')

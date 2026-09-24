@@ -1,12 +1,14 @@
 'use server'
 
-import { writeFile, mkdir } from 'fs/promises'
-import { existsSync } from 'fs'
-import path from 'path'
+import { PutObjectCommand } from '@aws-sdk/client-s3'
+import { s3, S3_BUCKET, S3_PUBLIC_URL } from '@/lib/s3'
+import { randomUUID } from 'crypto'
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024 // 20 МБ
 
-export async function uploadDocument(formData: FormData): Promise<{ success: boolean; url?: string; error?: string }> {
+export async function uploadDocumentServer(
+  formData: FormData
+): Promise<{ success: boolean; url?: string; error?: string }> {
   const file = formData.get('file') as File | null
 
   if (!file || file.size === 0) {
@@ -20,15 +22,17 @@ export async function uploadDocument(formData: FormData): Promise<{ success: boo
   const bytes = await file.arrayBuffer()
   const buffer = Buffer.from(bytes)
 
-  const ext = path.extname(file.name) // пусто, если у файла нет расширения — это нормально
-  const filename = `${crypto.randomUUID()}${ext}`
+  const ext = file.name.includes('.') ? file.name.split('.').pop() : ''
+  const key = `documents/${randomUUID()}${ext ? `.${ext}` : ''}`
 
-  const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'documents')
-  if (!existsSync(uploadDir)) {
-    await mkdir(uploadDir, { recursive: true })
-  }
+  await s3.send(
+    new PutObjectCommand({
+      Bucket: S3_BUCKET,
+      Key: key,
+      Body: buffer,
+      ContentType: file.type || 'application/octet-stream',
+    })
+  )
 
-  await writeFile(path.join(uploadDir, filename), buffer)
-
-  return { success: true, url: `/uploads/documents/${filename}` }
+  return { success: true, url: `${S3_PUBLIC_URL}/${key}` }
 }
