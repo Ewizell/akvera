@@ -32,12 +32,24 @@ export async function addImage(variantId: string, formData: FormData) {
     },
   })
 
+  const variant = await prisma.productVariant.findUnique({
+    where: { id: variantId },
+    select: { slug: true },
+  })
+
   revalidatePath('/admin/products')
+  if (variant) revalidatePath(`/product/${variant.slug}`)
+  revalidatePath('/catalog/all')
+  revalidatePath('/category', 'layout')
+
   return { success: true, image, resetMain: isMain }
 }
 
 export async function deleteImage(id: string) {
-  const image = await prisma.productImage.findUnique({ where: { id } })
+  const image = await prisma.productImage.findUnique({
+    where: { id },
+    include: { variant: { select: { slug: true } } },
+  })
   if (!image) {
     return { success: false, error: 'Изображение не найдено' }
   }
@@ -47,5 +59,9 @@ export async function deleteImage(id: string) {
   await prisma.productImage.delete({ where: { id } })
 
   revalidatePath('/admin/products')
+  revalidatePath(`/product/${image.variant.slug}`)
+  revalidatePath('/catalog/all')
+  revalidatePath('/category', 'layout')
+
   return { success: true, id }
 }
