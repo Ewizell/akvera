@@ -208,7 +208,13 @@ export default function BulkActionsToolbar({
     }
 
     startTransition(async () => {
-      await bulkDeleteProducts(selectedIds);
+      const result = await bulkDeleteProducts(selectedIds);
+
+      if (!result.success) {
+        alert(result.error);
+        return;
+      }
+
       onClear();
       router.refresh();
     });

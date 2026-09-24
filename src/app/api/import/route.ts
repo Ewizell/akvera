@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { parseCsvImport } from '@/lib/import-export/csv-parser';
 import { parseYmlImport } from '@/lib/import-export/yml-parser';
 import { importRow } from '@/lib/import-export/import';
+import { revalidatePath } from 'next/cache';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300; // импорт 350 товаров с картинками может идти пару минут
@@ -35,6 +36,10 @@ export async function POST(req: NextRequest) {
   for (const row of rows) {
     results.push(await importRow(row, { downloadImages, defaultStock, mode }));
   }
+
+  revalidatePath('/admin/products');
+  revalidatePath('/catalog/all');
+  revalidatePath('/category', 'layout');
 
   return NextResponse.json({
     created: results.filter((r) => r.status === 'created').length,

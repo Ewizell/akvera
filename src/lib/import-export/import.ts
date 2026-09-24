@@ -38,11 +38,23 @@ export async function importRow(row: ImportRow, opts: ImportOptions): Promise<Im
       });
 
       if (opts.downloadImages && row.imageUrl) {
-        const hasImages = await prisma.productImage.count({ where: { variantId: existing.id } });
-        if (!hasImages) {
+        const mainImage = await prisma.productImage.findFirst({
+          where: { variantId: existing.id, isMain: true },
+        });
+
+        if (!mainImage) {
           const localUrl = await downloadAndSaveImage(row.imageUrl);
           if (localUrl) {
             await prisma.productImage.create({ data: { variantId: existing.id, url: localUrl, isMain: true } });
+          }
+        } else if (opts.updateImages) {
+          const localUrl = await downloadAndSaveImage(row.imageUrl);
+          if (localUrl) {
+            await deleteFromS3(mainImage.url);
+            await prisma.productImage.update({
+              where: { id: mainImage.id },
+              data: { url: localUrl },
+            });
           }
         }
       }
