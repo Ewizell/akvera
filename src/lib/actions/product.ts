@@ -178,17 +178,24 @@ export async function getPopularVariants(excludeVariantId?: string, take = 5) {
 }
 
 export async function bulkDeleteProducts(productIds: string[]) {
-  try {
-    await prisma.product.deleteMany({ where: { id: { in: productIds } } });
-    revalidatePath("/admin/products");
-    return { success: true };
-  } catch (error) {
-    console.error('bulkDeleteProducts error:', error);
-    return {
-      success: false,
-      error: 'Некоторые товары нельзя удалить — по ним есть оформленные заказы. Уберите их из выборки и повторите.',
-    };
+  let deleted = 0;
+  const blocked: string[] = [];
+
+  for (const id of productIds) {
+    try {
+      await prisma.product.delete({ where: { id } });
+      deleted++;
+    } catch {
+      const product = await prisma.product.findUnique({ where: { id }, select: { name: true } });
+      blocked.push(product?.name ?? id);
+    }
   }
+
+  revalidatePath("/admin/products");
+  revalidatePath("/catalog/all");
+  revalidatePath("/category", "layout");
+
+  return { success: true, deleted, blocked };
 }
 
 export async function bulkUpdateCategory(

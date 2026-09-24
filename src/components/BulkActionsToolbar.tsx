@@ -162,6 +162,10 @@ export default function BulkActionsToolbar({
   // ключ — variantId, значение — набор ключей атрибутов, отмеченных для переноса в customAttributes
   const [transferChoices, setTransferChoices] = useState<Record<string, Set<string>>>({});
 
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteResult, setDeleteResult] = useState<{ deleted: number; blocked: string[] } | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
   const hasSelection = selectedIds.length > 0;
   const disabled = isPending || !hasSelection;
 
@@ -199,25 +203,23 @@ export default function BulkActionsToolbar({
   }, [modal, isPending]);
 
   function handleDelete() {
-    if (
-      !confirm(
-        `Удалить ${selectedIds.length} товар(ов)? Это действие необратимо.`
-      )
-    ) {
-      return;
-    }
+    setDeleteConfirmOpen(true);
+  }
 
+  function handleConfirmDelete() {
     startTransition(async () => {
       const result = await bulkDeleteProducts(selectedIds);
 
-      if (!result.success) {
-        alert(result.error);
-        return;
-      }
+      setDeleteConfirmOpen(false);
+      setDeleteResult({ deleted: result.deleted, blocked: result.blocked });
 
       onClear();
       router.refresh();
     });
+  }
+
+  function closeDeleteResult() {
+    setDeleteResult(null);
   }
 
   function handlePreviewCategory() {
@@ -227,7 +229,7 @@ export default function BulkActionsToolbar({
       const result = await previewBulkCategoryChange(selectedIds, selectedOptionId);
 
       if (!result.success) {
-        alert(result.error);
+        setErrorMessage(result.error ?? "Не удалось выполнить операцию.");
         return;
       }
 
@@ -276,7 +278,7 @@ export default function BulkActionsToolbar({
       const result = await applyBulkCategoryChange(selectedIds, selectedOptionId, transfers);
 
       if (!result.success) {
-        alert(result.error);
+        setErrorMessage(result.error ?? "Не удалось выполнить операцию.");
         return;
       }
 
@@ -954,6 +956,163 @@ export default function BulkActionsToolbar({
                 )}
 
                 Применить
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deleteConfirmOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#18212b]/45 p-4 backdrop-blur-[3px]"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !isPending) {
+              setDeleteConfirmOpen(false);
+            }
+          }}
+        >
+          <div className="w-full max-w-[440px] overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/[0.08]">
+            <div className="p-5">
+              <div className="flex items-start gap-3.5">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#fff0f0] text-[#b33a3a]">
+                  <svg viewBox="0 0 20 20" fill="none" className="h-5 w-5" stroke="currentColor" strokeWidth="1.6">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10 3.5l7 12.5H3L10 3.5z" />
+                    <path strokeLinecap="round" d="M10 8v3.5M10 14.2v.1" />
+                  </svg>
+                </div>
+
+                <div className="min-w-0">
+                  <h3 className="text-base font-semibold text-[#28313d]">
+                    Удалить {selectedIds.length} товар(ов)?
+                  </h3>
+                  <p className="mt-1 text-sm leading-5 text-[#7b8592]">
+                    Это действие необратимо. Товары, по которым есть оформленные заказы,
+                    удалены не будут — вы увидите список после завершения.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 border-t border-[#eef0f2] bg-[#fafbfc] px-5 py-4">
+              <button
+                type="button"
+                onClick={() => setDeleteConfirmOpen(false)}
+                disabled={isPending}
+                className={secondaryButtonClassName}
+              >
+                Отмена
+              </button>
+
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                disabled={isPending}
+                className="inline-flex h-10 items-center justify-center rounded-xl bg-[#b33a3a] px-4 text-sm font-semibold text-white transition hover:bg-[#963030] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {isPending && (
+                  <span className="mr-2">
+                    <Spinner />
+                  </span>
+                )}
+                Удалить
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deleteResult && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#18212b]/45 p-4 backdrop-blur-[3px]"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              closeDeleteResult();
+            }
+          }}
+        >
+          <div className="w-full max-w-[480px] overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/[0.08]">
+            <div className="p-5">
+              <div className="flex items-start gap-3.5">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#f1f7f3] text-[#397653]">
+                  <svg viewBox="0 0 20 20" fill="none" className="h-5 w-5" stroke="currentColor" strokeWidth="1.6">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 10.5l4 4L16 5.5" />
+                  </svg>
+                </div>
+
+                <div className="min-w-0">
+                  <h3 className="text-base font-semibold text-[#28313d]">
+                    Результат удаления
+                  </h3>
+                  <p className="mt-1 text-sm text-[#5f6976]">
+                    Удалено: <span className="font-semibold">{deleteResult.deleted}</span>
+                  </p>
+                </div>
+              </div>
+
+              {deleteResult.blocked.length > 0 && (
+                <div className="mt-4 rounded-xl bg-[#fff9ed] p-3.5 ring-1 ring-[#f0dfb8]">
+                  <p className="mb-1.5 text-xs font-semibold text-[#9a6b19]">
+                    Не удалось удалить (есть оформленные заказы):
+                  </p>
+                  <ul className="space-y-1 text-xs leading-5 text-[#9a6b19]">
+                    {deleteResult.blocked.map((name, i) => (
+                      <li key={i}>· {name}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end border-t border-[#eef0f2] bg-[#fafbfc] px-5 py-4">
+              <button
+                type="button"
+                onClick={closeDeleteResult}
+                className={primaryButtonClassName}
+              >
+                Понятно
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {errorMessage && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#18212b]/45 p-4 backdrop-blur-[3px]"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setErrorMessage(null);
+            }
+          }}
+        >
+          <div className="w-full max-w-[440px] overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/[0.08]">
+            <div className="p-5">
+              <div className="flex items-start gap-3.5">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#fff0f0] text-[#b33a3a]">
+                  <svg viewBox="0 0 20 20" fill="none" className="h-5 w-5" stroke="currentColor" strokeWidth="1.6">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10 3.5l7 12.5H3L10 3.5z" />
+                    <path strokeLinecap="round" d="M10 8v3.5M10 14.2v.1" />
+                  </svg>
+                </div>
+
+                <div className="min-w-0">
+                  <h3 className="text-base font-semibold text-[#28313d]">
+                    Не удалось выполнить операцию
+                  </h3>
+                  <p className="mt-1 text-sm leading-5 text-[#7b8592]">
+                    {errorMessage}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end border-t border-[#eef0f2] bg-[#fafbfc] px-5 py-4">
+              <button
+                type="button"
+                onClick={() => setErrorMessage(null)}
+                className={primaryButtonClassName}
+              >
+                Понятно
               </button>
             </div>
           </div>
