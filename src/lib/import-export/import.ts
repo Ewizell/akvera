@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { resolveCategory, resolveBrand, uniqueVariantSlug, downloadAndSaveImage } from './helpers';
+import { deleteFromS3 } from '@/lib/actions/upload';
 import type { ImportRow, ImportResultRow, ImportOptions } from './types';
 
 export async function importRow(row: ImportRow, opts: ImportOptions): Promise<ImportResultRow> {
