@@ -51,6 +51,8 @@ export async function updateCategory(id: string, formData: FormData) {
     })
 
     revalidatePath('/admin/categories')
+    revalidatePath('/catalog')
+    revalidatePath('/category', 'layout')
 
     return { success: true }
   } catch (error) {
@@ -100,6 +102,8 @@ export async function createCategory(formData: FormData) {
     })
 
     revalidatePath('/admin/categories')
+    revalidatePath('/catalog')
+    revalidatePath('/category', 'layout')
 
     return { success: true }
   } catch (error) {
@@ -120,6 +124,8 @@ export async function deleteCategory(id: string) {
     })
 
     revalidatePath('/admin/categories')
+    revalidatePath('/catalog')
+    revalidatePath('/category', 'layout')
 
     return { success: true }
   } catch (error) {
