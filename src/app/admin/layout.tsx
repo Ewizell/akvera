@@ -191,7 +191,7 @@ export default function AdminLayout({
   return (
     <div className="min-h-screen bg-[#f7f8fa] text-[#28313d]">
       <aside
-        className={`fixed left-0 top-0 z-40 flex h-screen flex-col border-r border-black/[0.05] bg-white transition-all duration-200 ${
+        className={`fixed left-0 top-0 z-40 flex h-screen flex-col border-r border-black/[0.05] bg-white transition-all duration-200 print:hidden ${
           collapsed ? 'w-14' : 'w-56'
         }`}
       >
@@ -352,7 +352,7 @@ export default function AdminLayout({
 
       {/* Main content */}
       <main
-        className={`min-h-screen transition-[margin] duration-200 ${
+        className={`min-h-screen transition-[margin] duration-200 print:ml-0 ${
           collapsed ? 'ml-14' : 'ml-56'
         }`}
       >

@@ -7,11 +7,24 @@ import {
   updateOrderStatus,
   updateOrderContact,
   updateOrderAdminComment,
+  deleteOrder,
+  deleteOrderItem,
+  updateOrderItem,
+  addOrderItem,
+  searchVariantsForOrder,
 } from "@/lib/actions/order";
 import { STATUS_LABELS } from "@/lib/orderTypes";
 import { OrderStatusBadge } from "./OrderStatusBadge";
 
 type OrderDetail = NonNullable<Awaited<ReturnType<typeof getOrderById>>>;
+
+type VariantSearchResult = {
+  id: string;
+  sku: string;
+  name: string;
+  productName: string;
+  price: number | null;
+};
 
 const inputCls =
   "w-full h-10 rounded-xl border-0 bg-[#f4f5f7] px-3.5 text-sm text-[#28313d] outline-none ring-1 ring-transparent transition placeholder:text-[#a1a8b3] focus:bg-white focus:ring-2 focus:ring-[#28394c]/15";
@@ -86,6 +99,21 @@ export function OrderDetailModal({
   const [adminComment, setAdminComment] = useState("");
   const [copied, setCopied] = useState(false);
 
+  const [deleteOrderConfirmOpen, setDeleteOrderConfirmOpen] = useState(false);
+  const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [addingItem, setAddingItem] = useState(false);
+  const [itemForm, setItemForm] = useState({
+    quantity: 1,
+    priceAtOrder: "",
+    onRequest: false,
+    variantId: "",
+    variantLabel: "",
+  });
+  const [variantQuery, setVariantQuery] = useState("");
+  const [variantResults, setVariantResults] = useState<VariantSearchResult[]>([]);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
   useEffect(() => {
     getOrderById(orderId).then((o) => {
       setOrder(o);
@@ -143,6 +171,146 @@ export function OrderDetailModal({
       setOrder(fresh);
       onStatusChanged();
     });
+  }
+    function confirmDeleteOrder() {
+    startTransition(async () => {
+      const result = await deleteOrder(orderId);
+
+      if (!result.success) {
+        setErrorMessage(result.error);
+        setDeleteOrderConfirmOpen(false);
+        return;
+      }
+
+      setDeleteOrderConfirmOpen(false);
+      onStatusChanged();
+      onClose();
+    });
+  }
+
+  function confirmDeleteItem() {
+    if (!deleteItemId) return;
+
+    startTransition(async () => {
+      const result = await deleteOrderItem(orderId, deleteItemId);
+
+      setDeleteItemId(null);
+
+      if (!result.success) {
+        setErrorMessage(result.error);
+        return;
+      }
+
+      const fresh = await getOrderById(orderId);
+      setOrder(fresh);
+      onStatusChanged();
+    });
+  }
+  
+
+  function startEditItem(item: OrderDetail["items"][number]) {
+    setEditingItemId(item.id);
+    setItemForm({
+      quantity: item.quantity,
+      priceAtOrder: item.priceAtOrder !== null ? String(item.priceAtOrder) : "",
+      onRequest: item.priceAtOrder === null,
+      variantId: item.variantId,
+      variantLabel: `${item.variant.product.name} — ${item.variant.name} (${item.variant.sku})`,
+    });
+    setVariantQuery("");
+    setVariantResults([]);
+  }
+
+  function cancelEditItem() {
+    setEditingItemId(null);
+  }
+
+  function startAddItem() {
+    setAddingItem(true);
+    setItemForm({
+      quantity: 1,
+      priceAtOrder: "",
+      onRequest: false,
+      variantId: "",
+      variantLabel: "",
+    });
+    setVariantQuery("");
+    setVariantResults([]);
+  }
+
+  function cancelAddItem() {
+    setAddingItem(false);
+  }
+
+  function saveNewItem() {
+    if (!itemForm.variantId) {
+      setErrorMessage("Выберите товар из списка.");
+      return;
+    }
+
+    startTransition(async () => {
+      const result = await addOrderItem(orderId, {
+        variantId: itemForm.variantId,
+        quantity: itemForm.quantity,
+        priceAtOrder: itemForm.onRequest ? null : parseFloat(itemForm.priceAtOrder) || 0,
+      });
+
+      if (!result.success) {
+        setErrorMessage(result.error);
+        return;
+      }
+
+      const fresh = await getOrderById(orderId);
+      setOrder(fresh);
+      setAddingItem(false);
+      onStatusChanged();
+    });
+  }
+
+  function saveEditItem() {
+    if (!editingItemId) return;
+
+    startTransition(async () => {
+      const result = await updateOrderItem(editingItemId, {
+        quantity: itemForm.quantity,
+        priceAtOrder: itemForm.onRequest ? null : parseFloat(itemForm.priceAtOrder) || 0,
+        variantId: itemForm.variantId,
+      });
+
+      if (!result.success) {
+        setErrorMessage(result.error);
+        return;
+      }
+
+      const fresh = await getOrderById(orderId);
+      setOrder(fresh);
+      setEditingItemId(null);
+      onStatusChanged();
+    });
+  }
+
+  function searchVariants(query: string) {
+    setVariantQuery(query);
+
+    if (!query.trim()) {
+      setVariantResults([]);
+      return;
+    }
+
+    startTransition(async () => {
+      const results = await searchVariantsForOrder(query);
+      setVariantResults(results);
+    });
+  }
+
+  function pickVariant(v: VariantSearchResult) {
+    setItemForm((prev) => ({
+      ...prev,
+      variantId: v.id,
+      variantLabel: `${v.productName} — ${v.name} (${v.sku})`,
+    }));
+    setVariantQuery("");
+    setVariantResults([]);
   }
 
   function copyOrder() {
@@ -295,6 +463,16 @@ export function OrderDetailModal({
                 Печать
               </span>
             </a>
+
+            <button
+              onClick={() => setDeleteOrderConfirmOpen(true)}
+              className="inline-flex h-9 items-center justify-center gap-2 rounded-xl bg-[#fff7f7] px-3.5 text-xs font-medium text-[#b33a3a] ring-1 ring-[#f0d5d5] transition hover:bg-[#ffefef]"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />
+              </svg>
+              <span className="hidden sm:inline">Удалить заказ</span>
+            </button>
 
             <button
               onClick={onClose}
@@ -675,11 +853,97 @@ export function OrderDetailModal({
                       ? item.priceAtOrder * item.quantity
                       : null;
 
+                  if (editingItemId === item.id) {
+                    return (
+                      <div key={item.id} className="space-y-3 bg-[#fafbfc] px-5 py-4">
+                        <div>
+                          <label className={labelCls}>Товар</label>
+
+                          <div className="relative">
+                            <input
+                              value={variantQuery || itemForm.variantLabel}
+                              onChange={(e) => searchVariants(e.target.value)}
+                              placeholder="Поиск по названию или SKU..."
+                              className={inputCls}
+                            />
+
+                            {variantResults.length > 0 && (
+                              <div className="absolute z-10 mt-1 w-full overflow-hidden rounded-xl bg-white shadow-lg ring-1 ring-black/[0.08]">
+                                {variantResults.map((v) => (
+                                  <button
+                                    key={v.id}
+                                    type="button"
+                                    onClick={() => pickVariant(v)}
+                                    className="flex w-full flex-col items-start px-3.5 py-2.5 text-left text-sm transition hover:bg-[#f4f5f7]"
+                                  >
+                                    <span className="font-medium text-[#28313d]">
+                                      {v.productName} — {v.name}
+                                    </span>
+                                    <span className="text-xs text-[#8d96a3]">
+                                      {v.sku}
+                                      {v.price !== null && ` · ${v.price.toLocaleString("ru-RU")} ₽`}
+                                    </span>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className={labelCls}>Количество</label>
+                            <input
+                              type="number"
+                              min={1}
+                              value={itemForm.quantity}
+                              onChange={(e) =>
+                                setItemForm((prev) => ({ ...prev, quantity: Number(e.target.value) }))
+                              }
+                              className={inputCls}
+                            />
+                          </div>
+
+                          <div>
+                            <label className={labelCls}>Цена за шт.</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={itemForm.priceAtOrder}
+                              disabled={itemForm.onRequest}
+                              onChange={(e) =>
+                                setItemForm((prev) => ({ ...prev, priceAtOrder: e.target.value }))
+                              }
+                              className={`${inputCls} disabled:bg-[#eef0f2] disabled:text-[#a1a8b3]`}
+                            />
+
+                            <label className="mt-2 flex cursor-pointer items-center gap-2 text-xs text-[#7b8592]">
+                              <input
+                                type="checkbox"
+                                checked={itemForm.onRequest}
+                                onChange={(e) =>
+                                  setItemForm((prev) => ({ ...prev, onRequest: e.target.checked }))
+                                }
+                              />
+                              Цена по запросу
+                            </label>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 pt-1">
+                          <button onClick={saveEditItem} disabled={isPending} className={primaryBtnCls}>
+                            {isPending ? "Сохранение..." : "Сохранить"}
+                          </button>
+                          <button onClick={cancelEditItem} disabled={isPending} className={secondaryBtnCls}>
+                            Отмена
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  }
+
                   return (
-                    <div
-                      key={item.id}
-                      className="flex gap-4 px-5 py-4"
-                    >
+                    <div key={item.id} className="flex items-center gap-4 px-5 py-4">
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#f4f5f6] text-xs font-semibold text-[#7d8794]">
                         {String(index + 1).padStart(2, "0")}
                       </div>
@@ -696,25 +960,144 @@ export function OrderDetailModal({
                         <p className="mt-2 text-xs text-[#687382]">
                           {item.quantity} шт.
                           {item.priceAtOrder !== null &&
-                            ` × ${item.priceAtOrder.toLocaleString(
-                              "ru-RU"
-                            )} ₽`}
+                            ` × ${item.priceAtOrder.toLocaleString("ru-RU")} ₽`}
                         </p>
                       </div>
 
                       <div className="shrink-0 text-right">
                         <p className="text-sm font-semibold text-[#28394c]">
                           {itemTotal !== null
-                            ? `${itemTotal.toLocaleString(
-                                "ru-RU"
-                              )} ₽`
+                            ? `${itemTotal.toLocaleString("ru-RU")} ₽`
                             : "По запросу"}
                         </p>
+                      </div>
+
+                      <div className="flex shrink-0 items-center gap-1.5">
+                        <button
+                          onClick={() => startEditItem(item)}
+                          aria-label="Изменить позицию"
+                          className="flex h-8 w-8 items-center justify-center rounded-lg text-[#687382] transition hover:bg-[#f4f5f7] hover:text-[#28394c]"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                            <path d="M12 20h9" />
+                            <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4z" />
+                          </svg>
+                        </button>
+
+                        {order.items.length > 1 && (
+                          <button
+                            onClick={() => setDeleteItemId(item.id)}
+                            aria-label="Удалить позицию"
+                            className="flex h-8 w-8 items-center justify-center rounded-lg text-[#b33a3a] transition hover:bg-[#fff0f0]"
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                              <path d="M4 6h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />
+                            </svg>
+                          </button>
+                        )}
                       </div>
                     </div>
                   );
                 })}
               </div>
+
+              {addingItem ? (
+                <div className="space-y-3 border-t border-[#eef0f2] bg-[#fafbfc] px-5 py-4">
+                  <div>
+                    <label className={labelCls}>Товар</label>
+
+                    <div className="relative">
+                      <input
+                        value={variantQuery || itemForm.variantLabel}
+                        onChange={(e) => searchVariants(e.target.value)}
+                        placeholder="Поиск по названию или SKU..."
+                        className={inputCls}
+                        autoFocus
+                      />
+
+                      {variantResults.length > 0 && (
+                        <div className="absolute z-10 mt-1 w-full overflow-hidden rounded-xl bg-white shadow-lg ring-1 ring-black/[0.08]">
+                          {variantResults.map((v) => (
+                            <button
+                              key={v.id}
+                              type="button"
+                              onClick={() => pickVariant(v)}
+                              className="flex w-full flex-col items-start px-3.5 py-2.5 text-left text-sm transition hover:bg-[#f4f5f7]"
+                            >
+                              <span className="font-medium text-[#28313d]">
+                                {v.productName} — {v.name}
+                              </span>
+                              <span className="text-xs text-[#8d96a3]">
+                                {v.sku}
+                                {v.price !== null && ` · ${v.price.toLocaleString("ru-RU")} ₽`}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className={labelCls}>Количество</label>
+                      <input
+                        type="number"
+                        min={1}
+                        value={itemForm.quantity}
+                        onChange={(e) =>
+                          setItemForm((prev) => ({ ...prev, quantity: Number(e.target.value) }))
+                        }
+                        className={inputCls}
+                      />
+                    </div>
+
+                    <div>
+                      <label className={labelCls}>Цена за шт.</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={itemForm.priceAtOrder}
+                        disabled={itemForm.onRequest}
+                        onChange={(e) =>
+                          setItemForm((prev) => ({ ...prev, priceAtOrder: e.target.value }))
+                        }
+                        className={`${inputCls} disabled:bg-[#eef0f2] disabled:text-[#a1a8b3]`}
+                      />
+
+                      <label className="mt-2 flex cursor-pointer items-center gap-2 text-xs text-[#7b8592]">
+                        <input
+                          type="checkbox"
+                          checked={itemForm.onRequest}
+                          onChange={(e) =>
+                            setItemForm((prev) => ({ ...prev, onRequest: e.target.checked }))
+                          }
+                        />
+                        Цена по запросу
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-1">
+                    <button onClick={saveNewItem} disabled={isPending} className={primaryBtnCls}>
+                      {isPending ? "Добавление..." : "Добавить в заказ"}
+                    </button>
+                    <button onClick={cancelAddItem} disabled={isPending} className={secondaryBtnCls}>
+                      Отмена
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="border-t border-[#eef0f2] px-5 py-3">
+                  <button
+                    onClick={startAddItem}
+                    className="inline-flex items-center gap-2 text-xs font-semibold text-[#28394c] hover:underline"
+                  >
+                    <span className="flex h-5 w-5 items-center justify-center rounded-md bg-[#eef1f4]">+</span>
+                    Добавить товар
+                  </button>
+                </div>
+              )}
 
               <div className="flex items-center justify-between rounded-b-2xl border-t border-[#eef0f2] bg-[#fafbfc] px-5 py-4">
                 <span className="text-xs font-medium uppercase tracking-wide text-[#8d96a3]">
@@ -943,6 +1326,89 @@ export function OrderDetailModal({
           </aside>
         </div>
       </main>
+
+      {deleteOrderConfirmOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#18212b]/45 p-4 backdrop-blur-[3px]">
+          <div className="w-full max-w-[440px] overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/[0.08]">
+            <div className="p-5">
+              <div className="flex items-start gap-3.5">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#fff0f0] text-[#b33a3a]">
+                  <svg viewBox="0 0 20 20" fill="none" className="h-5 w-5" stroke="currentColor" strokeWidth="1.6">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10 3.5l7 12.5H3L10 3.5z" />
+                    <path strokeLinecap="round" d="M10 8v3.5M10 14.2v.1" />
+                  </svg>
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-base font-semibold text-[#28313d]">
+                    Удалить заказ №{order.orderNumber}?
+                  </h3>
+                  <p className="mt-1 text-sm leading-5 text-[#7b8592]">
+                    Это действие необратимо. Все позиции и вложения заказа будут удалены.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center justify-end gap-2 border-t border-[#eef0f2] bg-[#fafbfc] px-5 py-4">
+              <button onClick={() => setDeleteOrderConfirmOpen(false)} disabled={isPending} className={secondaryBtnCls}>
+                Отмена
+              </button>
+              <button
+                onClick={confirmDeleteOrder}
+                disabled={isPending}
+                className="inline-flex h-9 items-center justify-center rounded-xl bg-[#b33a3a] px-4 text-xs font-medium text-white transition hover:bg-[#963030] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isPending ? "Удаление..." : "Удалить заказ"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deleteItemId && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#18212b]/45 p-4 backdrop-blur-[3px]">
+          <div className="w-full max-w-[420px] overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/[0.08]">
+            <div className="p-5">
+              <h3 className="text-base font-semibold text-[#28313d]">Удалить позицию?</h3>
+              <p className="mt-1 text-sm leading-5 text-[#7b8592]">
+                Позиция будет удалена из заказа, сумма пересчитается автоматически.
+              </p>
+            </div>
+            <div className="flex items-center justify-end gap-2 border-t border-[#eef0f2] bg-[#fafbfc] px-5 py-4">
+              <button onClick={() => setDeleteItemId(null)} disabled={isPending} className={secondaryBtnCls}>
+                Отмена
+              </button>
+              <button
+                onClick={confirmDeleteItem}
+                disabled={isPending}
+                className="inline-flex h-9 items-center justify-center rounded-xl bg-[#b33a3a] px-4 text-xs font-medium text-white transition hover:bg-[#963030] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isPending ? "Удаление..." : "Удалить"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {errorMessage && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-[#18212b]/45 p-4 backdrop-blur-[3px]"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setErrorMessage(null);
+          }}
+        >
+          <div className="w-full max-w-[420px] overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/[0.08]">
+            <div className="p-5">
+              <h3 className="text-base font-semibold text-[#28313d]">Ошибка</h3>
+              <p className="mt-1 text-sm leading-5 text-[#7b8592]">{errorMessage}</p>
+            </div>
+            <div className="flex items-center justify-end border-t border-[#eef0f2] bg-[#fafbfc] px-5 py-4">
+              <button onClick={() => setErrorMessage(null)} className={primaryBtnCls}>
+                Понятно
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -209,3 +209,117 @@ export async function createOrder(formData: FormData) {
     return { success: false as const, error: "Не удалось оформить заявку. Попробуйте ещё раз." };
   }
 }
+import { deleteFromS3 } from './upload';
+
+export async function deleteOrder(orderId: string) {
+  try {
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: { attachments: true },
+    });
+
+    if (!order) {
+      return { success: false as const, error: 'Заказ не найден' };
+    }
+
+    for (const attachment of order.attachments) {
+      await deleteFromS3(attachment.url);
+    }
+
+    await prisma.order.delete({ where: { id: orderId } });
+
+    revalidatePath('/admin/orders');
+    return { success: true as const };
+  } catch (error) {
+    console.error('deleteOrder error:', error);
+    return { success: false as const, error: 'Не удалось удалить заказ.' };
+  }
+}
+
+export async function deleteOrderItem(orderId: string, itemId: string) {
+  try {
+    const itemsCount = await prisma.orderItem.count({ where: { orderId } });
+
+    if (itemsCount <= 1) {
+      return {
+        success: false as const,
+        error: 'Нельзя удалить последнюю позицию — удалите весь заказ.',
+      };
+    }
+
+    await prisma.orderItem.delete({ where: { id: itemId } });
+
+    revalidatePath('/admin/orders');
+    return { success: true as const };
+  } catch (error) {
+    console.error('deleteOrderItem error:', error);
+    return { success: false as const, error: 'Не удалось удалить позицию.' };
+  }
+}
+
+export async function updateOrderItem(
+  itemId: string,
+  data: { quantity: number; priceAtOrder: number | null; variantId: string }
+) {
+  try {
+    await prisma.orderItem.update({
+      where: { id: itemId },
+      data: {
+        quantity: data.quantity,
+        priceAtOrder: data.priceAtOrder,
+        variant: { connect: { id: data.variantId } },
+      },
+    });
+
+    revalidatePath('/admin/orders');
+    return { success: true as const };
+  } catch (error) {
+    console.error('updateOrderItem error:', error);
+    return { success: false as const, error: 'Не удалось обновить позицию.' };
+  }
+}
+
+export async function addOrderItem(
+  orderId: string,
+  data: { variantId: string; quantity: number; priceAtOrder: number | null }
+) {
+  try {
+    await prisma.orderItem.create({
+      data: {
+        orderId,
+        variantId: data.variantId,
+        quantity: data.quantity,
+        priceAtOrder: data.priceAtOrder,
+      },
+    });
+
+    revalidatePath('/admin/orders');
+    return { success: true as const };
+  } catch (error) {
+    console.error('addOrderItem error:', error);
+    return { success: false as const, error: 'Не удалось добавить товар.' };
+  }
+}
+
+export async function searchVariantsForOrder(query: string) {
+  if (!query.trim()) return [];
+
+  const variants = await prisma.productVariant.findMany({
+    where: {
+      OR: [
+        { sku: { contains: query, mode: 'insensitive' } },
+        { name: { contains: query, mode: 'insensitive' } },
+      ],
+    },
+    include: { product: { select: { name: true } } },
+    take: 10,
+  });
+
+  return variants.map((v) => ({
+    id: v.id,
+    sku: v.sku,
+    name: v.name,
+    productName: v.product.name,
+    price: v.price !== null ? Number(v.price) : null,
+  }));
+}
