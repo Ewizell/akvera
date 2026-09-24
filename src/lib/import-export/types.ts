@@ -21,7 +21,7 @@ export interface ImportResultRow {
 
 export interface ImportOptions {
   downloadImages: boolean;
-  updateImages: boolean;
+  updateImages?: boolean;
   defaultStock: number;
   mode: 'upsert' | 'update-only' | 'create-only';
 }
