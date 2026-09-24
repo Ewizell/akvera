@@ -15,7 +15,11 @@ export async function generateYmlFeed(baseUrl: string): Promise<string> {
 
   const offersXml = variants
     .map((v) => {
-      const picture = v.images[0] ? `<picture>${esc(baseUrl + v.images[0].url)}</picture>` : '';
+      const picture = v.images[0]
+        ? `<picture>${esc(
+            v.images[0].url.startsWith('http') ? v.images[0].url : baseUrl + v.images[0].url
+          )}</picture>`
+        : '';
       const params = Object.entries((v.attributes as Record<string, unknown>) ?? {})
         .filter(([, val]) => val !== null && val !== undefined && val !== '')
         .map(([key, val]) => `<param name="${esc(key)}">${esc(String(val))}</param>`)

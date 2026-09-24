@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { uploadImageServer, deleteFromS3 } from './upload'
 
 export async function addImage(variantId: string, formData: FormData) {
-  const file = formData.get('image') as File | null
+  const file = formData.get('file') as File | null
   if (!file || file.size === 0) {
     return { success: false, error: 'Файл не выбран' }
   }

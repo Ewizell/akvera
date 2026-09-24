@@ -1,7 +1,8 @@
-import { prisma } from '@/lib/prisma'; // поправь путь под свой клиент, если он называется иначе
-import { writeFile, mkdir } from 'fs/promises';
+import { prisma } from '@/lib/prisma';
 import path from 'path';
 import { randomUUID } from 'crypto';
+import { PutObjectCommand } from '@aws-sdk/client-s3';
+import { s3, S3_BUCKET, S3_PUBLIC_URL } from '@/lib/s3';
 
 const TRANSLIT: Record<string, string> = {
   а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'e', ж: 'zh', з: 'z', и: 'i',
@@ -70,11 +71,18 @@ export async function downloadAndSaveImage(url: string): Promise<string | null> 
     if (!res.ok) return null;
     const buffer = Buffer.from(await res.arrayBuffer());
     const ext = path.extname(new URL(url).pathname) || '.jpg';
-    const filename = `${randomUUID()}${ext}`;
-    const dir = path.join(process.cwd(), 'public', 'uploads', 'products');
-    await mkdir(dir, { recursive: true });
-    await writeFile(path.join(dir, filename), buffer);
-    return `/uploads/products/${filename}`;
+    const key = `products/${randomUUID()}${ext}`;
+
+    await s3.send(
+      new PutObjectCommand({
+        Bucket: S3_BUCKET,
+        Key: key,
+        Body: buffer,
+        ContentType: res.headers.get('content-type') ?? 'image/jpeg',
+      })
+    );
+
+    return `${S3_PUBLIC_URL}/${key}`;
   } catch (e) {
     console.error('Не удалось скачать изображение:', url, e);
     return null;
