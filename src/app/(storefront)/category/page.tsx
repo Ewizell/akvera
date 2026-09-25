@@ -33,9 +33,9 @@ export default async function CatalogPage({
       page
     ),
     prisma.category.findMany({
-      where: { parentId: null },
+      where: { parentId: null, isHidden: false },
       orderBy: { name: "asc" },
-      include: { children: { orderBy: { name: "asc" } } },
+      include: { children: { where: { isHidden: false }, orderBy: { name: "asc" } } },
     }),
     prisma.brand.findMany({ orderBy: { name: "asc" } }),
     brand ? prisma.brand.findUnique({ where: { slug: brand } }) : null,

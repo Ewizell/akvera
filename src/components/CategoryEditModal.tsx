@@ -13,6 +13,7 @@ type Category = {
   parentId: string | null;
   imageUrl: string | null;
   iconUrl: string | null;
+  isHidden: boolean;
 };
 
 const inputCls =
@@ -302,6 +303,19 @@ export default function CategoryEditModal({
                 Оставьте пустым, чтобы не менять текущую иконку
               </p>
             </div>
+
+            {/* VISIBILITY */}
+            <label className="flex cursor-pointer items-center gap-3 rounded-xl bg-[#fafbfc] px-3.5 py-3 ring-1 ring-[#eef0f2]">
+              <input
+                type="checkbox"
+                name="isHidden"
+                defaultChecked={category.isHidden}
+                className="h-4 w-4 rounded border-[#cbd1d8] text-[#28394c] focus:ring-[#28394c]/20"
+              />
+              <span className="text-sm font-medium text-[#4f5a67]">
+                Скрыть категорию от покупателей
+              </span>
+            </label>
 
             {/* ERROR */}
             {deleteError && (

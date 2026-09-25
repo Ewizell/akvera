@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import CategoryTileGrid from "@/components/CategoryTileGrid";
 import CategoryProductListing from "@/components/CategoryProductListing";
 import { parseCatalogSearchParams } from "@/lib/catalog-query";
+import { getVisibleCategoryIds } from "@/lib/visibility";
 import type { CategoryNavData } from "@/components/CategoryFilterSidebar";
 import type { Metadata } from "next";
 import ShowAllProductsButton from "@/components/ShowAllProductsButton";
@@ -71,6 +72,11 @@ export default async function ChildCategoryPage({
     notFound();
   }
 
+  const visibleCategoryIds = await getVisibleCategoryIds();
+  if (!visibleCategoryIds.includes(category.id) || !visibleCategoryIds.includes(parent.id)) {
+    notFound();
+  }
+
   const crumbs = [
     { label: "Главная", href: "/" },
     { label: "Каталог", href: "/catalog" },
@@ -79,8 +85,10 @@ export default async function ChildCategoryPage({
   ];
 
     // Есть свои подкатегории (третий уровень) — показываем плитку
-  if (category.children.length > 0) {
-    const tileItems = category.children.map((child) => ({
+  const visibleChildren = category.children.filter((c) => visibleCategoryIds.includes(c.id));
+
+  if (visibleChildren.length > 0) {
+    const tileItems = visibleChildren.map((child) => ({
       slug: child.slug,
       name: child.name,
       href: `/category/${parent.slug}/${category.slug}/${child.slug}`,
@@ -119,7 +127,7 @@ export default async function ChildCategoryPage({
   const categoryNav: CategoryNavData = {
     allProductsLink: { label: `Все товары: ${parent.name}`, href: `/category/${parent.slug}/all` },
     activeSlug: category.slug,
-    items: parent.children.map((s) => ({
+    items: parent.children.filter((s) => visibleCategoryIds.includes(s.id)).map((s) => ({
       id: s.id,
       name: s.name,
       slug: s.slug,

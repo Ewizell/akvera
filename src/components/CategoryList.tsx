@@ -1,9 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import CategoryEditModal from "./CategoryEditModal";
 import CategoryCreateModal from "./CategoryCreateModal";
 import CategoryAttributesModal from "./CategoryAttributesModal";
+import { toggleCategoryHidden } from "@/lib/actions/category";
 
 type Attribute = {
   id: string;
@@ -21,6 +23,7 @@ type Category = {
   parentId: string | null;
   imageUrl: string | null;
   iconUrl: string | null;
+  isHidden: boolean;
   attributes: Attribute[];
 };
 
@@ -45,11 +48,13 @@ function CategoryRow({
   depth,
   onEdit,
   onAttributes,
+  onToggleHidden,
 }: {
   category: CategoryWithChildren;
   depth: number;
   onEdit: (category: Category) => void;
   onAttributes: (category: Category) => void;
+  onToggleHidden: (category: Category) => void;
 }) {
   const hasChildren = category.children.length > 0;
 
@@ -133,6 +138,12 @@ function CategoryRow({
                     Раздел
                   </span>
                 )}
+
+                {category.isHidden && (
+                  <span className="rounded-full bg-[#fff0f0] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#b33a3a]">
+                    Скрыта
+                  </span>
+                )}
               </div>
 
               <div className="mt-1 flex items-center gap-2">
@@ -158,6 +169,30 @@ function CategoryRow({
 
           <div className="flex shrink-0 items-center gap-2">
             <button
+              onClick={() => onToggleHidden(category)}
+              className={`hidden h-9 items-center gap-2 rounded-xl px-3 text-xs font-medium transition sm:flex ${
+                category.isHidden
+                  ? "bg-[#fff7f7] text-[#b33a3a] ring-1 ring-[#f0d5d5] hover:bg-[#ffefef]"
+                  : "bg-[#f1f7f3] text-[#397653] ring-1 ring-[#d5e8dc] hover:bg-[#e8f3ec]"
+              }`}
+            >
+              <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6">
+                {category.isHidden ? (
+                  <>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.5 10s2.8-5.5 7.5-5.5S17.5 10 17.5 10s-2.8 5.5-7.5 5.5S2.5 10 2.5 10z" />
+                    <path strokeLinecap="round" d="M3 3l14 14" />
+                  </>
+                ) : (
+                  <>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.5 10s2.8-5.5 7.5-5.5S17.5 10 17.5 10s-2.8 5.5-7.5 5.5S2.5 10 2.5 10z" />
+                    <circle cx="10" cy="10" r="2.2" />
+                  </>
+                )}
+              </svg>
+              {category.isHidden ? "Скрыта" : "Видна"}
+            </button>
+
+            <button
               onClick={() => onAttributes(category)}
               className="hidden h-9 items-center gap-2 rounded-xl bg-[#f4f5f7] px-3 text-xs font-medium text-[#687382] transition hover:bg-[#e9ebee] sm:flex"
             >
@@ -177,6 +212,21 @@ function CategoryRow({
               <span className="rounded-full bg-white px-1.5 py-0.5 text-[10px] text-[#596575] shadow-sm">
                 {category.attributes.length}
               </span>
+            </button>
+
+            <button
+              onClick={() => onToggleHidden(category)}
+              className={`flex h-9 w-9 items-center justify-center rounded-xl transition sm:hidden ${
+                category.isHidden
+                  ? "bg-[#fff7f7] text-[#b33a3a]"
+                  : "bg-[#f1f7f3] text-[#397653]"
+              }`}
+              aria-label={category.isHidden ? "Показать категорию" : "Скрыть категорию"}
+            >
+              <svg width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.5 10s2.8-5.5 7.5-5.5S17.5 10 17.5 10s-2.8 5.5-7.5 5.5S2.5 10 2.5 10z" />
+                {category.isHidden ? <path strokeLinecap="round" d="M3 3l14 14" /> : <circle cx="10" cy="10" r="2.2" />}
+              </svg>
             </button>
 
             <button
@@ -239,6 +289,7 @@ function CategoryRow({
           depth={depth + 1}
           onEdit={onEdit}
           onAttributes={onAttributes}
+          onToggleHidden={onToggleHidden}
         />
       ))}
     </>
@@ -250,11 +301,20 @@ export default function CategoryList({
 }: {
   categories: Category[];
 }) {
+  const router = useRouter();
+  const [, startTransition] = useTransition();
   const [editing, setEditing] = useState<Category | null>(null);
   const [creating, setCreating] = useState(false);
   const [attributesFor, setAttributesFor] =
     useState<Category | null>(null);
   const [search, setSearch] = useState("");
+
+  function handleToggleHidden(category: Category) {
+    startTransition(async () => {
+      await toggleCategoryHidden(category.id, !category.isHidden);
+      router.refresh();
+    });
+  }
 
   const tree = buildTree(categories);
 
@@ -530,6 +590,7 @@ export default function CategoryList({
                   depth={0}
                   onEdit={setEditing}
                   onAttributes={setAttributesFor}
+                  onToggleHidden={handleToggleHidden}
                 />
               ))}
             </ul>

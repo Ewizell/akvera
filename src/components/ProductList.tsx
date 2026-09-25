@@ -6,7 +6,7 @@ import ProductCreateModal from './ProductCreateModal'
 import ProductEditModal from './ProductEditModal'
 import BulkActionsToolbar from './BulkActionsToolbar'
 import CategoryTree from './CategoryTree'
-import { deleteProduct, duplicateProduct } from '@/lib/actions/product'
+import { deleteProduct, duplicateProduct, toggleProductHidden } from '@/lib/actions/product'
 
 type CategoryAttributeSchema = {
   id: string
@@ -51,6 +51,7 @@ type Product = {
   brandId: string | null
   description: string | null
   shortDescription: string | null
+  isHidden: boolean
   applicationAreas: string[]
   advantages: string[]
   documents: {
@@ -216,6 +217,7 @@ function ProductRow({
   onEdit,
   onDuplicate,
   onDelete,
+  onToggleHidden,
 }: {
   product: Product
   selected: boolean
@@ -223,6 +225,7 @@ function ProductRow({
   onEdit: (product: Product) => void
   onDuplicate: (product: Product) => void
   onDelete: (product: Product) => void
+  onToggleHidden: (product: Product) => void
 }) {
   const [expanded, setExpanded] = useState(false)
 
@@ -286,6 +289,12 @@ function ProductRow({
                   <span className="rounded-lg bg-[#eef1f4] px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-[#687382]">
                     {product.category.name}
                   </span>
+
+                  {product.isHidden && (
+                    <span className="rounded-lg bg-[#fff0f0] px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-[#b33a3a]">
+                      Скрыт
+                    </span>
+                  )}
                 </div>
 
                 <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#8b949f]">
@@ -382,6 +391,37 @@ function ProductRow({
                     {expanded ? 'Скрыть' : 'Варианты'}
                   </button>
                 )}
+
+                <button
+                  type="button"
+                  onClick={() => onToggleHidden(product)}
+                  className={`inline-flex h-9 items-center gap-2 rounded-xl px-3 text-xs font-semibold transition ${
+                    product.isHidden
+                      ? 'bg-[#fff7f7] text-[#b33a3a] ring-1 ring-[#f0d5d5] hover:bg-[#ffefef]'
+                      : 'bg-[#f1f7f3] text-[#397653] ring-1 ring-[#d5e8dc] hover:bg-[#e8f3ec]'
+                  }`}
+                >
+                  <svg
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    className="h-4 w-4"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                  >
+                    {product.isHidden ? (
+                      <>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.5 10s2.8-5.5 7.5-5.5S17.5 10 17.5 10s-2.8 5.5-7.5 5.5S2.5 10 2.5 10z" />
+                        <path strokeLinecap="round" d="M3 3l14 14" />
+                      </>
+                    ) : (
+                      <>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.5 10s2.8-5.5 7.5-5.5S17.5 10 17.5 10s-2.8 5.5-7.5 5.5S2.5 10 2.5 10z" />
+                        <circle cx="10" cy="10" r="2.2" />
+                      </>
+                    )}
+                  </svg>
+                  {product.isHidden ? 'Скрыт' : 'Виден'}
+                </button>
 
                 <button
                   type="button"
@@ -757,6 +797,13 @@ export default function ProductList({
     })
   }
 
+  function handleToggleHidden(product: Product) {
+    startTransition(async () => {
+      await toggleProductHidden(product.id, !product.isHidden)
+      router.refresh()
+    })
+  }
+
   function handleEdit(product: Product) {
     setEditing(product)
   }
@@ -1055,6 +1102,7 @@ export default function ProductList({
                     onEdit={handleEdit}
                     onDuplicate={handleDuplicate}
                     onDelete={handleDelete}
+                    onToggleHidden={handleToggleHidden}
                   />
                 ))}
               </div>

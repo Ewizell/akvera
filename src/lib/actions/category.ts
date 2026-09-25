@@ -39,11 +39,14 @@ export async function updateCategory(id: string, formData: FormData) {
       iconUrl = uploadResult.url
     }
 
+    const isHidden = formData.get('isHidden') === 'on'
+
     await prisma.category.update({
       where: { id },
       data: {
         name,
         slug,
+        isHidden,
         parent: parentId ? { connect: { id: parentId } } : { disconnect: true },
         ...(imageUrl !== undefined ? { imageUrl } : {}),
         ...(iconUrl !== undefined ? { iconUrl } : {}),
@@ -91,10 +94,13 @@ export async function createCategory(formData: FormData) {
       }
     }
 
+    const isHidden = formData.get('isHidden') === 'on'
+
     await prisma.category.create({
       data: {
         name,
         slug,
+        isHidden,
         ...(parentId ? { parent: { connect: { id: parentId } } } : {}),
         ...(imageUrl !== undefined ? { imageUrl } : {}),
         ...(iconUrl !== undefined ? { iconUrl } : {}),
@@ -141,6 +147,9 @@ export async function deleteCategory(id: string) {
 
 export async function getCategoryTree(): Promise<CategoryNode[]> {
   const categories = await prisma.category.findMany({
+    where: {
+      isHidden: false,
+    },
     orderBy: {
       name: 'asc',
     },
@@ -173,6 +182,8 @@ export async function getCategoryTree(): Promise<CategoryNode[]> {
   for (const category of categories) {
     const node = byId.get(category.id)!
 
+    // родитель тоже мог быть скрыт и потому отсутствовать в выборке —
+    // такой узел просто не попадёт в дерево вообще
     if (category.parentId) {
       byId.get(category.parentId)?.children.push(node)
     } else {
@@ -181,4 +192,11 @@ export async function getCategoryTree(): Promise<CategoryNode[]> {
   }
 
   return roots
+}
+export async function toggleCategoryHidden(id: string, isHidden: boolean) {
+  await prisma.category.update({ where: { id }, data: { isHidden } })
+  revalidatePath('/admin/categories')
+  revalidatePath('/catalog')
+  revalidatePath('/category', 'layout')
+  return { success: true }
 }

@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
+import { getVisibleCategoryIds } from '@/lib/visibility'
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
@@ -19,6 +20,11 @@ export async function GET(request: Request) {
   }
 
   const prefix = `${q}%`
+  const visibleCategoryIds = await getVisibleCategoryIds()
+
+  if (visibleCategoryIds.length === 0) {
+    return NextResponse.json({ results: [] })
+  }
 
   const rows = await prisma.$queryRaw<SearchRow[]>`
     SELECT p.id, p.name, v.slug, v.price::float AS price, img.url AS "imageUrl",
@@ -40,8 +46,12 @@ export async function GET(request: Request) {
       ORDER BY "isMain" DESC, "sortOrder" ASC
       LIMIT 1
     ) img ON true
-    WHERE p.name ILIKE ${prefix} OR v.sku ILIKE ${prefix} OR v.name ILIKE ${prefix}
-       OR p.name % ${q} OR v.sku % ${q} OR v.name % ${q}
+    WHERE p."isHidden" = false
+      AND p."categoryId" = ANY(${visibleCategoryIds})
+      AND (
+        p.name ILIKE ${prefix} OR v.sku ILIKE ${prefix} OR v.name ILIKE ${prefix}
+        OR p.name % ${q} OR v.sku % ${q} OR v.name % ${q}
+      )
     GROUP BY p.id, p.name, v.slug, v.price, img.url
     ORDER BY sim DESC
     LIMIT 5

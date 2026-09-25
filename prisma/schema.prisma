@@ -18,6 +18,7 @@ model Category {
   slug       String              @unique
   imageUrl   String?
   iconUrl    String?
+  isHidden   Boolean             @default(false)
   attributes CategoryAttribute[]
   products   Product[]
 
@@ -56,6 +57,7 @@ model Product {
   brand             Brand?   @relation(fields: [brandId], references: [id])
   description       String?
   shortDescription  String?  @db.VarChar(200)
+  isHidden          Boolean  @default(false)
   applicationAreas  String[] @default([])
   advantages        String[] @default([])
   variants          ProductVariant[]

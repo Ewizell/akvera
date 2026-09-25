@@ -28,6 +28,8 @@ export async function createProduct(formData: FormData) {
   const advantages = parseStringList(formData, 'advantages')
 
   try {
+    const isHidden = formData.get('isHidden') === 'on'
+
     await prisma.product.create({
       data: {
         name,
@@ -37,6 +39,7 @@ export async function createProduct(formData: FormData) {
         applicationAreas,
         advantages,
         brandId: brandId || null,
+        isHidden,
         variants: {
           create: {
             name,
@@ -91,6 +94,8 @@ export async function updateProduct(id: string, formData: FormData) {
   const applicationAreas = parseStringList(formData, 'applicationAreas')
   const advantages = parseStringList(formData, 'advantages')
 
+  const isHidden = formData.get('isHidden') === 'on'
+
   try {
     await prisma.product.update({
       where: { id },
@@ -102,6 +107,7 @@ export async function updateProduct(id: string, formData: FormData) {
         applicationAreas,
         advantages,
         brandId: brandId || null,
+        isHidden,
         tags: { set: tagIds.map((id) => ({ id })) },
       },
     })
@@ -513,4 +519,11 @@ export async function applyAttributeTransfers(
     console.error('applyAttributeTransfers error:', error)
     return { success: false as const, error: 'Не удалось перенести атрибуты.' }
   }
+}
+export async function toggleProductHidden(id: string, isHidden: boolean) {
+  await prisma.product.update({ where: { id }, data: { isHidden } })
+  revalidatePath('/admin/products')
+  revalidatePath('/catalog/all')
+  revalidatePath('/category', 'layout')
+  return { success: true }
 }

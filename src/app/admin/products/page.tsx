@@ -71,6 +71,7 @@ export default async function ProductsPage() {
     brandId: product.brandId,
     description: product.description,
     shortDescription: product.shortDescription,
+    isHidden: product.isHidden,
     applicationAreas: product.applicationAreas,
     advantages: product.advantages,
 

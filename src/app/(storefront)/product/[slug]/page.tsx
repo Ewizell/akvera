@@ -13,6 +13,7 @@ import { RecentlyViewedCarousel } from "@/components/RecentlyViewedCarousel";
 import { OtherVariantsTile } from "@/components/OtherVariantsTile";
 import FavoriteButtonWithLabel from "@/components/FavoriteButtonWithLabel";
 import { CopyField } from "@/components/CopyField";
+import { getVisibleCategoryIds } from "@/lib/visibility";
 
 export const revalidate = 3600;
 
@@ -80,6 +81,15 @@ export default async function ProductPage({
 });
 
 if (!variant) {
+  notFound();
+}
+
+if (variant.product.isHidden) {
+  notFound();
+}
+
+const visibleCategoryIds = await getVisibleCategoryIds();
+if (!visibleCategoryIds.includes(variant.product.categoryId)) {
   notFound();
 }
 

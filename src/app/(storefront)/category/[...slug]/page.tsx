@@ -10,6 +10,7 @@ import {
   getDescendantCategoryIds,
   getCategoryChildren,
 } from "@/lib/catalog-query";
+import { getVisibleCategoryIds } from "@/lib/visibility";
 import type { CategoryNavData } from "@/components/CategoryFilterSidebar";
 import type { Metadata } from "next";
 
@@ -59,6 +60,9 @@ export default async function CategoryPage({
   });
   if (!category) notFound();
 
+  const visibleCategoryIds = await getVisibleCategoryIds();
+  if (!visibleCategoryIds.includes(category.id)) notFound();
+
   const ancestors = await getCategoryAncestors(category.parentId);
 
   // Проверяем, что весь путь в URL соответствует реальной цепочке родителей
@@ -87,11 +91,13 @@ export default async function CategoryPage({
 
   // ── "Все товары" — рекурсивно, с деревом категорий в сайдбаре ──
   if (isAll) {
-    const descendantIds = await getDescendantCategoryIds(category.id);
-    const children = await getCategoryChildren(
+    const rawDescendantIds = await getDescendantCategoryIds(category.id);
+    const descendantIds = rawDescendantIds.filter((id) => visibleCategoryIds.includes(id));
+    const rawChildren = await getCategoryChildren(
       category.id,
       [...ancestors.map((a) => a.slug), category.slug]
     );
+    const children = rawChildren.filter((c) => visibleCategoryIds.includes(c.id));
 
     const crumbs: { label: string; href?: string }[] = [
       { label: "Главная", href: "/" },
@@ -134,8 +140,10 @@ export default async function CategoryPage({
   ];
 
    // ── Плитка подкатегорий (есть дети → всегда тайл, листинг здесь не открывается) ──
-  if (category.children.length > 0) {
-    const tileItems = category.children.map((child) => ({
+  const visibleChildren = category.children.filter((c) => visibleCategoryIds.includes(c.id));
+
+  if (visibleChildren.length > 0) {
+    const tileItems = visibleChildren.map((child) => ({
       slug: child.slug,
       name: child.name,
       href: `${tilePath}/${child.slug}`,
@@ -171,7 +179,7 @@ export default async function CategoryPage({
   }
 
   // ── Лист без подкатегорий — единственный случай, когда открывается листинг товаров ──
-  const siblingsSource = parent
+  const rawSiblingsSource = parent
     ? (
         await prisma.category.findUnique({
           where: { id: parent.id },
@@ -185,6 +193,8 @@ export default async function CategoryPage({
         orderBy: { name: "asc" },
         include: { _count: { select: { products: true } } },
       });
+
+  const siblingsSource = rawSiblingsSource.filter((s) => visibleCategoryIds.includes(s.id));
 
   const categoryNav: CategoryNavData = {
     allProductsLink: parent

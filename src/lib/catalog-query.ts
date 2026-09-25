@@ -148,6 +148,7 @@ export async function getCatalogProducts(
 
   const baseWhere = {
     product: {
+      isHidden: false,
       category: categoryFilter,
       brand: brand ? { slug: brand } : undefined,
     },
@@ -170,8 +171,11 @@ export async function getCatalogProducts(
       ) AS max_sim
       FROM "ProductVariant" v
       JOIN "Product" p ON p.id = v."productId"
-      WHERE p.name ILIKE ${prefix} OR v.sku ILIKE ${prefix} OR v.name ILIKE ${prefix}
-         OR p.name % ${q} OR v.sku % ${q} OR v.name % ${q}
+      WHERE p."isHidden" = false
+        AND (
+          p.name ILIKE ${prefix} OR v.sku ILIKE ${prefix} OR v.name ILIKE ${prefix}
+          OR p.name % ${q} OR v.sku % ${q} OR v.name % ${q}
+        )
       GROUP BY v.id
       ORDER BY max_sim DESC
     `;
@@ -261,6 +265,7 @@ export async function getPriceRange(
     where: {
       price: { not: null },
       product: {
+        isHidden: false,
         category: categoryFilter,
         brand: filters.brand ? { slug: filters.brand } : undefined,
         tags: filters.tags && filters.tags.length > 0 ? { some: { slug: { in: filters.tags } } } : undefined,
@@ -299,7 +304,7 @@ export async function getAttributeFilterOptions(
 
   const productCategoryFilter = categoryId ? { id: categoryId } : { id: { in: categoryIds! } };
   const variants = await prisma.productVariant.findMany({
-    where: { product: { category: productCategoryFilter } },
+    where: { product: { isHidden: false, category: productCategoryFilter } },
     select: { attributes: true },
   });
 
@@ -396,7 +401,7 @@ export async function getCategoryAncestors(parentId: string | null): Promise<Cat
 }
 
 export async function getDescendantCategoryIds(rootId: string): Promise<string[]> {
-  const all = await prisma.category.findMany({ select: { id: true, parentId: true } });
+  const all = await prisma.category.findMany({ where: { isHidden: false }, select: { id: true, parentId: true } });
   const byParent = new Map<string, string[]>();
   for (const c of all) {
     const key = c.parentId ?? "__root__";
@@ -477,7 +482,7 @@ export async function getCategoryChildren(
   pathSlugs: string[] // цепочка slug'ов от корня до текущей категории (для построения href)
 ): Promise<CategoryChildItem[]> {
   const children = await prisma.category.findMany({
-    where: { parentId: categoryId },
+    where: { parentId: categoryId, isHidden: false },
     select: { id: true, name: true, slug: true, _count: { select: { products: true } } },
   });
 

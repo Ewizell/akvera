@@ -70,6 +70,7 @@ type Product = {
   brandId: string | null
   description: string | null
   shortDescription: string | null
+  isHidden: boolean
   applicationAreas: string[]
   advantages: string[]
   tagIds: string[]
@@ -1624,6 +1625,18 @@ export default function ProductEditModal({
                         className={inputCls}
                       />
                     </div>
+
+                    <label className="flex cursor-pointer items-center gap-3 rounded-xl bg-[#f4f5f7] px-3.5 py-3 text-sm text-[#4f5a67] transition hover:bg-[#eef1f4]">
+                      <input
+                        type="checkbox"
+                        name="isHidden"
+                        defaultChecked={product.isHidden}
+                        className="h-4 w-4 rounded border-[#cbd1d8] text-[#28394c] focus:ring-[#28394c]/20"
+                      />
+                      <span className="font-medium">
+                        Скрыть товар от покупателей
+                      </span>
+                    </label>
 
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <div>
