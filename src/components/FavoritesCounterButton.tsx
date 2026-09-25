@@ -17,7 +17,7 @@ export default function FavoritesCounterButton() {
           </span>
         )}
       </div>
-      <span className="text-[#475569] text-sm font-medium">Избранное</span>
+      <span className="text-[#475569] text-[14px] font-medium">Избранное</span>
     </Link>
   );
 }

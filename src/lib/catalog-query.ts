@@ -291,7 +291,8 @@ export type AttributeFilterOption = {
 
 export async function getAttributeFilterOptions(
   categoryId: string | undefined,
-  categoryIds: string[] | undefined
+  categoryIds: string[] | undefined,
+  brandSlug?: string
 ): Promise<AttributeFilterOption[]> {
   const primaryCategoryId = categoryId ?? categoryIds?.[0];
   if (!primaryCategoryId) return [];
@@ -304,7 +305,13 @@ export async function getAttributeFilterOptions(
 
   const productCategoryFilter = categoryId ? { id: categoryId } : { id: { in: categoryIds! } };
   const variants = await prisma.productVariant.findMany({
-    where: { product: { isHidden: false, category: productCategoryFilter } },
+    where: {
+      product: {
+        isHidden: false,
+        category: productCategoryFilter,
+        brand: brandSlug ? { slug: brandSlug } : undefined,
+      },
+    },
     select: { attributes: true },
   });
 
@@ -496,4 +503,30 @@ export async function getCategoryChildren(
       productCount: c._count.products,
       href: `/category/${[...pathSlugs, c.slug].join("/")}`,
     }));
+}
+export type BrandCategoryItem = {
+  id: string;
+  name: string;
+  slug: string;
+  productCount: number;
+};
+
+export async function getBrandCategories(brandSlug: string): Promise<BrandCategoryItem[]> {
+  const products = await prisma.product.findMany({
+    where: { isHidden: false, brand: { slug: brandSlug } },
+    select: { category: { select: { id: true, name: true, slug: true } } },
+  });
+
+  const map = new Map<string, BrandCategoryItem>();
+  for (const p of products) {
+    if (!p.category) continue;
+    const existing = map.get(p.category.id);
+    if (existing) {
+      existing.productCount += 1;
+    } else {
+      map.set(p.category.id, { id: p.category.id, name: p.category.name, slug: p.category.slug, productCount: 1 });
+    }
+  }
+
+  return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name, "ru"));
 }

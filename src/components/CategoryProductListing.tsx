@@ -9,6 +9,7 @@ import {
   getAttributeFilterOptions,
   PAGE_SIZE,
   type CatalogFilters,
+  type CatalogCard,
 } from "@/lib/catalog-query";
 import { CategoryFilterSidebar, type CategoryNavData, type CategoryChildrenData } from "@/components/CategoryFilterSidebar";
 
@@ -26,6 +27,8 @@ export default async function CategoryProductListing({
   backHref,
   categoryNav,
   categoryChildren,
+  headerContent,
+  jsonLd,
   priceMin,
   priceMax,
   inStock,
@@ -45,6 +48,8 @@ export default async function CategoryProductListing({
   backHref: string;
   categoryNav?: CategoryNavData;
   categoryChildren?: CategoryChildrenData;
+  headerContent?: React.ReactNode; // произвольный блок под заголовком (шапка бренда и т.п.)
+  jsonLd?: (ctx: { cards: CatalogCard[]; totalCount: number }) => Record<string, unknown> | null; // опциональная JSON-LD схема на основе уже загруженных карточек
   priceMin?: number;
   priceMax?: number;
   inStock?: boolean;
@@ -70,16 +75,26 @@ export default async function CategoryProductListing({
     prisma.brand.findMany({ orderBy: { name: "asc" } }),
     prisma.tag.findMany({ orderBy: { name: "asc" } }),
     getPriceRange({ categoryId, categoryIds, brand, tags }),
-    getAttributeFilterOptions(categoryId, categoryIds),
+    getAttributeFilterOptions(categoryId, categoryIds, brand),
   ]);
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+  const ldJson = jsonLd ? jsonLd({ cards, totalCount }) : null;
 
   return (
-    <main className="max-w-[1440px] mx-auto px-20 py-10">
+    <>
+      {ldJson && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(ldJson) }}
+        />
+      )}
+      <main className="max-w-[1440px] mx-auto px-20 py-10">
       <Breadcrumbs items={crumbs} />
 
       <h1 className="font-bold text-[#0f172a] text-[36px] leading-[1.2] mt-3 mb-6">{title}</h1>
+
+      {headerContent}
 
       <div className="grid grid-cols-[221px_1fr] gap-8">
 <aside>
@@ -124,5 +139,6 @@ export default async function CategoryProductListing({
         </div>
       </div>
     </main>
+    </>
   );
 }

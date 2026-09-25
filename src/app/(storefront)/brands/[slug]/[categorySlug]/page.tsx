@@ -4,7 +4,7 @@ import CategoryProductListing from "@/components/CategoryProductListing";
 import BrandInfoBar from "@/components/BrandInfoBar";
 import { parseCatalogSearchParams, getBrandCategories } from "@/lib/catalog-query";
 import { getVisibleCategoryIds } from "@/lib/visibility";
-import { stripHtml, absoluteUrl } from "@/lib/seo";
+import { absoluteUrl } from "@/lib/seo";
 import type { CategoryNavData } from "@/components/CategoryFilterSidebar";
 import type { Metadata } from "next";
 
@@ -13,44 +13,36 @@ export const revalidate = 3600;
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ slug: string; categorySlug: string }>;
 }): Promise<Metadata> {
-  const { slug } = await params;
+  const { slug, categorySlug } = await params;
 
-  const brand = await prisma.brand.findUnique({
-    where: { slug },
-    select: { name: true, description: true, logoUrl: true },
-  });
-  if (!brand) return {};
+  const [brand, category] = await Promise.all([
+    prisma.brand.findUnique({ where: { slug }, select: { name: true } }),
+    prisma.category.findUnique({ where: { slug: categorySlug }, select: { name: true } }),
+  ]);
+  if (!brand || !category) return {};
 
-  const title = `${brand.name} — купить оборудование ${brand.name} | Akvera`;
-  const description = brand.description
-    ? stripHtml(brand.description).slice(0, 160)
-    : `Каталог оборудования бренда ${brand.name}: цены, наличие, характеристики. Каталог Akvera.`;
-  const url = absoluteUrl(`/brands/${slug}`);
+  const title = `${category.name} ${brand.name} — купить | Akvera`;
+  const description = `${category.name} бренда ${brand.name}: цены, наличие и характеристики в каталоге Akvera.`;
+  const url = absoluteUrl(`/brands/${slug}/${categorySlug}`);
 
   return {
     title,
     description,
     alternates: { canonical: url },
-    openGraph: {
-      title,
-      description,
-      url,
-      type: "website",
-      ...(brand.logoUrl ? { images: [{ url: brand.logoUrl }] } : {}),
-    },
+    openGraph: { title, description, url, type: "website" },
   };
 }
 
-export default async function BrandPage({
+export default async function BrandCategoryPage({
   params,
   searchParams,
 }: {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ slug: string; categorySlug: string }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const { slug } = await params;
+  const { slug, categorySlug } = await params;
   const sp = await searchParams;
 
   const brand = await prisma.brand.findUnique({
@@ -65,9 +57,12 @@ export default async function BrandPage({
   ]);
   const categories = rawCategories.filter((c) => visibleCategoryIds.includes(c.id));
 
+  const activeCategory = categories.find((c) => c.slug === categorySlug);
+  if (!activeCategory) notFound(); // либо категории нет, либо у бренда нет в ней товаров
+
   const categoryNav: CategoryNavData = {
     allProductsLink: { label: "Все категории", href: `/brands/${slug}` },
-    activeSlug: null,
+    activeSlug: categorySlug,
     items: categories.map((c) => ({
       id: c.id,
       name: c.name,
@@ -83,19 +78,21 @@ export default async function BrandPage({
   const crumbs = [
     { label: "Главная", href: "/" },
     { label: "Бренды", href: "/brands" },
-    { label: brand.name },
+    { label: brand.name, href: `/brands/${slug}` },
+    { label: activeCategory.name },
   ];
 
   return (
     <CategoryProductListing
-      title={`ТОВАРЫ БРЕНДА ${brand.name}`.toUpperCase()}
-      basePath={`/brands/${slug}`}
+      title={`${activeCategory.name.toUpperCase()} ${brand.name.toUpperCase()}`}
+      basePath={`/brands/${slug}/${categorySlug}`}
+      categoryId={activeCategory.id}
       brand={slug}
       tags={tags}
       sort={sort}
       page={page}
       crumbs={crumbs}
-      backHref="/brands"
+      backHref={`/brands/${slug}`}
       categoryNav={categoryNav}
       headerContent={
         <BrandInfoBar name={brand.name} description={brand.description} logoUrl={brand.logoUrl} />
@@ -113,7 +110,6 @@ export default async function BrandPage({
             name: brand.name,
             url: absoluteUrl(`/brands/${slug}`),
             ...(brand.logoUrl ? { logo: brand.logoUrl } : {}),
-            ...(brand.description ? { description: stripHtml(brand.description) } : {}),
           },
           {
             "@type": "BreadcrumbList",
@@ -126,8 +122,8 @@ export default async function BrandPage({
           },
           {
             "@type": "CollectionPage",
-            name: `Товары бренда ${brand.name}`,
-            url: absoluteUrl(`/brands/${slug}`),
+            name: `${activeCategory.name} — ${brand.name}`,
+            url: absoluteUrl(`/brands/${slug}/${categorySlug}`),
             mainEntity: {
               "@type": "ItemList",
               itemListElement: cards.map((card, i) => ({

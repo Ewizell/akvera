@@ -18,7 +18,7 @@ export default function HeaderAuthLink() {
     return (
       <Link
         href="/login"
-        className="flex h-11 w-[106px] shrink-0 items-center justify-center rounded-xl bg-[#179146] text-white text-base font-semibold hover:bg-[#147a3b]"
+        className="flex h-11 w-[106px] shrink-0 items-center justify-center rounded-xl bg-[#179146] text-white text-base font-medium hover:bg-[#147a3b]"
       >
         Войти
       </Link>
@@ -29,7 +29,7 @@ export default function HeaderAuthLink() {
     <div className="flex items-center gap-3 shrink-0">
       <Link
         href="/account"
-        className="flex h-11 items-center justify-center rounded-xl bg-[#179146] px-4 text-white text-base font-semibold hover:bg-[#147a3b] whitespace-nowrap"
+        className="flex h-11 items-center justify-center rounded-xl bg-[#179146] px-4 text-white text-base font-medium hover:bg-[#147a3b] whitespace-nowrap"
       >
         Кабинет
       </Link>

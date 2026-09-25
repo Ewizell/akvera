@@ -24,7 +24,7 @@ export default async function SiteHeader() {
                 г. Одинцово, ул. Внуковская, 11с19
               </span>
             </div>
-            <div className="flex gap-3 items-center text-[#475569] text-sm font-medium leading-none whitespace-nowrap">
+            <div className="flex gap-3 items-center text-[#475569] text-[14px] font-medium leading-none whitespace-nowrap">
               <Link href="/about">О компании</Link>
               <Link href="/contacts">Контакты</Link>
               <Link href="/delivery">Доставка и оплата</Link>
