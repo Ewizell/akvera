@@ -1,7 +1,12 @@
 export type LeadListItem = {
   id: string;
   type: "CALLBACK" | "QUOTE";
-  status: "NEW" | "IN_PROGRESS" | "DONE" | "SPAM";
+  status:
+    | "NEW"
+    | "IN_PROGRESS"
+    | "DONE"
+    | "CANCELLED"
+    | "SPAM";
   name: string;
   phone: string;
   email: string | null;
@@ -23,4 +28,6 @@ export const LEAD_STATUS_LABELS: Record<LeadListItem["status"], string> = {
   IN_PROGRESS: "В работе",
   DONE: "Обработана",
   SPAM: "Спам",
+  CANCELLED: "Отменена",
+  
 };
