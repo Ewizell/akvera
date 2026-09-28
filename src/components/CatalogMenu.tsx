@@ -144,7 +144,7 @@ export default function CatalogMenu({ categories }: { categories: CategoryNode[]
     <div className="shrink-0" ref={ref}>
       <button
         onClick={() => setOpen((v) => !v)}
-        className={`flex gap-2 h-11 items-center justify-center px-2.5 py-3 rounded-xl text-white text-base font-semibold shrink-0 transition-colors duration-200 ${
+        className={`cursor-pointer flex gap-2 h-11 items-center justify-center px-2.5 py-3 rounded-xl text-white text-base font-semibold shrink-0 transition-colors duration-200 ${
           open ? "bg-[#147a3b]" : "bg-[#179146] hover:bg-[#147a3b]"
         }`}
       >
@@ -160,7 +160,7 @@ export default function CatalogMenu({ categories }: { categories: CategoryNode[]
           <rect y="9" width="20" height="2" rx="1" />
           <rect y="15" width="20" height="2" rx="1" />
         </svg>
-        <span className="hidden sm:inline">Каталог</span>
+        <span className="hidden sm:inline ">Каталог</span>
       </button>
 
       {/* ───────── Десктоп (md+): двухпанельное мега-меню ───────── */}

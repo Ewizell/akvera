@@ -331,16 +331,20 @@ export function CheckoutForm() {
         <label className="flex items-start gap-2 text-[14px] text-[#767d83] cursor-pointer">
           <input
             type="checkbox"
+            name="consent"
             checked={agreed}
             onChange={(e) => setAgreed(e.target.checked)}
             required
             className="w-[18px] h-[18px] mt-0.5 accent-[#179146] rounded shrink-0"
           />
           <span>
-            Нажимая кнопку, вы соглашаетесь с{' '}
-            {/* TODO: укажите реальную ссылку на политику конфиденциальности */}
-            <a href="/privacy" className="text-[#0082b2] font-medium">
-              политикой конфиденциальности
+            Я даю{' '}
+            <a href="/consent" target="_blank" className="text-[#0082b2] font-medium">
+              согласие на обработку персональных данных
+            </a>{' '}
+            и ознакомлен(а) с{' '}
+            <a href="/privacy" target="_blank" className="text-[#0082b2] font-medium">
+              политикой обработки персональных данных
             </a>
           </span>
         </label>

@@ -9,6 +9,7 @@ import { randomUUID } from "crypto";
 import { mkdir, writeFile } from "fs/promises";
 import path from "path";
 import { auth } from "@/auth";
+import { getConsentMeta } from "@/lib/consent-meta";
 
 export async function getOrders(params: {
   status?: OrderStatus;
@@ -127,6 +128,10 @@ export async function createOrder(formData: FormData) {
       return { success: false as const, error: "Укажите имя и телефон" };
     }
 
+    if (formData.get("consent")?.toString() !== "on") {
+      return { success: false as const, error: "Необходимо согласие на обработку персональных данных" };
+    }
+
     const rawItems = formData.get("items")?.toString();
     if (!rawItems) {
       return { success: false as const, error: "Корзина пуста" };
@@ -164,6 +169,7 @@ export async function createOrder(formData: FormData) {
         deliveryAddress,
         paymentMethod,
         prepaymentType,
+        ...(await getConsentMeta()),
         status: OrderStatus.NEW,
         ...(session?.user?.id ? { user: { connect: { id: session.user.id } } } : {}),
         items: {

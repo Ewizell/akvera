@@ -7,6 +7,18 @@ import FavoritesCounterButton from "./FavoritesCounterButton";
 import HeaderAuthLink from "./HeaderAuthLink";
 import CatalogMenu from "./CatalogMenu";
 import { getCategoryTree } from "@/lib/actions/category";
+import { CONTACTS } from "@/lib/site-content";
+
+const TOP_LINKS = [
+  { label: "О компании", href: "/about" },
+  { label: "Доставка и оплата", href: "/#delivery" },
+  { label: "FAQ", href: "/#faq" },
+  { label: "Контакты и реквизиты", href: "/#requisites" },
+];
+
+// кольцо фокуса для навигации с клавиатуры
+const focusRing =
+  "rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#179146]/40";
 
 export default async function SiteHeader() {
   const categories = await getCategoryTree();
@@ -21,31 +33,49 @@ export default async function SiteHeader() {
             <div className="flex gap-1.5 items-center">
               <Image src="/icons/fi-br-marker.svg" alt="" width={16} height={16} />
               <span className="font-semibold text-[#475569] text-base leading-none whitespace-nowrap">
-                г. Одинцово, ул. Внуковская, 11с19
+                {CONTACTS.address}
               </span>
             </div>
-            <div className="flex gap-3 items-center text-[#475569] text-[14px] font-medium leading-none whitespace-nowrap">
-              <Link href="/about">О компании</Link>
-              <Link href="/contacts">Контакты</Link>
-              <Link href="/delivery">Доставка и оплата</Link>
-              <Link href="/requisites">Реквизиты</Link>
-            </div>
+            <nav
+              aria-label="Информация о компании"
+              className="flex gap-3 items-center text-[#475569] text-[14px] font-medium leading-none whitespace-nowrap"
+            >
+              {TOP_LINKS.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`transition-colors duration-200 hover:text-[#179146] ${focusRing}`}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
           </div>
+
           <div className="flex gap-8 items-center">
-            <a href="mailto:sales@akvera.ru" className="flex gap-1.5 items-center font-bold text-[#475569] text-lg leading-none whitespace-nowrap">
+            <a
+              href={`mailto:${CONTACTS.email}`}
+              className={`flex gap-1.5 items-center font-bold text-[#475569] text-lg leading-none whitespace-nowrap transition-colors duration-200 hover:text-[#179146] ${focusRing}`}
+            >
               <Image src="/icons/fi-br-envelope.svg" alt="" width={18} height={18} />
-              sales@akvera.ru
+              {CONTACTS.email}
             </a>
-            <a href="tel:88008888888" className="flex gap-1.5 items-center font-semibold text-[#475569] text-base leading-none whitespace-nowrap">
+            <a
+              href={`tel:${CONTACTS.phone.replace(/[^\d+]/g, "")}`}
+              className={`flex gap-1.5 items-center font-semibold text-[#475569] text-base leading-none whitespace-nowrap transition-colors duration-200 hover:text-[#179146] ${focusRing}`}
+            >
               <Image src="/icons/fi-br-interrogation.svg" alt="" width={16} height={16} />
-              8 800 888-88-88
+              {CONTACTS.phone}
             </a>
           </div>
         </div>
 
         {/* Центральный ряд */}
         <div className="relative flex gap-8 items-center w-full">
-          <Link href="/" className="font-maven-pro font-bold text-[#179146] text-[40px] shrink-0">
+          <Link
+            href="/"
+            className={`font-maven-pro font-bold text-[#179146] text-[40px] shrink-0 transition-opacity duration-200 hover:opacity-80 ${focusRing}`}
+          >
             AKVERA
           </Link>
 
@@ -63,11 +93,24 @@ export default async function SiteHeader() {
         </div>
 
         {/* Нижний ряд */}
-        <nav className="flex items-center justify-between w-full text-[#475569] text-sm font-medium leading-none pt-1 whitespace-nowrap">
+        <nav
+          aria-label="Категории"
+          className="flex w-full flex-wrap items-center justify-between gap-x-6 gap-y-2 pt-1 text-[#475569] text-sm font-medium leading-none whitespace-nowrap"
+        >
           {categories.map((cat) => (
-            <Link key={cat.id} href={`/category/${cat.slug}`} className="flex items-center gap-1.5">
+            <Link
+              key={cat.id}
+              href={`/category/${cat.slug}`}
+              className={`group relative flex items-center gap-1.5 pb-1.5 transition-colors duration-200 hover:text-[#179146] after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:origin-left after:scale-x-0 after:rounded-full after:bg-[#179146] after:transition-transform after:duration-200 hover:after:scale-x-100 ${focusRing}`}
+            >
               {cat.iconUrl && (
-                <Image src={cat.iconUrl} alt="" width={18} height={18} className="shrink-0" />
+                <Image
+                  src={cat.iconUrl}
+                  alt=""
+                  width={18}
+                  height={18}
+                  className="shrink-0 transition-transform duration-200 group-hover:scale-110"
+                />
               )}
               {cat.name}
             </Link>

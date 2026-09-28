@@ -508,13 +508,14 @@ export type BrandCategoryItem = {
   id: string;
   name: string;
   slug: string;
+  imageUrl: string | null;
   productCount: number;
 };
 
 export async function getBrandCategories(brandSlug: string): Promise<BrandCategoryItem[]> {
   const products = await prisma.product.findMany({
     where: { isHidden: false, brand: { slug: brandSlug } },
-    select: { category: { select: { id: true, name: true, slug: true } } },
+    select: { category: { select: { id: true, name: true, slug: true, imageUrl: true } } },
   });
 
   const map = new Map<string, BrandCategoryItem>();
@@ -524,7 +525,13 @@ export async function getBrandCategories(brandSlug: string): Promise<BrandCatego
     if (existing) {
       existing.productCount += 1;
     } else {
-      map.set(p.category.id, { id: p.category.id, name: p.category.name, slug: p.category.slug, productCount: 1 });
+      map.set(p.category.id, {
+        id: p.category.id,
+        name: p.category.name,
+        slug: p.category.slug,
+        imageUrl: p.category.imageUrl ?? null,
+        productCount: 1,
+      });
     }
   }
 

@@ -25,7 +25,7 @@ export default function CartButton() {
     <div ref={ref} className="relative">
       <button
         onClick={() => (isOpen ? closeCart() : openCart())}
-        className="flex flex-col items-center justify-center gap-0.5"
+        className="flex flex-col items-center justify-center gap-0.5 cursor-pointer"
         aria-label="Открыть корзину"
       >
         <div className="relative">

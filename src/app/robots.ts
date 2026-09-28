@@ -1,16 +1,32 @@
 import type { MetadataRoute } from 'next'
+import { absoluteUrl } from '@/lib/seo'
 
 export default function robots(): MetadataRoute.Robots {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || ''
-
   return {
     rules: [
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/admin/', '/api/', '/checkout', '/cart'],
+        disallow: [
+          '/admin',
+          '/api/',
+          '/account',
+          '/login',
+          '/cart',
+          '/checkout',
+          '/compare',
+          '/favorites',
+          '/catalog/search',
+          // дубли листингов с фильтрами и сортировкой
+          '/*sort=',
+          '/*tags=',
+          '/*stock=',
+          '/*priceMin=',
+          '/*priceMax=',
+          '/*attr_',
+        ],
       },
     ],
-    sitemap: `${siteUrl}/sitemap.xml`,
+    sitemap: absoluteUrl('/sitemap.xml'),
   }
 }
