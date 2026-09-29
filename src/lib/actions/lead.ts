@@ -7,8 +7,8 @@ import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { randomUUID } from "crypto";
-import { mkdir, rm, writeFile } from "fs/promises";
 import path from "path";
+import { uploadDocumentServer, deleteFromS3 } from "@/lib/actions/upload";
 import { LEAD_ALLOWED_EXTENSIONS, LEAD_MAX_FILES, LEAD_MAX_FILE_SIZE } from "@/lib/lead-config";
 import { getConsentMeta } from "@/lib/consent-meta";
 
@@ -98,15 +98,19 @@ async function createLead(type: LeadType, formData: FormData, allowFiles: boolea
     const leadId = randomUUID();
     const saved: { url: string; filename: string }[] = [];
 
-    if (files.length > 0) {
-      const dir = path.join(process.cwd(), "public", "uploads", "leads", leadId);
-      await mkdir(dir, { recursive: true });
-      for (const file of files) {
-        const ext = path.extname(file.name).toLowerCase();
-        const stored = `${randomUUID()}${ext}`;
-        await writeFile(path.join(dir, stored), Buffer.from(await file.arrayBuffer()));
-        saved.push({ url: `/uploads/leads/${leadId}/${stored}`, filename: file.name.slice(0, 200) });
+    for (const file of files) {
+      const ext = path.extname(file.name).toLowerCase();
+      if (!LEAD_ALLOWED_EXTENSIONS.includes(ext)) {
+        return { success: false as const, error: `Файл «${file.name}»: неподдерживаемый формат` };
       }
+
+      const uploadFd = new FormData();
+      uploadFd.set("file", file);
+      const uploaded = await uploadDocumentServer(uploadFd);
+      if (!uploaded.success || !uploaded.url) {
+        return { success: false as const, error: uploaded.error ?? "Не удалось загрузить файл" };
+      }
+      saved.push({ url: uploaded.url, filename: file.name.slice(0, 200) });
     }
 
     await prisma.lead.create({
@@ -184,7 +188,18 @@ export async function updateLeadAdminComment(id: string, adminComment: string | 
 
 export async function deleteLead(id: string) {
   await requireAdmin();
+  const lead = await prisma.lead.findUnique({
+    where: { id },
+    select: { attachments: { select: { url: true } } },
+  });
+
   await prisma.lead.delete({ where: { id } }); // бросит ошибку, если id не существует
-  await rm(path.join(process.cwd(), "public", "uploads", "leads", id), { recursive: true, force: true });
+
+  if (lead) {
+    for (const attachment of lead.attachments) {
+      await deleteFromS3(attachment.url);
+    }
+  }
+
   revalidatePath("/admin/leads");
 }

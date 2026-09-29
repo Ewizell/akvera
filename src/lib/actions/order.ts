@@ -6,8 +6,9 @@ import { prisma } from "@/lib/prisma";
 import type { OrderListItem } from "@/lib/orderTypes";
 import { revalidatePath } from "next/cache";
 import { randomUUID } from "crypto";
-import { mkdir, writeFile } from "fs/promises";
 import path from "path";
+import { uploadDocumentServer } from "@/lib/actions/upload";
+import { LEAD_ALLOWED_EXTENSIONS, LEAD_MAX_FILE_SIZE } from "@/lib/lead-config";
 import { auth } from "@/auth";
 import { getConsentMeta } from "@/lib/consent-meta";
 
@@ -148,6 +149,23 @@ export async function createOrder(formData: FormData) {
       return { success: false as const, error: "Корзина пуста" };
     }
 
+    const attachments = formData
+      .getAll("attachments")
+      .filter((f): f is File => f instanceof File && f.size > 0);
+
+    for (const file of attachments) {
+      const ext = path.extname(file.name).toLowerCase();
+      if (!LEAD_ALLOWED_EXTENSIONS.includes(ext)) {
+        return { success: false as const, error: `Файл «${file.name}»: неподдерживаемый формат` };
+      }
+      if (file.size > LEAD_MAX_FILE_SIZE) {
+        return {
+          success: false as const,
+          error: `Файл «${file.name}» больше ${LEAD_MAX_FILE_SIZE / 1024 / 1024} МБ`,
+        };
+      }
+    }
+
     // Не доверяем цене/количеству с клиента — перезапрашиваем цены из БД
     const variantIds = items.map((i) => i.variantId);
     const variants = await prisma.productVariant.findMany({
@@ -183,28 +201,21 @@ export async function createOrder(formData: FormData) {
       select: { id: true },
     });
 
-    const attachments = formData
-      .getAll("attachments")
-      .filter((f): f is File => f instanceof File && f.size > 0);
-
-    if (attachments.length > 0) {
-      const uploadDir = path.join(process.cwd(), "public", "uploads", "orders", order.id);
-      await mkdir(uploadDir, { recursive: true });
-
-      for (const file of attachments) {
-        const ext = path.extname(file.name);
-        const filename = `${randomUUID()}${ext}`;
-        const buffer = Buffer.from(await file.arrayBuffer());
-        await writeFile(path.join(uploadDir, filename), buffer);
-
-        await prisma.orderAttachment.create({
-          data: {
-            orderId: order.id,
-            url: `/uploads/orders/${order.id}/${filename}`,
-            filename: file.name,
-          },
-        });
+    for (const file of attachments) {
+      const uploadFd = new FormData();
+      uploadFd.set("file", file);
+      const uploaded = await uploadDocumentServer(uploadFd);
+      if (!uploaded.success || !uploaded.url) {
+        return { success: false as const, error: uploaded.error ?? "Не удалось загрузить файл" };
       }
+
+      await prisma.orderAttachment.create({
+        data: {
+          orderId: order.id,
+          url: uploaded.url,
+          filename: file.name,
+        },
+      });
     }
 
     revalidatePath("/admin/orders");

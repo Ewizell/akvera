@@ -79,3 +79,30 @@ export async function uploadImageServer(
 
   return { success: true, url: `${S3_PUBLIC_URL}/${key}` }
 }
+export async function uploadFileServer(
+  file: File,
+  subfolder: string,
+  allowedExtensions: string[]
+): Promise<{ success: boolean; url?: string; error?: string }> {
+  const ext = file.name.includes(".") ? `.${file.name.split(".").pop()!.toLowerCase()}` : "";
+
+  if (!allowedExtensions.includes(ext)) {
+    return { success: false, error: `Файл «${file.name}»: неподдерживаемый формат` };
+  }
+
+  const bytes = await file.arrayBuffer();
+  const buffer = Buffer.from(bytes);
+
+  const key = `${subfolder}/${randomUUID()}${ext}`;
+
+  await s3.send(
+    new PutObjectCommand({
+      Bucket: S3_BUCKET,
+      Key: key,
+      Body: buffer,
+      ContentType: file.type || "application/octet-stream",
+    })
+  );
+
+  return { success: true, url: `${S3_PUBLIC_URL}/${key}` };
+}
