@@ -1,42 +1,91 @@
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
+
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import HomeSection from "@/components/HomeSection";
 import BrandSlider from "@/components/BrandSlider";
 import { HomeSteps, HomeCta } from "@/components/HomeInfoBlocks";
-import { HomeRequisites } from "@/components/HomeContentBlocks";
-import { AboutActivities, AboutValues } from "@/components/AboutBlocks";
-import { ABOUT_PAGE_LEAD, ABOUT_PAGE_TEXT, ABOUT_STATS } from "@/lib/site-content";
+import {
+  HomeRequisites,
+} from "@/components/HomeContentBlocks";
+import {
+  AboutActivities,
+  AboutValues,
+} from "@/components/AboutBlocks";
+
+import {
+  ABOUT_PAGE_LEAD,
+  ABOUT_PAGE_TEXT,
+  ABOUT_STATS,
+} from "@/lib/site-content";
+
 import { SITE_URL, absoluteUrl } from "@/lib/seo";
-import type { Metadata } from "next";
 
 export const revalidate = 3600;
 
-const TITLE = "О компании Akvera — поставщик промышленного оборудования";
+const TITLE =
+  "О компании Akvera — поставщик промышленного оборудования";
+
 const DESCRIPTION =
   "Akvera — поставщик промышленного оборудования для предприятий: подбор, поставка, техническая документация и поддержка. Работаем с юридическими лицами.";
 
 export const metadata: Metadata = {
-  title: { absolute: TITLE },
+  title: {
+    absolute: TITLE,
+  },
   description: DESCRIPTION,
-  alternates: { canonical: absoluteUrl("/about") },
-  openGraph: { title: TITLE, description: DESCRIPTION, url: absoluteUrl("/about"), type: "website" },
+  alternates: {
+    canonical: absoluteUrl("/about"),
+  },
+  openGraph: {
+    title: TITLE,
+    description: DESCRIPTION,
+    url: absoluteUrl("/about"),
+    type: "website",
+  },
 };
 
 export default async function AboutPage() {
   const brands = await prisma.brand.findMany({
-    where: { products: { some: { isHidden: false } } },
-    orderBy: { products: { _count: "desc" } },
+    where: {
+      products: {
+        some: {
+          isHidden: false,
+        },
+      },
+    },
+    orderBy: {
+      products: {
+        _count: "desc",
+      },
+    },
     take: 12,
     select: {
       id: true,
       slug: true,
       name: true,
       logoUrl: true,
-      _count: { select: { products: { where: { isHidden: false } } } },
+      _count: {
+        select: {
+          products: {
+            where: {
+              isHidden: false,
+            },
+          },
+        },
+      },
     },
   });
 
-  const crumbs = [{ label: "Главная", href: "/" }, { label: "О компании" }];
+  const crumbs = [
+    {
+      label: "Главная",
+      href: "/",
+    },
+    {
+      label: "О компании",
+    },
+  ];
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -46,79 +95,203 @@ export default async function AboutPage() {
         name: TITLE,
         url: absoluteUrl("/about"),
         description: DESCRIPTION,
-        about: { "@type": "Organization", name: "Akvera", url: SITE_URL },
+        about: {
+          "@type": "Organization",
+          name: "Akvera",
+          url: SITE_URL,
+        },
       },
       {
         "@type": "BreadcrumbList",
-        itemListElement: crumbs.map((c, i) => ({
+        itemListElement: crumbs.map((crumb, index) => ({
           "@type": "ListItem",
-          position: i + 1,
-          name: c.label,
-          ...(c.href ? { item: absoluteUrl(c.href) } : {}),
+          position: index + 1,
+          name: crumb.label,
+          ...(crumb.href
+            ? {
+                item: absoluteUrl(crumb.href),
+              }
+            : {}),
         })),
       },
     ],
   };
 
   return (
-    <main className="max-w-[1440px] mx-auto px-20 py-10 pb-16">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+    <main className="w-full bg-[#f4f5f7]">
+      {/* SEO */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(jsonLd),
+        }}
+      />
 
-      <Breadcrumbs items={crumbs} />
+      <div className="mx-auto w-full max-w-[1440px] px-5 pb-16 sm:px-8 lg:px-12">
+        {/* =====================================================
+            BREADCRUMBS
+        ===================================================== */}
 
-      <h1 className="mt-3 mb-6 text-[36px] font-bold leading-[1.2] text-[#0f172a]">О компании</h1>
-
-      <div className="grid gap-8 lg:grid-cols-[1fr_520px]">
-        <div>
-          <p className="text-lg font-medium leading-relaxed text-[#0f172a]">{ABOUT_PAGE_LEAD}</p>
-          <div className="mt-4 space-y-4 text-base leading-relaxed text-[#475569]">
-            {ABOUT_PAGE_TEXT.map((p) => (
-              <p key={p}>{p}</p>
-            ))}
-          </div>
+        <div className="pt-6 sm:pt-8">
+          <Breadcrumbs items={crumbs} />
         </div>
 
-        <dl className="grid grid-cols-2 content-start gap-4">
-          {ABOUT_STATS.map((s) => (
-            <div key={s.label} className="rounded-2xl bg-[#f3f4f6] p-6">
-              <dt className="text-[32px] font-bold leading-none text-[#179146]">{s.value}</dt>
-              <dd className="mt-2 text-sm text-[#767d83]">{s.label}</dd>
+        {/* =====================================================
+            HERO
+        ===================================================== */}
+
+        <section className="mt-6">
+          <div className="grid overflow-hidden rounded-3xl bg-[#28313d] lg:grid-cols-[1.15fr_0.85fr]">
+            {/* Левая часть */}
+            <div className="relative overflow-hidden p-7 sm:p-10 lg:p-12">
+              {/* Фон */}
+              <div className="absolute inset-0 bg-gradient-to-br from-[#28313d] via-[#28313d] to-[#18212b]" />
+
+              <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-[#179146]/10 blur-3xl" />
+
+              <div className="absolute -bottom-32 -left-20 h-80 w-80 rounded-full bg-[#0f172a]/60 blur-3xl" />
+
+              {/* Контент */}
+              <div className="relative">
+                <p className="text-xs font-medium uppercase tracking-[0.16em] text-white/45">
+                  О компании
+                </p>
+
+                <h1 className="mt-5 max-w-[720px] text-4xl font-medium leading-[1.05] tracking-[-0.04em] text-white sm:text-5xl lg:text-[52px]">
+                  Промышленное оборудование
+                  <br />
+                  для реальных задач
+                </h1>
+
+                <p className="mt-6 max-w-[650px] text-base leading-7 text-white/60 sm:text-[17px]">
+                  {ABOUT_PAGE_LEAD}
+                </p>
+
+                <div className="mt-8 max-w-[680px] space-y-3">
+                  {ABOUT_PAGE_TEXT.slice(0, 2).map((text) => (
+                    <p
+                      key={text}
+                      className="text-sm leading-6 text-white/45"
+                    >
+                      {text}
+                    </p>
+                  ))}
+                </div>
+              </div>
             </div>
-          ))}
-        </dl>
-      </div>
 
-      <HomeSection title="Чем мы занимаемся">
-        <AboutActivities />
-      </HomeSection>
+            {/* Правая часть — статистика */}
+            <div className="relative border-t border-white/10 bg-white/[0.03] p-5 sm:p-7 lg:border-l lg:border-t-0 lg:p-8">
+              <div className="grid h-full grid-cols-2 gap-3">
+                {ABOUT_STATS.map((stat, index) => (
+                  <div
+                    key={stat.label}
+                    className={[
+                      "group relative overflow-hidden rounded-2xl p-5 sm:p-6",
+                      index === 0
+                        ? "bg-white"
+                        : "bg-white/[0.06] hover:bg-white/[0.1]",
+                      "transition-colors duration-300",
+                    ].join(" ")}
+                  >
+                    {index === 0 && (
+                      <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-[#179146]/10 blur-2xl" />
+                    )}
 
-      <HomeSection title="Наши принципы">
-        <AboutValues />
-      </HomeSection>
+                    <div className="relative">
+                      <dt
+                        className={[
+                          "text-3xl font-semibold tracking-[-0.04em] sm:text-4xl",
+                          index === 0
+                            ? "text-[#179146]"
+                            : "text-white",
+                        ].join(" ")}
+                      >
+                        {stat.value}
+                      </dt>
 
-      <HomeSection title="Как мы работаем">
-        <HomeSteps />
-      </HomeSection>
+                      <dd
+                        className={[
+                          "mt-3 text-sm leading-5",
+                          index === 0
+                            ? "text-[#66717d]"
+                            : "text-white/45",
+                        ].join(" ")}
+                      >
+                        {stat.label}
+                      </dd>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
 
-      {brands.length > 0 && (
-        <HomeSection title="С кем мы работаем" href="/brands" linkLabel="Все бренды">
-          <BrandSlider
-            items={brands.map((b) => ({
-              id: b.id,
-              slug: b.slug,
-              name: b.name,
-              logoUrl: b.logoUrl,
-              productCount: b._count.products,
-            }))}
-          />
+        
+        {/* =====================================================
+            ЧЕМ ЗАНИМАЕМСЯ
+        ===================================================== */}
+
+        <HomeSection title="Чем мы занимаемся">
+          <AboutActivities />
         </HomeSection>
-      )}
 
-      <HomeCta />
+        {/* =====================================================
+            ПРИНЦИПЫ
+        ===================================================== */}
 
-      <HomeSection title="Реквизиты" id="requisites">
-        <HomeRequisites />
-      </HomeSection>
+        <HomeSection title="Наши принципы">
+          <AboutValues />
+        </HomeSection>
+
+        {/* =====================================================
+            КАК РАБОТАЕМ
+        ===================================================== */}
+
+        <HomeSection title="Как мы работаем">
+          <HomeSteps />
+        </HomeSection>
+
+        {/* =====================================================
+            БРЕНДЫ
+        ===================================================== */}
+
+        {brands.length > 0 && (
+          <HomeSection
+            title="С кем мы работаем"
+            href="/brands"
+            linkLabel="Все бренды"
+          >
+            <BrandSlider
+              items={brands.map((brand) => ({
+                id: brand.id,
+                slug: brand.slug,
+                name: brand.name,
+                logoUrl: brand.logoUrl,
+                productCount: brand._count.products,
+              }))}
+            />
+          </HomeSection>
+        )}
+
+        {/* =====================================================
+            CTA
+        ===================================================== */}
+
+        <HomeCta />
+
+        {/* =====================================================
+            РЕКВИЗИТЫ
+        ===================================================== */}
+
+        <HomeSection
+          title="Реквизиты"
+          id="requisites"
+        >
+          <HomeRequisites />
+        </HomeSection>
+      </div>
     </main>
   );
 }
