@@ -7,7 +7,7 @@ import type { OrderListItem } from "@/lib/orderTypes";
 import { revalidatePath } from "next/cache";
 import { randomUUID } from "crypto";
 import path from "path";
-import { uploadDocumentServer } from "@/lib/actions/upload";
+import { uploadDocumentServer } from "@/lib/actions/uploadDocument";
 import { LEAD_ALLOWED_EXTENSIONS, LEAD_MAX_FILE_SIZE } from "@/lib/lead-config";
 import { auth } from "@/auth";
 import { getConsentMeta } from "@/lib/consent-meta";

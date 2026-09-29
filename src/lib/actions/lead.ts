@@ -8,7 +8,8 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { randomUUID } from "crypto";
 import path from "path";
-import { uploadDocumentServer, deleteFromS3 } from "@/lib/actions/upload";
+import { uploadDocumentServer } from "@/lib/actions/uploadDocument";
+import { deleteFromS3 } from "@/lib/actions/upload";
 import { LEAD_ALLOWED_EXTENSIONS, LEAD_MAX_FILES, LEAD_MAX_FILE_SIZE } from "@/lib/lead-config";
 import { getConsentMeta } from "@/lib/consent-meta";
 
