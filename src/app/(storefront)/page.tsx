@@ -7,7 +7,7 @@ import { HomeProductCarousel } from "@/components/HomeProductCarousel";
 import type { HomeCarouselVariant } from "@/components/HomeProductCarousel";
 import type { CatalogCard } from "@/lib/catalog-query";
 import BrandSlider from "@/components/BrandSlider";
-import CategoryTileGrid from "@/components/CategoryTileGrid";
+import HomeCategoryTileGrid from "@/components/HomeCategoryTileGrid";
 
 import {
   HomeSteps,
@@ -154,7 +154,6 @@ async function getTopCategories(visibleIds: string[]) {
       ...category,
       productCount: total(category.id),
     }))
-    .filter((category) => category.productCount > 0)
     .sort((a, b) => b.productCount - a.productCount)
     .slice(0, 8);
 }
@@ -390,7 +389,7 @@ export default async function HomePage() {
             href="/catalog"
             linkLabel="Весь каталог"
           >
-            <CategoryTileGrid
+            <HomeCategoryTileGrid
               items={topCategories.map((category) => ({
                 slug: category.slug,
                 name: category.name,
