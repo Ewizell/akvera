@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { AboutRequisites } from "@/components/AboutBlocks";
 import {
   ABOUT_PARAGRAPHS,
@@ -35,78 +36,160 @@ const ICONS: Record<DeliveryIcon, React.ReactNode> = {
 
 export function HomeAbout() {
   return (
-    <div className="grid gap-8 lg:grid-cols-[1fr_520px]">
-      <div>
-        <div className="space-y-4 text-base leading-relaxed text-[#475569]">
-          {ABOUT_PARAGRAPHS.map((p) => (
-            <p key={p}>{p}</p>
-          ))}
+    <div className="grid gap-4 lg:grid-cols-[1fr_0.85fr]">
+      {/* Левая карточка */}
+      <div className="flex flex-col overflow-hidden rounded-2xl bg-[#fff]">
+        <div className="flex-1 p-7 sm:p-9 lg:p-10">
+
+
+          <h3 className="mt-4 max-w-[620px] text-2xl font-[500] leading-[1.15] tracking-[-0.025em] text-[#28313d] sm:text-3xl">
+            Оборудование для инженерных систем
+          </h3>
+
+          <div className="mt-5 max-w-[650px] space-y-4 text-[15px] leading-7 text-[#66717d]">
+            {ABOUT_PARAGRAPHS.map((p) => (
+              <p key={p}>{p}</p>
+            ))}
+          </div>
         </div>
 
-        <Link
-          href="/about"
-          className="group mt-6 inline-flex items-center gap-2 rounded-full bg-[#179146] px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#127a3a]"
-        >
-          Подробнее
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 14 14"
-            fill="none"
-            className="transition-transform group-hover:translate-x-0.5"
+        {/* Нижняя панель */}
+        <div className="px-7 py-5 sm:px-9">
+          <Link
+            href="/about"
+            className="group inline-flex h-11 items-center gap-3 rounded-xl bg-[#e5e8eb] pl-4 pr-1.5 text-sm font-medium text-[#28313d] transition-all duration-300 hover:bg-gradient-to-br hover:from-[#179146] hover:to-[#0f172a] hover:text-white"
           >
-            <path
-              d="M1 7H13M13 7L7.5 1.5M13 7L7.5 12.5"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </Link>
+            <span>Подробнее</span>
+
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#d9dde1] text-[#28313d] transition-all duration-300 group-hover:bg-white/15 group-hover:text-white">
+              <ArrowRight
+                size={16}
+                strokeWidth={1.8}
+                className="transition-transform duration-200 group-hover:translate-x-0.5"
+              />
+            </span>
+          </Link>
+        </div>
       </div>
 
-      <dl className="grid grid-cols-2 gap-4">
-        {ABOUT_STATS.map((s) => (
-          <div key={s.label} className="rounded-2xl bg-[#f3f4f6] p-6">
-            <dt className="text-[32px] font-bold leading-none text-[#179146]">{s.value}</dt>
-            <dd className="mt-2 text-sm text-[#767d83]">{s.label}</dd>
-          </div>
-        ))}
-      </dl>
+      {/* Правая карточка со статистикой */}
+      <div className="group relative min-h-[360px] overflow-hidden rounded-2xl bg-gradient-to-br from-[#179146] to-[#0f172a]">
+        {/* Декоративный свет */}
+        <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/[0.07] blur-3xl transition-transform duration-700 group-hover:scale-110" />
+
+        {/* Затемнение в нижней части */}
+        <div className="absolute -bottom-24 -left-16 h-64 w-64 rounded-full bg-black/[0.12] blur-3xl" />
+
+        {/* Дополнительный градиент */}
+        <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-[#0f172a]/35" />
+
+        {/* Статистика */}
+        <div className="relative flex h-full flex-col justify-between p-6 sm:p-7">
+          <p className="text-xs font-medium uppercase tracking-[0.14em] text-white/55">
+            Akvera в цифрах
+          </p>
+
+          <dl className="grid grid-cols-2 gap-x-8 gap-y-8">
+            {ABOUT_STATS.map((stat) => (
+              <div key={stat.label}>
+                <dt className="text-2xl font-medium leading-none tracking-[-0.02em] text-white sm:text-3xl">
+                  {stat.value}
+                </dt>
+
+                <dd className="mt-2 max-w-[150px] text-xs leading-5 text-white/60 sm:text-sm">
+                  {stat.label}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </div>
     </div>
   );
 }
 
 export function HomeDelivery() {
   return (
-    <div className="grid gap-6 md:grid-cols-3">
-      {DELIVERY_ITEMS.map((item) => (
-        <div key={item.title} className="rounded-2xl border border-[#e9e9e9] bg-white p-6">
-          <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#179146]/10 text-[#179146]">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.6"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-6 w-6"
+    <div className="grid gap-3 md:grid-cols-3">
+      {DELIVERY_ITEMS.map((item, index) => {
+        const inverted = index % 2 === 0;
+
+        return (
+          <div
+            key={item.title}
+            className={[
+              "group relative overflow-hidden rounded-2xl p-6 transition-all duration-500 sm:p-7",
+              inverted
+                ? "bg-gradient-to-br from-[#179146] to-[#0f172a]"
+                : "bg-white",
+              inverted
+                ? "hover:bg-white hover:bg-none"
+                : "hover:bg-gradient-to-br hover:from-[#179146] hover:to-[#0f172a]",
+            ].join(" ")}
+          >
+            {/* Декоративная иконка */}
+            <div
+              className={[
+                "pointer-events-none absolute right-5 top-5 transition-colors duration-500",
+                inverted
+                  ? "text-white/10 group-hover:text-[#179146]/10"
+                  : "text-[#179146]/10 group-hover:text-white/10",
+              ].join(" ")}
             >
-              {ICONS[item.icon]}
-            </svg>
-          </span>
-          <h3 className="mt-4 text-base font-semibold text-[#0f172a]">{item.title}</h3>
-          <ul className="mt-3 space-y-2">
-            {item.points.map((point) => (
-              <li key={point} className="flex gap-2 text-sm text-[#475569]">
-                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#179146]" />
-                {point}
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))}
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-32 w-32"
+              >
+                {ICONS[item.icon]}
+              </svg>
+            </div>
+
+            {/* Контент */}
+            <div className="relative z-10">
+              <h3
+                className={[
+                  "relative max-w-[80%] text-base font-medium leading-snug transition-colors duration-500",
+                  inverted
+                    ? "text-white group-hover:text-[#28313d]"
+                    : "text-[#28313d] group-hover:text-white",
+                ].join(" ")}
+              >
+                {item.title}
+              </h3>
+
+              <ul className="mt-5 space-y-2.5">
+                {item.points.map((point) => (
+                  <li
+                    key={point}
+                    className={[
+                      "flex gap-2.5 text-sm leading-5 transition-colors duration-500",
+                      inverted
+                        ? "text-white/65 group-hover:text-[#66717d]"
+                        : "text-[#66717d] group-hover:text-white/65",
+                    ].join(" ")}
+                  >
+                    <span
+                      className={[
+                        "mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full transition-colors duration-500",
+                        inverted
+                          ? "bg-white/70 group-hover:bg-[#179146]"
+                          : "bg-[#179146] group-hover:bg-white/70",
+                      ].join(" ")}
+                    />
+
+                    <span>{point}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -114,67 +197,235 @@ export function HomeDelivery() {
 export function HomeFaq() {
   return (
     <div className="space-y-3">
-      {FAQ_ITEMS.map((item) => (
-        <details
-          key={item.question}
-          className="group rounded-2xl border border-[#e9e9e9] bg-white px-6 open:border-[#179146]"
-        >
-          <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-5 text-base font-semibold text-[#0f172a] [&::-webkit-details-marker]:hidden">
-            {item.question}
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#e9e9e9] text-[#1c2126] transition-transform group-open:rotate-45 group-open:bg-[#179146] group-open:text-white">
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                <path d="M6 1v10M1 6h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
-            </span>
-          </summary>
-          <p className="pb-5 text-sm leading-relaxed text-[#475569]">{item.answer}</p>
-        </details>
-      ))}
+      {FAQ_ITEMS.map((item, index) => {
+        const tinted = index % 2 === 1;
+
+        return (
+          <details
+            key={item.question}
+            className={[
+              "group overflow-hidden rounded-2xl transition-all duration-500",
+              tinted ? "bg-[#fff]" : "bg-white",
+              "open:bg-white",
+              "open:shadow-[0_4px_20px_rgba(40,49,61,0.06)]",
+            ].join(" ")}
+          >
+            <summary
+              className="
+                flex
+                cursor-pointer
+                list-none
+                items-center
+                justify-between
+                gap-6
+                px-6
+                py-5
+                text-[15px]
+                font-medium
+                leading-6
+                text-[#28313d]
+                transition-colors
+                duration-300
+                hover:text-[#179146]
+                [&::-webkit-details-marker]:hidden
+                sm:px-7
+              "
+            >
+              <span>{item.question}</span>
+
+              <span
+                className="
+                  flex
+                  h-9
+                  w-9
+                  shrink-0
+                  items-center
+                  justify-center
+                  rounded-xl
+                  bg-[#e5e8eb]
+                  text-[#66717d]
+                  transition-all
+                  duration-500
+                  group-hover:bg-[#dfe3e7]
+                  group-hover:text-[#28313d]
+                  group-open:bg-gradient-to-br
+                  group-open:from-[#179146]
+                  group-open:to-[#0f172a]
+                  group-open:text-white
+                  group-open:rotate-45
+                "
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 14 14"
+                  fill="none"
+                >
+                  <path
+                    d="M7 1.5v11M1.5 7h11"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </span>
+            </summary>
+
+            <div className="px-6 pb-6 sm:px-7">
+              <div className="h-px bg-[#e9ecef]" />
+
+              <p className="max-w-[850px] pt-5 text-sm leading-6 text-[#66717d]">
+                {item.answer}
+              </p>
+            </div>
+          </details>
+        );
+      })}
     </div>
   );
 }
 
 export function HomeRequisites() {
-  const items: { label: string; value: string; href?: string }[] = [
-    { label: "Телефон", value: CONTACTS.phone, href: `tel:${CONTACTS.phone.replace(/[^\d+]/g, "")}` },
-    { label: "Почта", value: CONTACTS.email, href: `mailto:${CONTACTS.email}` },
-    { label: "Адрес", value: CONTACTS.address },
-    { label: "Режим работы", value: CONTACTS.hours },
+  const items: {
+    label: string;
+    value: string;
+    href?: string;
+  }[] = [
+    {
+      label: "Телефон",
+      value: CONTACTS.phone,
+      href: `tel:${CONTACTS.phone.replace(/[^\d+]/g, "")}`,
+    },
+    {
+      label: "Почта",
+      value: CONTACTS.email,
+      href: `mailto:${CONTACTS.email}`,
+    },
+    {
+      label: "Адрес",
+      value: CONTACTS.address,
+    },
+    {
+      label: "Режим работы",
+      value: CONTACTS.hours,
+    },
   ];
+
   const hasMap = Boolean(CONTACTS.mapEmbedUrl);
 
-    return (
-    <div className={hasMap ? "grid gap-6 lg:grid-cols-2" : "space-y-6"}>
-      <div className="space-y-6">
-        <div className={`grid gap-4 sm:grid-cols-2 ${hasMap ? "" : "lg:grid-cols-4"}`}>
-          {items.map((item) => (
-            <div key={item.label} className="rounded-2xl bg-[#f3f4f6] p-6">
-              <p className="text-xs uppercase tracking-wider text-[#969393]">{item.label}</p>
-              {item.href ? (
-                <a
-                  href={item.href}
-                  className="mt-2 block text-base font-semibold text-[#0f172a] transition-colors hover:text-[#179146]"
-                >
+  return (
+    <div
+      className={
+        hasMap
+          ? "grid gap-4 lg:grid-cols-[0.9fr_1.1fr]"
+          : "space-y-4"
+      }
+    >
+      {/* Левая часть */}
+      <div className="overflow-hidden rounded-2xl bg-[#fff]">
+        <div className="p-7 sm:p-8">
+          <p className="text-xs font-medium uppercase tracking-[0.14em] text-[#929aa6]">
+            Контакты
+          </p>
+
+          <h3 className="mt-3 text-2xl font-medium tracking-[-0.025em] text-[#28313d]">
+            Свяжитесь с нами
+          </h3>
+
+          <p className="mt-3 max-w-[500px] text-sm leading-6 text-[#66717d]">
+            Ответим на вопросы по оборудованию и поставке.
+          </p>
+
+          {/* Основные контакты */}
+          <div className="mt-7 space-y-3">
+            {items.slice(0, 2).map((item) => (
+              <a
+                key={item.label}
+                href={item.href}
+                className="
+                  group
+                  flex
+                  items-center
+                  justify-between
+                  rounded-xl
+                  bg-[#f6f6f6]
+                  px-5
+                  py-4
+                  transition-all
+                  duration-300
+                  hover:bg-gradient-to-br
+                  hover:from-[#179146]
+                  hover:to-[#0f172a]
+                "
+              >
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.12em] text-[#929aa6] transition-colors duration-300 group-hover:text-white/55">
+                    {item.label}
+                  </p>
+
+                  <p className="mt-1 text-sm font-medium text-[#28313d] transition-colors duration-300 group-hover:text-white">
+                    {item.value}
+                  </p>
+                </div>
+
+                <ArrowRight
+                  size={16}
+                  strokeWidth={1.7}
+                  className="text-[#929aa6] transition-all duration-300 group-hover:translate-x-1 group-hover:text-white"
+                />
+              </a>
+            ))}
+          </div>
+
+          {/* Дополнительная информация */}
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            {items.slice(2).map((item) => (
+              <div
+                key={item.label}
+                className="rounded-xl bg-[#f6f6f6] px-5 py-4"
+              >
+                <p className="text-[11px] uppercase tracking-[0.12em] text-[#929aa6]">
+                  {item.label}
+                </p>
+
+                <p className="mt-1.5 text-sm leading-5 text-[#28313d]">
                   {item.value}
-                </a>
-              ) : (
-                <p className="mt-2 text-base font-semibold text-[#0f172a]">{item.value}</p>
-              )}
-            </div>
-          ))}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {SHOW_REQUISITES && <AboutRequisites />}
+        {SHOW_REQUISITES && (
+          <div className="border-t border-[#dfe3e7] px-7 py-5 sm:px-8">
+            <AboutRequisites />
+          </div>
+        )}
       </div>
 
+      {/* Правая часть — карта */}
       {hasMap && (
-        <div className="relative min-h-[300px] overflow-hidden rounded-2xl border border-[#e9e9e9] lg:min-h-0">
+        <div className="relative min-h-[420px] overflow-hidden rounded-2xl bg-gradient-to-br from-[#179146] to-[#0f172a]">
           <iframe
             src={CONTACTS.mapEmbedUrl}
             title="Карта проезда"
             className="absolute inset-0 h-full w-full"
             loading="lazy"
           />
+
+          {/* Лёгкий градиент поверх карты */}
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#18212b]/45 via-transparent to-[#18212b]/10" />
+
+          {/* Метка */}
+          <div className="pointer-events-none absolute top-5 left-5 rounded-xl bg-[#18212b]/80 px-4 py-3 backdrop-blur-sm">
+            <p className="text-xs font-medium uppercase tracking-[0.12em] text-white/50">
+              Мы находимся
+            </p>
+
+            <p className="mt-1 text-sm font-medium text-white">
+              {CONTACTS.address}
+            </p>
+          </div>
         </div>
       )}
     </div>

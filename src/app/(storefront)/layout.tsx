@@ -15,7 +15,7 @@ export default function StorefrontLayout({ children }: { children: React.ReactNo
           <header>
             <SiteHeader />
           </header>
-          <div className="flex-1">{children}</div>
+          <div className="flex-1 pt-[116px]">{children}</div>
           <Footer />
           <CookieConsent />
           <YandexMetrika />

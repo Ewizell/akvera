@@ -24,7 +24,7 @@ export default async function SiteHeader() {
   const categories = await getCategoryTree();
 
   return (
-    <div className="bg-white w-full">
+    <div className="fixed top-0 z-50 w-full bg-white shadow-[0_2px_8px_rgba(15,23,42,0.06)]">
       <div className="max-w-[1440px] mx-auto px-20 py-3 flex flex-col gap-3 items-start justify-center">
 
         {/* Верхний ряд */}
@@ -91,31 +91,6 @@ export default async function SiteHeader() {
 
           <HeaderAuthLink />
         </div>
-
-        {/* Нижний ряд */}
-        <nav
-          aria-label="Категории"
-          className="flex w-full flex-wrap items-center justify-between gap-x-6 gap-y-2 pt-1 text-[#475569] text-sm font-medium leading-none whitespace-nowrap"
-        >
-          {categories.map((cat) => (
-            <Link
-              key={cat.id}
-              href={`/category/${cat.slug}`}
-              className={`group relative flex items-center gap-1.5 pb-1.5 transition-colors duration-200 hover:text-[#179146] after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:origin-left after:scale-x-0 after:rounded-full after:bg-[#179146] after:transition-transform after:duration-200 hover:after:scale-x-100 ${focusRing}`}
-            >
-              {cat.iconUrl && (
-                <Image
-                  src={cat.iconUrl}
-                  alt=""
-                  width={18}
-                  height={18}
-                  className="shrink-0 transition-transform duration-200 group-hover:scale-110"
-                />
-              )}
-              {cat.name}
-            </Link>
-          ))}
-        </nav>
       </div>
     </div>
   );

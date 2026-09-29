@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef } from 'react'
+import Link from 'next/link'
 import CarouselProductCard, {
   type CarouselVariant,
 } from './CarouselProductCard'
@@ -32,9 +33,13 @@ function ChevronIcon({
 export function ProductCarousel({
   title,
   variants,
+  href,
+  linkLabel = 'Смотреть все',
 }: {
   title: string
   variants: CarouselVariant[]
+  href?: string
+  linkLabel?: string
 }) {
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -53,9 +58,33 @@ export function ProductCarousel({
 
   return (
     <section className="mt-12">
-      <p className="font-manrope font-bold text-[24px] text-[#1c2126] mb-[16px]">
-        {title}
-      </p>
+      <div className="mb-[16px] flex items-center justify-between gap-4">
+        <p className="font-manrope font-bold text-[24px] text-[#1c2126]">{title}</p>
+
+        {href && (
+          <Link
+            href={href}
+            className="group inline-flex shrink-0 items-center gap-2 rounded-full border border-[#179146] px-5 py-2 text-sm font-semibold text-[#179146] transition-colors hover:bg-[#179146] hover:text-white"
+          >
+            {linkLabel}
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 14 14"
+              fill="none"
+              className="transition-transform group-hover:translate-x-0.5"
+            >
+              <path
+                d="M1 7H13M13 7L7.5 1.5M13 7L7.5 12.5"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </Link>
+        )}
+      </div>
 
       <div className="relative">
         <button
