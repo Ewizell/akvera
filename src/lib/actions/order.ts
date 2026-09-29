@@ -10,6 +10,7 @@ import path from "path";
 import { uploadDocumentServer } from "@/lib/actions/uploadDocument";
 import { LEAD_ALLOWED_EXTENSIONS, LEAD_MAX_FILE_SIZE } from "@/lib/lead-config";
 import { auth } from "@/auth";
+import { sendMail } from "@/lib/mailer";
 import { getConsentMeta } from "@/lib/consent-meta";
 
 export async function getOrders(params: {
@@ -170,9 +171,10 @@ export async function createOrder(formData: FormData) {
     const variantIds = items.map((i) => i.variantId);
     const variants = await prisma.productVariant.findMany({
       where: { id: { in: variantIds } },
-      select: { id: true, price: true },
+      select: { id: true, price: true, name: true, product: { select: { name: true } } },
     });
     const priceByVariantId = new Map(variants.map((v) => [v.id, v.price]));
+    const variantById = new Map(variants.map((v) => [v.id, v]));
 
     const session = await auth();
 
@@ -198,7 +200,7 @@ export async function createOrder(formData: FormData) {
           })),
         },
       },
-      select: { id: true },
+      select: { id: true, orderNumber: true },
     });
 
     for (const file of attachments) {
@@ -215,6 +217,35 @@ export async function createOrder(formData: FormData) {
           url: uploaded.url,
           filename: file.name,
         },
+      });
+    }
+
+    const notifyEmail = process.env.LEADS_NOTIFY_EMAIL;
+    if (notifyEmail) {
+      const itemsHtml = items
+        .map((item) => {
+          const variant = variantById.get(item.variantId);
+          const title = variant ? `${variant.product.name}${variant.name ? ` — ${variant.name}` : ""}` : item.variantId;
+          return `<li>${title} × ${item.quantity}</li>`;
+        })
+        .join("");
+
+      await sendMail({
+        to: notifyEmail,
+        subject: `Новый заказ №${order.orderNumber}`,
+        html: `
+          <p><b>Номер заказа:</b> ${order.orderNumber}</p>
+          <p><b>Имя:</b> ${contactName}</p>
+          <p><b>Телефон:</b> ${contactPhone}</p>
+          ${contactEmail ? `<p><b>Почта:</b> ${contactEmail}</p>` : ""}
+          ${organization ? `<p><b>Организация:</b> ${organization}</p>` : ""}
+          ${deliveryMethod ? `<p><b>Доставка:</b> ${deliveryMethod}${deliveryAddress ? `, ${deliveryAddress}` : ""}</p>` : ""}
+          ${paymentMethod ? `<p><b>Оплата:</b> ${paymentMethod}${prepaymentType ? ` (${prepaymentType})` : ""}</p>` : ""}
+          ${comment ? `<p><b>Комментарий:</b><br/>${comment.replace(/\n/g, "<br/>")}</p>` : ""}
+          <p><b>Состав заказа:</b></p>
+          <ul>${itemsHtml}</ul>
+          <p><a href="${process.env.NEXT_PUBLIC_SITE_URL}/admin/orders/${order.id}">Открыть в админке</a></p>
+        `,
       });
     }
 

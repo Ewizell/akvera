@@ -155,7 +155,7 @@ async function getTopCategories(visibleIds: string[]) {
       productCount: total(category.id),
     }))
     .sort((a, b) => b.productCount - a.productCount)
-    .slice(0, 8);
+    .slice(0, 12);
 }
 
 function toCarouselVariants(

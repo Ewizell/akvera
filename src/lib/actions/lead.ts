@@ -11,6 +11,8 @@ import path from "path";
 import { uploadDocumentServer } from "@/lib/actions/uploadDocument";
 import { deleteFromS3 } from "@/lib/actions/upload";
 import { LEAD_ALLOWED_EXTENSIONS, LEAD_MAX_FILES, LEAD_MAX_FILE_SIZE } from "@/lib/lead-config";
+import { sendMail } from "@/lib/mailer";
+import { LEAD_TYPE_LABELS } from "@/lib/leadTypes";
 import { getConsentMeta } from "@/lib/consent-meta";
 
 const RATE_WINDOW_MS = 10 * 60 * 1000;
@@ -128,6 +130,24 @@ async function createLead(type: LeadType, formData: FormData, allowFiles: boolea
         ...(saved.length > 0 ? { attachments: { create: saved } } : {}),
       },
     });
+
+    const notifyEmail = process.env.LEADS_NOTIFY_EMAIL;
+    if (notifyEmail) {
+      await sendMail({
+        to: notifyEmail,
+        subject: `Новая заявка: ${LEAD_TYPE_LABELS[type]} — ${name}`,
+        html: `
+          <p><b>Тип:</b> ${LEAD_TYPE_LABELS[type]}</p>
+          <p><b>Имя:</b> ${name}</p>
+          <p><b>Телефон:</b> ${phone}</p>
+          ${email ? `<p><b>Почта:</b> ${email}</p>` : ""}
+          ${organization ? `<p><b>Организация:</b> ${organization}</p>` : ""}
+          ${message ? `<p><b>Сообщение:</b><br/>${message.replace(/\n/g, "<br/>")}</p>` : ""}
+          ${saved.length > 0 ? `<p><b>Вложения:</b> ${saved.map((f) => f.filename).join(", ")}</p>` : ""}
+          <p><a href="${process.env.NEXT_PUBLIC_SITE_URL}/admin/leads">Открыть в админке</a></p>
+        `,
+      });
+    }
 
     revalidatePath("/admin/leads");
     return { success: true as const };
