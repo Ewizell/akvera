@@ -31,16 +31,23 @@ type CategoryWithChildren = Category & {
   children: CategoryWithChildren[];
 };
 
-function buildTree(
-  categories: Category[],
-  parentId: string | null = null
-): CategoryWithChildren[] {
-  return categories
-    .filter((category) => category.parentId === parentId)
-    .map((category) => ({
-      ...category,
-      children: buildTree(categories, category.id),
-    }));
+function buildTree(categories: Category[]): CategoryWithChildren[] {
+  const ids = new Set(categories.map((c) => c.id));
+
+  function build(parentId: string | null): CategoryWithChildren[] {
+    return categories
+      .filter((category) =>
+        parentId === null
+          ? category.parentId === null || !ids.has(category.parentId)
+          : category.parentId === parentId
+      )
+      .map((category) => ({
+        ...category,
+        children: build(category.id),
+      }));
+  }
+
+  return build(null);
 }
 
 function CategoryRow({
@@ -316,7 +323,7 @@ export default function CategoryList({
     });
   }
 
-  const tree = buildTree(categories);
+  const tree = useMemo(() => buildTree(categories), [categories]);
 
   const filteredCategories = useMemo(() => {
     const query = search.trim().toLowerCase();
