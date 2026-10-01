@@ -79,7 +79,7 @@ export const FAQ_ITEMS = [
 ];
 
 export const CONTACTS = {
-  phone: "+7 (XXX) XXX-XX-XX",
+  phone: "+7 (999) 999-99-99",
   email: "sales@akvera.ru",
   address: "г. Одинцово, ул. Внуковская, 11с19",
   hours: "Пн–Пт, 9:00–18:00",

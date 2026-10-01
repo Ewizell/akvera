@@ -267,23 +267,6 @@ export async function createOrder(formData: FormData) {
       });
     }
 
-    if (contactEmail) {
-      void sendOrderConfirmation({
-        orderNumber: order.orderNumber,
-        name: contactName,
-        email: contactEmail,
-        items: items.map((item) => {
-          const v = variantById.get(item.variantId);
-          const price = priceByVariantId.get(item.variantId);
-          return {
-            title: v ? `${v.product.name}${v.name ? ` — ${v.name}` : ""}` : item.variantId,
-            quantity: item.quantity,
-            price: price != null ? Number(price) : null,
-          };
-        }),
-      });
-    }
-
     revalidatePath("/admin/orders");
 
     return { success: true as const, orderId: order.id };

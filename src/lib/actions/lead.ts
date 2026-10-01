@@ -154,10 +154,6 @@ async function createLead(type: LeadType, formData: FormData, allowFiles: boolea
       void sendLeadConfirmation({ type, name, phone, email, hasFiles: saved.length > 0 });
     }
 
-    if (email) {
-      void sendLeadConfirmation({ type, name, phone, email, hasFiles: saved.length > 0 });
-    }
-
     revalidatePath("/admin/leads");
     return { success: true as const };
   } catch (error) {
