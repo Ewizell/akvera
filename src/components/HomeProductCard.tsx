@@ -61,6 +61,7 @@ export default function HomeProductCard({
         flex
         h-full
         w-full
+        cursor-pointer
         flex-col
         overflow-hidden
         rounded-2xl
@@ -211,32 +212,33 @@ export default function HomeProductCard({
           </div>
 
           {/* Корзина */}
-<button
-  type="button"
-  onClick={handleAddToCart}
-  className="
-    mt-4
-    flex
-    h-10
-    w-full
-    items-center
-    justify-center
-    rounded-xl
-    bg-[#116b36]
-    text-sm
-    font-semibold
-    text-white
-    shadow-[0_3px_8px_rgba(15,23,42,0.12)]
-    transition-all
-    duration-300
-    hover:bg-[#0d572c]
-    hover:shadow-[0_7px_18px_rgba(15,23,42,0.20)]
-    active:bg-[#094622]
-    active:shadow-[0_3px_8px_rgba(15,23,42,0.15)]
-  "
->
-  В корзину
-</button>
+          <button
+            type="button"
+            onClick={handleAddToCart}
+            className="
+              mt-4
+              flex
+              h-10
+              w-full
+              cursor-pointer
+              items-center
+              justify-center
+              rounded-xl
+              bg-[#116b36]
+              text-sm
+              font-semibold
+              text-white
+              shadow-[0_3px_8px_rgba(15,23,42,0.12)]
+              transition-all
+              duration-300
+              hover:bg-[#0d572c]
+              hover:shadow-[0_7px_18px_rgba(15,23,42,0.20)]
+              active:bg-[#094622]
+              active:shadow-[0_3px_8px_rgba(15,23,42,0.15)]
+            "
+          >
+            В корзину
+          </button>
         </div>
       </div>
     </Link>

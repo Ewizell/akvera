@@ -114,104 +114,109 @@ export function HomeProductCarousel({
       </div>
 
       {/* Карусель */}
-      <div className="relative">
-        {/* Левая стрелка */}
-        <button
-          type="button"
-          onClick={() => scroll("left")}
-          aria-label="Прокрутить влево"
-          className="
-            group
-            absolute
-            left-[-16px]
-            top-1/2
-            z-10
-            flex
-            h-10
-            w-10
-            -translate-y-1/2
-            items-center
-            justify-center
-            rounded-xl
-            bg-[#f4f5f7]
-            text-[#28313d]
-            shadow-sm
-            transition-all
-            duration-300
-            hover:bg-gradient-to-br
-            hover:from-accent
-            hover:to-accent-end
-            hover:text-white
-            hover:shadow-md
-          "
-        >
-          <ChevronIcon direction="left" />
-        </button>
+<div className="relative">
+  {/* Левая кнопка */}
+  <button
+    type="button"
+    onClick={() => scroll("left")}
+    aria-label="Прокрутить влево"
+    className="
+      group
+      absolute
+      left-2
+      top-1/2
+      z-50
+      flex
+      h-10
+      w-10
+      -translate-y-1/2
+      cursor-pointer
+      items-center
+      justify-center
+      rounded-xl
+      bg-[#f4f5f7]
+      text-[#28313d]
+      shadow-sm
+      transition-all
+      duration-300
+      hover:bg-gradient-to-br
+      hover:from-accent
+      hover:to-accent-end
+      hover:text-white
+      hover:shadow-md
+    "
+  >
+    <ChevronIcon direction="left" />
+  </button>
 
-        {/* Правая стрелка */}
-        <button
-          type="button"
-          onClick={() => scroll("right")}
-          aria-label="Прокрутить вправо"
-          className="
-            group
-            absolute
-            right-[-16px]
-            top-1/2
-            z-10
-            flex
-            h-10
-            w-10
-            -translate-y-1/2
-            items-center
-            justify-center
-            rounded-xl
-            bg-[#f4f5f7]
-            text-[#28313d]
-            shadow-sm
-            transition-all
-            duration-300
-            hover:bg-gradient-to-br
-            hover:from-accent
-            hover:to-accent-end
-            hover:text-white
-            hover:shadow-md
-          "
-        >
-          <ChevronIcon direction="right" />
-        </button>
+  {/* Правая кнопка */}
+  <button
+    type="button"
+    onClick={() => scroll("right")}
+    aria-label="Прокрутить вправо"
+    className="
+      group
+      absolute
+      right-2
+      top-1/2
+      z-50
+      flex
+      h-10
+      w-10
+      -translate-y-1/2
+      cursor-pointer
+      items-center
+      justify-center
+      rounded-xl
+      bg-[#f4f5f7]
+      text-[#28313d]
+      shadow-sm
+      transition-all
+      duration-300
+      hover:bg-gradient-to-br
+      hover:from-accent
+      hover:to-accent-end
+      hover:text-white
+      hover:shadow-md
+    "
+  >
+    <ChevronIcon direction="right" />
+  </button>
 
-        {/* Карточки */}
-        <div
-          ref={scrollRef}
-          className="
-            flex
-            items-stretch
-            gap-6
-            overflow-x-auto
-            scroll-smooth
-            snap-x
-            snap-mandatory
-            pb-2
-            [&::-webkit-scrollbar]:hidden
-            [-ms-overflow-style:none]
-            [scrollbar-width:none]
-          "
-        >
-          {variants.map((variant) => (
-            <div
-              key={variant.id}
-              className="
-                w-[calc((100%-96px)/5)]
-                shrink-0
-                snap-start
-              "
-            >
-              <HomeProductCard variant={variant} />
-            </div>
-          ))}
-        </div>
+  {/* Карточки */}
+  <div
+    ref={scrollRef}
+    className="
+      flex
+      items-stretch
+      gap-6
+      overflow-x-auto
+      scroll-smooth
+      snap-x
+      snap-mandatory
+      px-1
+      py-4
+      -my-4
+      [&::-webkit-scrollbar]:hidden
+      [-ms-overflow-style:none]
+      [scrollbar-width:none]
+    "
+  >
+    {variants.map((variant) => (
+      <div
+        key={variant.id}
+        className="
+          w-[calc((100%-96px)/5)]
+          shrink-0
+          snap-start
+          cursor-default
+        "
+      >
+        <HomeProductCard variant={variant} />
       </div>
+    ))}
+  </div>
+</div>
     </section>
   );
 }
