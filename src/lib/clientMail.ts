@@ -24,6 +24,12 @@ const esc = (s: string) =>
 
 const rub = (n: number) => `${n.toLocaleString("ru-RU")} ₽`;
 
+// Абзац вводного текста. last = true — последний абзац, после него отступ побольше
+const para = (html: string, last = false) => `
+  <p style="margin:0 0 ${last ? 28 : 6}px;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:22px;color:#767d83;">
+    ${html}
+  </p>`;
+
 function layout(title: string, body: string) {
   const siteUrl = SITE || "#";
 
@@ -115,7 +121,7 @@ function layout(title: string, body: string) {
                     <td
                       style="vertical-align:middle;font-family:Arial,Helvetica,sans-serif;font-size:24px;line-height:28px;font-weight:700;letter-spacing:-0.5px;color:#ffffff;"
                     >
-                      akvera
+                      AKVERA
                     </td>
                   </tr>
                 </table>
@@ -164,48 +170,56 @@ function layout(title: string, body: string) {
             </tr>
 
             <!-- CTA -->
-            <tr>
-              <td
-                style="
-                  padding:0 28px 32px;
-                  background-color:#ffffff;
-                "
-              >
-                <table
-                  role="presentation"
-                  cellpadding="0"
-                  cellspacing="0"
-                  border="0"
-                >
-                  <tr>
-                    <td
-                      style="
-                        border-radius:10px;
-                        background-color:#179146;
-                      "
-                    >
-                      <a
-                        href="${siteUrl}"
-                        style="
-                          display:inline-block;
-                          padding:13px 20px;
-                          border-radius:10px;
-                          background-color:#179146;
-                          color:#ffffff;
-                          font-family:Arial,Helvetica,sans-serif;
-                          font-size:14px;
-                          line-height:20px;
-                          font-weight:700;
-                          text-decoration:none;
-                        "
-                      >
-                        Перейти на сайт
-                      </a>
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
+<tr>
+  <td
+    style="
+      padding:0 28px 32px;
+      background-color:#ffffff;
+    "
+  >
+    <table
+      role="presentation"
+      cellpadding="0"
+      cellspacing="0"
+      border="0"
+      style="border-collapse:separate;"
+    >
+      <tr>
+        <td
+          align="center"
+          valign="middle"
+          style="
+            background-color:#179146;
+            border-radius:10px;
+            mso-padding-alt:14px 24px;
+          "
+        >
+          <a
+            href="${siteUrl}"
+            target="_blank"
+            style="
+              display:block;
+              padding:14px 24px;
+              background-color:#179146;
+              border:1px solid #179146;
+              border-radius:10px;
+              color:#ffffff;
+              font-family:Arial,Helvetica,sans-serif;
+              font-size:14px;
+              line-height:20px;
+              font-weight:700;
+              text-align:center;
+              text-decoration:none;
+              white-space:nowrap;
+            "
+          >
+            Перейти на сайт
+          </a>
+        </td>
+      </tr>
+    </table>
+  </td>
+</tr>
 
             ${
               contactLines.length
@@ -308,18 +322,8 @@ export function sendLeadConfirmation(p: {
             Здравствуйте, ${esc(p.name)}!
           </p>
 
-          <p
-            style="
-              margin:0 0 24px;
-              font-family:Arial,Helvetica,sans-serif;
-              font-size:14px;
-              line-height:22px;
-              color:#767d83;
-            "
-          >
-            Мы получили вашу заявку и перезвоним вам
-            в ближайшее рабочее время.
-          </p>
+          ${para("Мы получили вашу заявку.")}
+          ${para("Перезвоним вам в ближайшее рабочее время.", true)}
 
           <!-- Номер телефона -->
           <table
@@ -397,24 +401,16 @@ export function sendLeadConfirmation(p: {
           Здравствуйте, ${esc(p.name)}!
         </p>
 
-        <p
-          style="
-            margin:0 0 24px;
-            font-family:Arial,Helvetica,sans-serif;
-            font-size:14px;
-            line-height:22px;
-            color:#767d83;
-          "
-        >
-          Мы получили ваш запрос на коммерческое предложение${
+        ${para(
+          `Мы получили ваш запрос на коммерческое предложение${
             p.hasFiles ? " и приложенную спецификацию" : ""
-          }.
-          Подготовим КП и свяжемся с вами по телефону
-          <strong style="color:#28313d;">
-            ${esc(p.phone)}
-          </strong>
-          или по этой почте.
-        </p>
+          }.`
+        )}
+        ${para("Подготовим КП и свяжемся с вами по телефону или на эту почту.")}
+        ${para(
+          `Телефон для связи: <strong style="color:#28313d;white-space:nowrap;">${esc(p.phone)}</strong>`,
+          true
+        )}
 
         <!-- Статус -->
         <table
@@ -480,7 +476,7 @@ export function sendLeadConfirmation(p: {
             color:#767d83;
           "
         >
-          Приложенная спецификация будет использована менеджером
+          Приложенная спецификация будет использована менеджером<br />
           при подготовке коммерческого предложения.
         </p>
         `
@@ -580,18 +576,8 @@ export function sendOrderConfirmation(p: {
           Здравствуйте, ${esc(p.name)}!
         </p>
 
-        <p
-          style="
-            margin:0 0 24px;
-            font-family:Arial,Helvetica,sans-serif;
-            font-size:14px;
-            line-height:22px;
-            color:#767d83;
-          "
-        >
-          Спасибо за заявку. Менеджер свяжется с вами
-          в ближайшее время.
-        </p>
+        ${para("Спасибо за заявку.")}
+        ${para("Менеджер свяжется с вами в ближайшее время.", true)}
 
         <!-- Номер заявки -->
         <table
