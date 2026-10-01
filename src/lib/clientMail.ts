@@ -1,6 +1,6 @@
 import { LeadType } from "@/generated/prisma/enums";
 import { sendMail } from "@/lib/mailer";
-import { CONTACTS } from "@/lib/siteContent"; // ← поправьте путь
+import { CONTACTS } from "@/lib/site-content";
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "";
 
