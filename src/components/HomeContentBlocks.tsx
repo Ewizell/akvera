@@ -112,7 +112,7 @@ export function HomeDelivery() {
   return (
     <div className="grid gap-3 md:grid-cols-3">
       {DELIVERY_ITEMS.map((item, index) => {
-        const inverted = index % 2 === 0;
+        const inverted = index % 2 === 1;
 
         return (
           <div
@@ -120,11 +120,8 @@ export function HomeDelivery() {
             className={[
               "group relative overflow-hidden rounded-2xl p-6 transition-all duration-500 sm:p-7",
               inverted
-                ? "bg-gradient-to-br from-[#179146] to-[#0f172a]"
-                : "bg-white",
-              inverted
-                ? "hover:bg-white hover:bg-none"
-                : "hover:bg-gradient-to-br hover:from-[#179146] hover:to-[#0f172a]",
+                ? "bg-gradient-to-br from-[#28313d] to-[#3d5570] hover:bg-[#e2f0ef] hover:bg-none"
+                : "bg-white hover:bg-gradient-to-br hover:from-[#179146] hover:to-[#0f172a]",
             ].join(" ")}
           >
             {/* Декоративная иконка */}

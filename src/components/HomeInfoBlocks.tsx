@@ -20,7 +20,7 @@ export function HomeSteps() {
     <div className="overflow-hidden rounded-2xl bg-white">
       <div className="grid sm:grid-cols-2 lg:grid-cols-4">
         {STEPS.map((step, index) => {
-          const inverted = index % 2 === 0;
+          const inverted = index % 2 === 1;
 
           return (
             <div
@@ -30,12 +30,11 @@ export function HomeSteps() {
                 index > 0
                   ? "border-t border-[#dfe3e7] sm:border-l sm:border-t-0"
                   : "",
+
+                // Фон
                 inverted
-                  ? "bg-gradient-to-br from-[#179146] to-[#0f172a]"
-                  : "bg-white",
-                inverted
-                  ? "hover:bg-white hover:bg-none"
-                  : "hover:bg-gradient-to-br hover:from-[#179146] hover:to-[#0f172a]",
+                  ? "bg-gradient-to-br from-[#28313d] to-[#3d5570] hover:bg-[#e2f0ef] hover:bg-none"
+                  : "bg-white hover:bg-gradient-to-br hover:from-[#179146] hover:to-[#0f172a]",
               ].join(" ")}
             >
               {/* Номер */}
@@ -43,8 +42,8 @@ export function HomeSteps() {
                 className={[
                   "relative z-10 flex h-10 w-10 items-center justify-center rounded-xl text-sm font-medium transition-all duration-500",
                   inverted
-                    ? "bg-white/15 text-white group-hover:bg-[#f3f4f6] group-hover:text-[#179146]"
-                    : "bg-gradient-to-br from-[#179146] to-[#0f172a] text-white group-hover:bg-white/15 group-hover:bg-none group-hover:text-white",
+                    ? "bg-white/15 text-white group-hover:bg-white group-hover:text-[#179146]"
+                    : "bg-[#f3f4f7] text-[#179146] group-hover:bg-white/15 group-hover:text-white",
                 ].join(" ")}
               >
                 {String(index + 1).padStart(2, "0")}
@@ -56,7 +55,7 @@ export function HomeSteps() {
                   className={[
                     "absolute left-[68px] right-[-1px] top-[47px] hidden h-px transition-colors duration-500 lg:block",
                     inverted
-                      ? "bg-white/20 group-hover:bg-[#dfe3e7]"
+                      ? "bg-white/20 group-hover:bg-[#cbd8e5]"
                       : "bg-[#dfe3e7] group-hover:bg-white/20",
                   ].join(" ")}
                 />
@@ -106,7 +105,7 @@ export function HomeAdvantages() {
             className={[
               "group relative overflow-hidden rounded-2xl p-6 transition-all duration-500",
               inverted
-                ? "bg-gradient-to-br from-[#179146] to-[#0f172a] hover:bg-white hover:bg-none"
+                ? "bg-gradient-to-br from-[#28313d] to-[#3d5570] hover:bg-[#e2f0ef] hover:bg-none"
                 : "bg-white hover:bg-gradient-to-br hover:from-[#179146] hover:to-[#0f172a]",
             ].join(" ")}
           >
@@ -115,7 +114,7 @@ export function HomeAdvantages() {
               className={[
                 "flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-500",
                 inverted
-                  ? "bg-white/15 text-white group-hover:bg-[#f3f4f6] group-hover:text-[#179146]"
+                  ? "bg-white/15 text-white group-hover:bg-white group-hover:text-[#28313d]"
                   : "bg-[#f3f4f6] text-[#179146] group-hover:bg-white/15 group-hover:text-white",
               ].join(" ")}
             >

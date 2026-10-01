@@ -10,6 +10,12 @@
   color-scheme: light;
 }
 
+@theme {
+  --color-accent: #179146;
+  --color-accent-hover: #147a3a;
+  --color-accent-end: #0f172a;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -22,4 +28,26 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+}
+@keyframes brands-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.brands-track {
+  animation: brands-marquee 40s linear infinite;
+}
+
+.brands-marquee:hover .brands-track {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brands-track {
+    animation: none;
+  }
 }
