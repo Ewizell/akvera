@@ -129,7 +129,7 @@ export async function deleteCategory(id: string) {
       where: { id },
     })
 
-    revalidatePath('/admin/categories')
+    revalidatePath('/admin', 'layout')
     revalidatePath('/catalog')
     revalidatePath('/category', 'layout')
 
@@ -195,7 +195,7 @@ export async function getCategoryTree(): Promise<CategoryNode[]> {
 }
 export async function toggleCategoryHidden(id: string, isHidden: boolean) {
   await prisma.category.update({ where: { id }, data: { isHidden } })
-  revalidatePath('/admin/categories')
+  revalidatePath('/admin', 'layout')
   revalidatePath('/catalog')
   revalidatePath('/category', 'layout')
   return { success: true }
