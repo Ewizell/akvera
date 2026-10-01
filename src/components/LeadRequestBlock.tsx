@@ -148,6 +148,16 @@ function LeadForm({ mode }: { mode: Mode }) {
         className={inputCls}
       />
 
+      {mode === "callback" && (
+        <input
+          name="email"
+          type="email"
+          maxLength={150}
+          placeholder="Почта (необязательно, пришлём подтверждение)"
+          className={inputCls}
+        />
+      )}
+
       {mode === "quote" && (
         <>
           <div className="grid gap-3 sm:grid-cols-2">

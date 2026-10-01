@@ -153,7 +153,12 @@ export function CheckoutForm() {
               <input name="contactPhone" required className={inputClass} />
             </FormField>
             <FormField label="Электронная почта">
-              <input name="contactEmail" type="email" className={inputClass} />
+              <input
+                name="contactEmail"
+                type="email"
+                className={inputClass}
+                placeholder="Пришлём подтверждение заявки"
+              />
             </FormField>
           </div>
           {/* Вложения — нет в макете, оставил как есть, т.к. функциональность уже была */}

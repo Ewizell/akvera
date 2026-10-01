@@ -12,6 +12,7 @@ import { LEAD_ALLOWED_EXTENSIONS, LEAD_MAX_FILE_SIZE } from "@/lib/lead-config";
 import { auth } from "@/auth";
 import { sendMail } from "@/lib/mailer";
 import { getConsentMeta } from "@/lib/consent-meta";
+import { sendOrderConfirmation } from "@/lib/clientMail";
 
 export async function getOrders(params: {
   status?: OrderStatus;
@@ -246,6 +247,40 @@ export async function createOrder(formData: FormData) {
           <ul>${itemsHtml}</ul>
           <p><a href="${process.env.NEXT_PUBLIC_SITE_URL}/admin/orders/${order.id}">Открыть в админке</a></p>
         `,
+      });
+    }
+
+    if (contactEmail) {
+      void sendOrderConfirmation({
+        orderNumber: order.orderNumber,
+        name: contactName,
+        email: contactEmail,
+        items: items.map((item) => {
+          const v = variantById.get(item.variantId);
+          const price = priceByVariantId.get(item.variantId);
+          return {
+            title: v ? `${v.product.name}${v.name ? ` — ${v.name}` : ""}` : item.variantId,
+            quantity: item.quantity,
+            price: price != null ? Number(price) : null,
+          };
+        }),
+      });
+    }
+
+    if (contactEmail) {
+      void sendOrderConfirmation({
+        orderNumber: order.orderNumber,
+        name: contactName,
+        email: contactEmail,
+        items: items.map((item) => {
+          const v = variantById.get(item.variantId);
+          const price = priceByVariantId.get(item.variantId);
+          return {
+            title: v ? `${v.product.name}${v.name ? ` — ${v.name}` : ""}` : item.variantId,
+            quantity: item.quantity,
+            price: price != null ? Number(price) : null,
+          };
+        }),
       });
     }
 

@@ -14,6 +14,7 @@ import { LEAD_ALLOWED_EXTENSIONS, LEAD_MAX_FILES, LEAD_MAX_FILE_SIZE } from "@/l
 import { sendMail } from "@/lib/mailer";
 import { LEAD_TYPE_LABELS } from "@/lib/leadTypes";
 import { getConsentMeta } from "@/lib/consent-meta";
+import { sendLeadConfirmation } from "@/lib/clientMail";
 
 const RATE_WINDOW_MS = 10 * 60 * 1000;
 const RATE_MAX = 5;
@@ -147,6 +148,14 @@ async function createLead(type: LeadType, formData: FormData, allowFiles: boolea
           <p><a href="${process.env.NEXT_PUBLIC_SITE_URL}/admin/leads">Открыть в админке</a></p>
         `,
       });
+    }
+
+    if (email) {
+      void sendLeadConfirmation({ type, name, phone, email, hasFiles: saved.length > 0 });
+    }
+
+    if (email) {
+      void sendLeadConfirmation({ type, name, phone, email, hasFiles: saved.length > 0 });
     }
 
     revalidatePath("/admin/leads");
