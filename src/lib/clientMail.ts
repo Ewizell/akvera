@@ -30,8 +30,12 @@ const para = (html: string, last = false) => `
     ${html}
   </p>`;
 
-function layout(title: string, body: string) {
+function layout(title: string, preheader: string, body: string) {
   const siteUrl = SITE || "#";
+
+  // Скрытый текст для предпросмотра. Пробелы в конце не дают клиенту
+  // дополнить превью текстом из письма.
+  const pre = `<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#f4f5f7;opacity:0;">${esc(preheader)}${"&zwnj;&nbsp;".repeat(60)}</div>`;
 
   const linkStyle = "color:#767d83;text-decoration:none;";
   const contactLines = [
@@ -62,6 +66,7 @@ function layout(title: string, body: string) {
       color:#1c2126;
     "
   >
+    ${pre}
     <table
       role="presentation"
       width="100%"
@@ -190,8 +195,7 @@ function layout(title: string, body: string) {
           valign="middle"
           style="
             background-color:#179146;
-            border-radius:10px;
-            mso-padding-alt:14px 24px;
+            border-radius:8px;
           "
         >
           <a
@@ -199,14 +203,14 @@ function layout(title: string, body: string) {
             target="_blank"
             style="
               display:block;
-              padding:14px 24px;
+              padding:10px 20px;
               background-color:#179146;
               border:1px solid #179146;
-              border-radius:10px;
+              border-radius:8px;
               color:#ffffff;
               font-family:Arial,Helvetica,sans-serif;
-              font-size:14px;
-              line-height:20px;
+              font-size:13px;
+              line-height:18px;
               font-weight:700;
               text-align:center;
               text-decoration:none;
@@ -308,6 +312,7 @@ export function sendLeadConfirmation(p: {
       text: `Здравствуйте, ${p.name}! Мы получили вашу заявку и перезвоним на номер ${p.phone} в ближайшее рабочее время.`,
       html: layout(
         "Заявка на звонок принята",
+        "Мы получили вашу заявку и перезвоним в ближайшее рабочее время.",
         `
           <!-- Приветствие -->
           <p
@@ -387,6 +392,7 @@ export function sendLeadConfirmation(p: {
     text: `Здравствуйте, ${p.name}! Мы получили ваш запрос на КП. Подготовим предложение и свяжемся с вами.`,
     html: layout(
       "Запрос на КП принят",
+      "Подготовим коммерческое предложение и свяжемся с вами.",
       `
         <!-- Приветствие -->
         <p
@@ -562,6 +568,7 @@ export function sendOrderConfirmation(p: {
     text: `Здравствуйте, ${p.name}! Ваша заявка принята. Номер заявки: №${p.orderNumber}. Мы свяжемся с вами в ближайшее время.`,
     html: layout(
       `Заявка №${p.orderNumber} принята`,
+      `Номер вашей заявки: №${p.orderNumber}. Менеджер свяжется с вами в ближайшее время.`,
       `
         <!-- Приветствие -->
         <p
