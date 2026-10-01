@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import ShowAllProductsButton from "@/components/ShowAllProductsButton";
 import type { Metadata } from "next";
 import CategoryTileGrid from "@/components/CategoryTileGrid";
+import LeadRequestBlock from "@/components/LeadRequestBlock";
 
 export const revalidate = 3600;
 
@@ -68,6 +69,8 @@ export default async function CatalogPage() {
         ) : (
           <p className="text-gray-500 text-center py-20">Категории пока не добавлены</p>
         )}
+
+        <LeadRequestBlock />
       </main>
     </>
   );

@@ -9,7 +9,19 @@ export type HomeStat = {
   label: string;
 };
 
-export default function HomeHero({ stats }: { stats: HomeStat[] }) {
+export type HomeBrand = {
+  id: string;
+  name: string;
+  slug: string;
+};
+
+export default function HomeHero({
+  stats,
+  brands = [],
+}: {
+  stats: HomeStat[];
+  brands?: HomeBrand[];
+}) {
   const heroRef = useRef<HTMLElement>(null);
   const backgroundRef = useRef<HTMLDivElement>(null);
 
@@ -93,7 +105,7 @@ export default function HomeHero({ stats }: { stats: HomeStat[] }) {
         ref={backgroundRef}
         className="absolute -inset-[2%] bg-cover bg-center will-change-transform"
         style={{
-          backgroundImage: "url('/light.jpg')",
+          backgroundImage: "url('/hero-background.jpg')",
           transition:
             "transform 700ms cubic-bezier(0.22, 1, 0.36, 1)",
         }}
@@ -175,6 +187,26 @@ export default function HomeHero({ stats }: { stats: HomeStat[] }) {
               </span>
             </Link>
           </div>
+
+          {/* Слайдер брендов */}
+          {brands.length > 0 && (
+            <div className="brands-marquee mt-8 max-w-[620px] overflow-hidden rounded-xl border border-white/10 bg-white/[0.06] py-3 backdrop-blur-md [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]">
+              <div className="brands-track flex w-max items-center">
+                {/* Список дублируется для бесшовной прокрутки */}
+                {[...brands, ...brands].map((brand, index) => (
+                  <Link
+                    key={`${brand.id}-${index}`}
+                    href={`/brands/${brand.slug}`}
+                    aria-hidden={index >= brands.length}
+                    tabIndex={index >= brands.length ? -1 : undefined}
+                    className="flex h-8 shrink-0 items-center whitespace-nowrap px-8 text-sm font-semibold uppercase tracking-wider text-white/70 transition-colors duration-200 hover:text-white"
+                  >
+                    {brand.name}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Статистика каталога */}
           {stats.length > 0 && (

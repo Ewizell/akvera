@@ -3,6 +3,7 @@ import CategoryProductListing from "@/components/CategoryProductListing";
 import { parseCatalogSearchParams } from "@/lib/catalog-query";
 import type { CategoryNavData } from "@/components/CategoryFilterSidebar";
 import type { Metadata } from "next";
+import LeadRequestBlock from "@/components/LeadRequestBlock";
 
 export const revalidate = 3600;
 
@@ -46,6 +47,7 @@ export default async function CatalogAllPage({
   ];
 
   return (
+    <>
     <CategoryProductListing
       title="Все товары"
       basePath="/catalog/all"
@@ -62,5 +64,10 @@ export default async function CatalogAllPage({
       attrValues={attrValues}
       attrRanges={attrRanges}
     />
+
+    <div className="mx-auto w-full max-w-[1440px] px-5 pb-16 sm:px-8 lg:px-12">
+      <LeadRequestBlock />
+    </div>
+    </>
   );
 }

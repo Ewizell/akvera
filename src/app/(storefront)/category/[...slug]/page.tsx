@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import CategoryTileGrid from "@/components/CategoryTileGrid";
 import CategoryProductListing from "@/components/CategoryProductListing";
 import ShowAllProductsButton from "@/components/ShowAllProductsButton";
+import LeadRequestBlock from "@/components/LeadRequestBlock";
 import {
   parseCatalogSearchParams,
   getCategoryAncestors,
@@ -174,6 +175,8 @@ export default async function CategoryPage({
         </div>
 
         <CategoryTileGrid items={tileItems} />
+
+        <LeadRequestBlock />
       </main>
     );
   }

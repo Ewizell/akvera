@@ -363,7 +363,7 @@ export default async function HomePage() {
           1. HERO
           Полная ширина
       ===================================================== */}
-      <HomeHero stats={stats} />
+      <HomeHero stats={stats} brands={brands} />
 
       {/* =====================================================
           ОСНОВНОЙ КОНТЕНТ
@@ -503,7 +503,7 @@ export default async function HomePage() {
             13. РЕКВИЗИТЫ
         =================================================== */}
         <HomeSection
-          title="Реквизиты"
+          title="Контакты и реквизиты"
           id="requisites"
         >
           <HomeRequisites />

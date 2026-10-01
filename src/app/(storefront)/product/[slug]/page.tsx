@@ -14,6 +14,7 @@ import { OtherVariantsTile } from "@/components/OtherVariantsTile";
 import FavoriteButtonWithLabel from "@/components/FavoriteButtonWithLabel";
 import { CopyField } from "@/components/CopyField";
 import { getVisibleCategoryIds } from "@/lib/visibility";
+import { HomeCta } from "@/components/HomeInfoBlocks";
 
 export const revalidate = 3600;
 
@@ -450,6 +451,8 @@ const crumbs = [
             : [],
         }}
       />
+
+      <HomeCta />
     </main>
   );
 }

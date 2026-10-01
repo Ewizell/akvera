@@ -67,6 +67,12 @@ export default function CatalogGrid({
   const [currentPage, setCurrentPage] = useState(page)
   const [isPending, startTransition] = useTransition()
 
+  // Сброс списка при смене фильтров, сортировки или страницы
+  useEffect(() => {
+    setItems(products)
+    setCurrentPage(page)
+  }, [products, page])
+
   function handleLoadMore() {
     startTransition(async () => {
       const nextPage = currentPage + 1
