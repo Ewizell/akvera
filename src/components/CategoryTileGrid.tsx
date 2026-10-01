@@ -33,7 +33,7 @@ export default function CategoryTileGrid({ items }: { items: CategoryTileItem[] 
             />
           ) : (
             // Плейсхолдер, если у категории нет фото
-            <div className="absolute inset-0 bg-gradient-to-br from-[#179146] to-[#0f172a]">
+            <div className="absolute inset-0 bg-gradient-to-br from-accent to-accent-end">
               <svg
                 className="absolute right-4 bottom-4 h-16 w-16 text-white/10"
                 viewBox="0 0 24 24"

@@ -82,7 +82,7 @@ export default function SearchBox() {
 <button
   type="submit"
   aria-label="Найти"
-  className="flex items-center justify-center h-11 w-11 shrink-0 bg-[#179146] rounded-r-xl hover:bg-[#147a3b]"
+  className="flex items-center justify-center h-11 w-11 shrink-0 bg-accent rounded-r-xl hover:bg-accent-hover"
 >
   <Image src="/icons/fi-br-search.svg" alt="" width={16} height={16} />
 </button>
@@ -106,7 +106,7 @@ export default function SearchBox() {
               >
                 <div
                   className={`relative w-10 h-10 shrink-0 bg-gray-100 rounded overflow-hidden ${
-                    isBestMatch ? 'ring-2 ring-[#179146]' : ''
+                    isBestMatch ? 'ring-2 ring-accent' : ''
                   }`}
                 >
                   {item.imageUrl ? (
@@ -117,7 +117,7 @@ export default function SearchBox() {
                   <div className="flex items-center gap-2">
                     <p className="text-sm text-[#475569] truncate">{item.name}</p>
                     {isBestMatch && (
-                      <span className="shrink-0 rounded-md bg-[#F0F0F0]/10 px-1.5 py-0.5 text-[10px] font-semibold text-[#179146]">
+                      <span className="shrink-0 rounded-md bg-[#F0F0F0]/10 px-1.5 py-0.5 text-[10px] font-semibold text-accent">
                         Лучшее совпадение
                       </span>
                     )}

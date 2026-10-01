@@ -206,7 +206,7 @@ export function CategoryFilterSidebar({
             <Link href={categoryNav.allProductsLink.href} className="flex items-start gap-1.5">
               <span
                 className={`w-[3px] h-[17px] rounded-xl shrink-0 ${
-                  categoryNav.activeSlug === null ? 'bg-[#179146]' : 'bg-[#969393]'
+                  categoryNav.activeSlug === null ? 'bg-accent' : 'bg-[#969393]'
                 }`}
               />
               <span
@@ -221,7 +221,7 @@ export function CategoryFilterSidebar({
               <Link key={item.id} href={item.href} className="flex items-start gap-1.5">
                 <span
                   className={`w-[3px] h-[17px] rounded-xl shrink-0 ${
-                    item.slug === categoryNav.activeSlug ? 'bg-[#179146]' : 'bg-[#969393]'
+                    item.slug === categoryNav.activeSlug ? 'bg-accent' : 'bg-[#969393]'
                   }`}
                 />
                 <span
@@ -246,7 +246,7 @@ export function CategoryFilterSidebar({
           {categoryChildren.showAllHref && (
             <Link
               href={categoryChildren.showAllHref}
-              className="inline-block mb-3 text-sm font-manrope text-[#179146] hover:underline"
+              className="inline-block mb-3 text-sm font-manrope text-accent hover:underline"
             >
               Показать все товары раздела
             </Link>
@@ -257,7 +257,7 @@ export function CategoryFilterSidebar({
               <Link key={item.id} href={item.href} className="flex items-start gap-1.5">
                 <span
                   className={`w-[3px] h-[17px] rounded-xl shrink-0 ${
-                    item.slug === categoryChildren.activeSlug ? 'bg-[#179146]' : 'bg-[#969393]'
+                    item.slug === categoryChildren.activeSlug ? 'bg-accent' : 'bg-[#969393]'
                   }`}
                 />
                 <span
@@ -299,7 +299,7 @@ export function CategoryFilterSidebar({
           </div>
           <div className="relative h-1 bg-[#e9e9e9] rounded">
             <div
-              className="absolute h-1 bg-[#179146] rounded"
+              className="absolute h-1 bg-accent rounded"
               style={{
                 left: `${((sliderFrom - priceRange.min) / (priceRange.max - priceRange.min)) * 100}%`,
                 right: `${100 - ((sliderTo - priceRange.min) / (priceRange.max - priceRange.min)) * 100}%`,
@@ -313,7 +313,7 @@ export function CategoryFilterSidebar({
               onChange={(e) => applySlider(Math.min(Number(e.target.value), sliderTo), sliderTo)}
               onMouseUp={applyPriceInputs}
               onTouchEnd={applyPriceInputs}
-              className="absolute w-full top-1/2 -translate-y-1/2 appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-[#179146] [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer"
+              className="absolute w-full top-1/2 -translate-y-1/2 appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-accent [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer"
             />
             <input
               type="range"
@@ -323,7 +323,7 @@ export function CategoryFilterSidebar({
               onChange={(e) => applySlider(sliderFrom, Math.max(Number(e.target.value), sliderFrom))}
               onMouseUp={applyPriceInputs}
               onTouchEnd={applyPriceInputs}
-              className="absolute w-full top-1/2 -translate-y-1/2 appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-[#179146] [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer"
+              className="absolute w-full top-1/2 -translate-y-1/2 appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-accent [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer"
             />
           </div>
         </div>
@@ -349,10 +349,10 @@ export function CategoryFilterSidebar({
               onChange={() => router.push(buildHref({ inStock: null }))}
               className="peer sr-only"
             />
-            <span className="relative w-[17px] h-[17px] shrink-0 rounded-full border-2 border-[#e9e9e9] peer-checked:border-[#179146] transition-colors flex items-center justify-center">
+            <span className="relative w-[17px] h-[17px] shrink-0 rounded-full border-2 border-[#e9e9e9] peer-checked:border-accent transition-colors flex items-center justify-center">
               <svg
                 viewBox="0 0 16 16" fill="none"
-                className="w-[10px] h-[10px] text-[#179146] opacity-0 peer-checked:opacity-100 transition-opacity"
+                className="w-[10px] h-[10px] text-accent opacity-0 peer-checked:opacity-100 transition-opacity"
               >
                 <path d="M3 8l3 3 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
@@ -367,10 +367,10 @@ export function CategoryFilterSidebar({
               onChange={() => router.push(buildHref({ inStock: true }))}
               className="peer sr-only"
             />
-            <span className="relative w-[17px] h-[17px] shrink-0 rounded-full border-2 border-[#e9e9e9] peer-checked:border-[#179146] transition-colors flex items-center justify-center">
+            <span className="relative w-[17px] h-[17px] shrink-0 rounded-full border-2 border-[#e9e9e9] peer-checked:border-accent transition-colors flex items-center justify-center">
               <svg
                 viewBox="0 0 16 16" fill="none"
-                className="w-[10px] h-[10px] text-[#179146] opacity-0 peer-checked:opacity-100 transition-opacity"
+                className="w-[10px] h-[10px] text-accent opacity-0 peer-checked:opacity-100 transition-opacity"
               >
                 <path d="M3 8l3 3 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
@@ -402,7 +402,7 @@ export function CategoryFilterSidebar({
                     />
                     <span
                       className={`flex items-center justify-center w-[17px] h-[17px] shrink-0 rounded-[2px] transition-colors ${
-                        checked ? 'bg-[#179146]' : 'bg-[#e9e9e9]'
+                        checked ? 'bg-accent' : 'bg-[#e9e9e9]'
                       }`}
                     >
                       {checked && (

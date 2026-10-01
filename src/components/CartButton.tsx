@@ -31,7 +31,7 @@ export default function CartButton() {
         <div className="relative">
           <Image src="/icons/fi-br-shopping-cart.svg" alt="" width={24} height={24} />
           {totalCount > 0 && (
-            <span className="absolute -top-1 -right-2 inline-flex items-center justify-center rounded-full bg-[#179146] text-white text-[10px] font-medium w-4 h-4">
+            <span className="absolute -top-1 -right-2 inline-flex items-center justify-center rounded-full bg-accent text-white text-[10px] font-medium w-4 h-4">
               {totalCount > 9 ? '9+' : totalCount}
             </span>
           )}

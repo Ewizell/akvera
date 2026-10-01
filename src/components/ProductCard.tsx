@@ -49,7 +49,7 @@ export default function ProductCard({ product }: { product: CatalogCard }) {
             {product.tags.map((tag) => (
               <span
                 key={tag.id}
-                className="h-[26px] flex items-center px-2 bg-[#179146] rounded-lg text-white text-xs font-manrope font-medium truncate max-w-full"
+                className="h-[26px] flex items-center px-2 bg-accent rounded-lg text-white text-xs font-manrope font-medium truncate max-w-full"
               >
                 {tag.name}
               </span>

@@ -154,7 +154,7 @@ export default async function CategoryPage({
 
     return (
       <main className="max-w-7xl mx-auto px-4 py-10">
-        <nav className="mb-5 flex flex-wrap items-center gap-3 text-[14px] font-semibold uppercase tracking-[2px] text-[#179146]">
+        <nav className="mb-5 flex flex-wrap items-center gap-3 text-[14px] font-semibold uppercase tracking-[2px] text-accent">
           {crumbs.map((c, i) => (
             <span key={i} className="flex items-center gap-3">
               {c.href ? (

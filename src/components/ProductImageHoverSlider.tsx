@@ -49,7 +49,7 @@ export default function ProductImageHoverSlider({
             <span
               key={i}
               className={`w-1.5 h-1.5 rounded-full transition-colors ${
-                i === activeIndex ? 'bg-[#179146]' : 'bg-white/70 ring-1 ring-black/10'
+                i === activeIndex ? 'bg-accent' : 'bg-white/70 ring-1 ring-black/10'
               }`}
             />
           ))}

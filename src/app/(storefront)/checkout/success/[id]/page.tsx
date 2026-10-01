@@ -38,7 +38,7 @@ export default async function CheckoutSuccessPage({
             <span className="font-medium text-[#1c2126]">{order.contactPhone}</span> в ближайшее время.
           </p>
 
-          <div className="flex items-center gap-2 bg-[#f4f5f7] rounded-lg px-4 py-2 font-semibold text-[24px] text-[#179146]">
+          <div className="flex items-center gap-2 bg-[#f4f5f7] rounded-lg px-4 py-2 font-semibold text-[24px] text-accent">
             Номер заявки:
             <span className="font-mono text-[36px] text-[#475569]">№{order.orderNumber}</span>
           </div>
@@ -76,7 +76,7 @@ export default async function CheckoutSuccessPage({
 
           <Link
             href="/catalog"
-            className="w-full bg-[#179146] text-white text-center rounded-xl py-3 font-semibold hover:bg-[#137a3a] transition-colors mt-2"
+            className="w-full bg-accent text-white text-center rounded-xl py-3 font-semibold hover:bg-[#137a3a] transition-colors mt-2"
           >
             Вернуться в каталог
           </Link>

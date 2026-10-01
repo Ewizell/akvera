@@ -147,7 +147,7 @@ export default async function AboutPage() {
               {/* Фон */}
               <div className="absolute inset-0 bg-gradient-to-br from-[#28313d] via-[#28313d] to-[#18212b]" />
 
-              <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-[#179146]/10 blur-3xl" />
+              <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-accent/10 blur-3xl" />
 
               <div className="absolute -bottom-32 -left-20 h-80 w-80 rounded-full bg-[#0f172a]/60 blur-3xl" />
 
@@ -195,7 +195,7 @@ export default async function AboutPage() {
                     ].join(" ")}
                   >
                     {index === 0 && (
-                      <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-[#179146]/10 blur-2xl" />
+                      <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-accent/10 blur-2xl" />
                     )}
 
                     <div className="relative">
@@ -203,7 +203,7 @@ export default async function AboutPage() {
                         className={[
                           "text-3xl font-semibold tracking-[-0.04em] sm:text-4xl",
                           index === 0
-                            ? "text-[#179146]"
+                            ? "text-accent"
                             : "text-white",
                         ].join(" ")}
                       >

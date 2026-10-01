@@ -108,7 +108,7 @@ export default function CatalogGrid({
                   href={buildSortHref(basePath, filters, opt.value)}
                   className={`font-manrope text-base pb-1 border-b-2 ${
                     active
-                      ? 'text-[#1c2126] font-medium border-[#179146]'
+                      ? 'text-[#1c2126] font-medium border-accent'
                       : 'text-[#1c2126] font-normal border-transparent hover:border-[#e9e9e9]'
                   }`}
                 >
@@ -123,7 +123,7 @@ export default function CatalogGrid({
           <button
             onClick={() => setViewAndSave('grid')}
             aria-label="Плиткой"
-            className={view === 'grid' ? 'text-[#179146]' : 'text-[#969393] hover:text-[#1c2126]'}
+            className={view === 'grid' ? 'text-accent' : 'text-[#969393] hover:text-[#1c2126]'}
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <rect x="3" y="3" width="7" height="7" rx="1.5" />
@@ -135,7 +135,7 @@ export default function CatalogGrid({
           <button
             onClick={() => setViewAndSave('list')}
             aria-label="Списком"
-            className={view === 'list' ? 'text-[#179146]' : 'text-[#969393] hover:text-[#1c2126]'}
+            className={view === 'list' ? 'text-accent' : 'text-[#969393] hover:text-[#1c2126]'}
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <line x1="4" y1="6" x2="20" y2="6" />

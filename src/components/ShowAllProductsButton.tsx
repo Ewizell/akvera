@@ -4,7 +4,7 @@ export default function ShowAllProductsButton({ href }: { href: string }) {
   return (
     <Link
       href={href}
-      className="group inline-flex shrink-0 items-center gap-2 rounded-full border border-[#179146] px-5 py-2.5 text-[14px] font-semibold text-[#179146] transition-colors hover:bg-[#179146] hover:text-white"
+      className="group inline-flex shrink-0 items-center gap-2 rounded-full border border-accent px-5 py-2.5 text-[14px] font-semibold text-accent transition-colors hover:bg-accent hover:text-white"
     >
       Показать все товары
       <svg

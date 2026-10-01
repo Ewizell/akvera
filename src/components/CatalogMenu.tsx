@@ -57,8 +57,8 @@ function CategoryColumnEntry({
               leading-none
               text-gray-400
               transition-colors
-              hover:border-[#179146]
-              hover:text-[#179146]
+              hover:border-accent
+              hover:text-accent
             "
           >
             {isOpen ? "−" : "+"}
@@ -68,7 +68,7 @@ function CategoryColumnEntry({
         <Link
           href={path}
           onClick={onNavigate}
-          className={`min-w-0 flex-1 break-words text-sm transition-colors hover:text-[#179146] ${
+          className={`min-w-0 flex-1 break-words text-sm transition-colors hover:text-accent ${
             depth === 0
               ? "text-[#28313d]"
               : "text-[#64748b]"
@@ -213,8 +213,8 @@ export default function CatalogMenu({
         onClick={() => setOpen((value) => !value)}
         className={`flex h-11 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl px-2.5 py-3 text-base font-semibold text-white transition-colors duration-200 ${
           open
-            ? "bg-[#147a3b]"
-            : "bg-[#179146] hover:bg-[#147a3b]"
+            ? "bg-accent-hover"
+            : "bg-accent hover:bg-accent-hover"
         }`}
       >
         <svg
@@ -322,7 +322,7 @@ export default function CatalogMenu({
   onClick={() => setActiveRootId(category.id)}
   className={`flex items-center justify-between gap-2 pl-3.5 pr-3 py-2.5 cursor-pointer border-l-[3px] rounded-r-lg transition-colors duration-150 ${
     isActive
-      ? "bg-[#f3f4f6] border-l-[#179146] text-[#28313d]"
+      ? "bg-[#f3f4f6] border-l-accent text-[#28313d]"
       : "border-l-transparent text-[#475569] hover:bg-gray-50"
   }`}
 >
@@ -358,7 +358,7 @@ export default function CatalogMenu({
                       transition-colors
                       ${
                         isActive
-                          ? "text-[#179146]"
+                          ? "text-accent"
                           : "text-[#475569]"
                       }
                     `}
@@ -376,7 +376,7 @@ export default function CatalogMenu({
                         text-xs
                         ${
                           isActive
-                            ? "text-[#179146]/60"
+                            ? "text-accent/60"
                             : "text-gray-400"
                         }
                       `}
@@ -414,7 +414,7 @@ export default function CatalogMenu({
                   leading-tight
                   text-[#28313d]
                   transition-colors
-                  hover:text-[#179146]
+                  hover:text-accent
                 "
               >
                 <span>{activeRoot.name}</span>
@@ -434,7 +434,7 @@ export default function CatalogMenu({
                     duration-300
                     group-hover:-translate-y-0.5
                     group-hover:translate-x-0.5
-                    group-hover:text-[#179146]
+                    group-hover:text-accent
                   "
                   aria-hidden="true"
                 >

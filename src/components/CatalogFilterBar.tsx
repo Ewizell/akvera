@@ -79,7 +79,7 @@ export default function CatalogFilterBar({
             href={toggleTag(tag.slug)}
             className={`h-[33px] flex items-center px-2.5 rounded-xl text-sm font-manrope transition-colors ${
               active
-                ? 'bg-[#179146] text-white font-medium'
+                ? 'bg-accent text-white font-medium'
                 : 'bg-[#efefef] text-[#1c2126] font-normal hover:bg-[#e4e4e4]'
             }`}
           >
@@ -92,7 +92,7 @@ export default function CatalogFilterBar({
         <button
           type="button"
           onClick={() => setExpanded(true)}
-          className="text-sm font-manrope text-[#179146] hover:underline"
+          className="text-sm font-manrope text-accent hover:underline"
         >
           Показать ещё ⌄
         </button>

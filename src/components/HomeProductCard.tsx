@@ -122,7 +122,7 @@ export default function HomeProductCard({
           </p>
 
           {/* Название */}
-          <p className="mt-2.5 line-clamp-2 text-sm font-medium leading-5 text-[#28313d] transition-colors duration-300 group-hover:text-[#179146]">
+          <p className="mt-2.5 line-clamp-2 text-sm font-medium leading-5 text-[#28313d] transition-colors duration-300 group-hover:text-accent">
             {variant.name || variant.product.name}
           </p>
         </div>
@@ -140,7 +140,7 @@ export default function HomeProductCard({
                   rounded-full
                   ${
                     variant.stock > 0
-                      ? "bg-[#179146]"
+                      ? "bg-accent"
                       : "bg-[#aeb4ba]"
                   }
                 `}

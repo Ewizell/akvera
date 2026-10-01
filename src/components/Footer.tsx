@@ -23,7 +23,7 @@ export default function Footer() {
           {/* Бренд */}
           <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#344354] to-[#202a35] p-7 sm:p-8">
             {/* Декоративный градиент */}
-            <div className="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-[#179146]/10 blur-3xl" />
+            <div className="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-accent/10 blur-3xl" />
 
             <div className="relative">
               <Link
@@ -31,7 +31,7 @@ export default function Footer() {
                 className="inline-flex text-2xl font-semibold tracking-[0.04em] text-white"
               >
                 AKVERA
-                <span className="text-[#179146]">.</span>
+                <span className="text-accent">.</span>
               </Link>
 
               <p className="mt-4 max-w-md text-sm leading-6 text-white/55">
@@ -60,8 +60,8 @@ export default function Footer() {
                   transition-all
                   duration-300
                   hover:bg-gradient-to-br
-                  hover:from-[#179146]
-                  hover:to-[#0f172a]
+                  hover:from-accent
+                  hover:to-accent-end
                 "
               >
                 <span>Оставить заявку</span>

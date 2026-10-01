@@ -39,8 +39,8 @@ export default function HomeSection({
               text-[#28313d]
               transition-all duration-300
               hover:bg-gradient-to-br
-              hover:from-[#179146]
-              hover:to-[#0f172a]
+              hover:from-accent
+              hover:to-accent-end
               hover:text-white
             "
           >

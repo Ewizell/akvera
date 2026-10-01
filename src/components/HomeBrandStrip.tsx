@@ -10,7 +10,7 @@ export default function HomeBrandStrip({ items }: { items: HomeBrandItem[] }) {
         <Link
           key={b.id}
           href={`/brands/${b.slug}`}
-          className="group flex h-24 items-center justify-center rounded-2xl border border-[#e9e9e9] bg-white p-4 transition-all hover:border-[#179146] hover:shadow-md"
+          className="group flex h-24 items-center justify-center rounded-2xl border border-[#e9e9e9] bg-white p-4 transition-all hover:border-accent hover:shadow-md"
         >
           {b.logoUrl ? (
             <div className="relative h-full w-full transition-transform duration-300 group-hover:scale-105">

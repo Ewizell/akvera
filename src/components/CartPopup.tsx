@@ -64,7 +64,7 @@ export default function CartPopup() {
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-manrope font-medium text-[13px] text-[#1c2126] truncate hover:text-[#179146] transition-colors">
+                <p className="font-manrope font-medium text-[13px] text-[#1c2126] truncate hover:text-accent transition-colors">
                   {item.productName}
                 </p>
                 <p className="font-manrope text-[13px] text-[#767d83] mt-0.5">
@@ -102,7 +102,7 @@ export default function CartPopup() {
           <Link
             href="/cart"
             onClick={closeCart}
-            className="h-[40px] flex items-center justify-center bg-[#179146] hover:bg-[#147a3a] rounded-[10px] font-montserrat font-semibold text-[14px] text-white transition-colors"
+            className="h-[40px] flex items-center justify-center bg-accent hover:bg-accent-hover rounded-[10px] font-montserrat font-semibold text-[14px] text-white transition-colors"
           >
             Перейти в корзину
           </Link>

@@ -19,10 +19,10 @@ export function CopyField({ label, value }: { label: string; value: string }) {
       className="group flex items-center gap-2 cursor-pointer"
     >
       <span className="font-manrope font-semibold text-[14px] text-[#1c2116]">{label}</span>
-      <span className="font-manrope font-medium text-[14px] text-[#1c2126] transition-colors duration-200 group-hover:text-[#179146]">
+      <span className="font-manrope font-medium text-[14px] text-[#1c2126] transition-colors duration-200 group-hover:text-accent">
         {value}
       </span>
-      <span className="text-[#969393] transition-colors duration-200 group-hover:text-[#179146]">
+      <span className="text-[#969393] transition-colors duration-200 group-hover:text-accent">
         {copied ? (
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M20 6L9 17l-5-5" />

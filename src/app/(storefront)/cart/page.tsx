@@ -76,7 +76,7 @@ export default function CartPage({ popularVariants = [] }: CartPageProps) {
       <main className="max-w-3xl mx-auto px-4 py-20 text-center">
         <h1 className="text-2xl font-semibold mb-4">Корзина пуста</h1>
         <p className="text-gray-500 mb-6">Добавьте товары из каталога, чтобы оформить заявку</p>
-        <Link href="/catalog" className="inline-block bg-[#179146] text-white px-6 py-3 rounded-xl hover:bg-[#137a3a]">
+        <Link href="/catalog" className="inline-block bg-accent text-white px-6 py-3 rounded-xl hover:bg-[#137a3a]">
           Перейти в каталог
         </Link>
       </main>
@@ -86,7 +86,7 @@ export default function CartPage({ popularVariants = [] }: CartPageProps) {
   return (
     <main className="bg-[#f8fafc] py-10">
       <div className="max-w-[1280px] mx-auto px-4 md:px-20">
-        <nav className="flex gap-3 text-[14px] tracking-[1px] uppercase font-semibold text-[#179146] mb-6">
+        <nav className="flex gap-3 text-[14px] tracking-[1px] uppercase font-semibold text-accent mb-6">
           <Link href="/">Главная</Link>
           <span>/</span>
           <span>корзина</span>
@@ -113,9 +113,9 @@ export default function CartPage({ popularVariants = [] }: CartPageProps) {
                     type="checkbox"
                     checked={allSelected}
                     onChange={toggleSelectAll}
-                    className="w-[17px] h-[17px] accent-[#179146] rounded transition-transform duration-150 ease-out active:scale-90 group-hover:scale-110"
+                    className="w-[17px] h-[17px] accent-accent rounded transition-transform duration-150 ease-out active:scale-90 group-hover:scale-110"
                   />
-                  <span className="transition-colors duration-150 group-hover:text-[#179146]">Выбрать все</span>
+                  <span className="transition-colors duration-150 group-hover:text-accent">Выбрать все</span>
                 </label>
                 <button
                   onClick={deleteSelected}
@@ -135,7 +135,7 @@ export default function CartPage({ popularVariants = [] }: CartPageProps) {
                     type="checkbox"
                     checked={selected.has(item.variantId)}
                     onChange={() => toggleSelect(item.variantId)}
-                    className="w-[17px] h-[17px] mt-1 accent-[#179146] rounded shrink-0"
+                    className="w-[17px] h-[17px] mt-1 accent-accent rounded shrink-0"
                   />
 
                   <Link href={`/product/${item.slug}`} className="relative w-[108px] h-[108px] bg-gray-100 rounded shrink-0">
@@ -204,7 +204,7 @@ export default function CartPage({ popularVariants = [] }: CartPageProps) {
 
             {hasRequestPriceItems && (
               <div className="flex gap-2">
-                <div className="w-[3px] rounded-xl bg-[#179146] shrink-0" />
+                <div className="w-[3px] rounded-xl bg-accent shrink-0" />
                 <p className="text-sm text-[#1c2126]">
                   Есть товары с ценой по запросу — сумма будет уточнена при обработке заявки
                 </p>
@@ -215,7 +215,7 @@ export default function CartPage({ popularVariants = [] }: CartPageProps) {
 
             <Link
               href="/checkout"
-              className="bg-[#179146] text-white text-center rounded-xl py-3 font-semibold hover:bg-[#137a3a] transition-colors"
+              className="bg-accent text-white text-center rounded-xl py-3 font-semibold hover:bg-[#137a3a] transition-colors"
             >
               Перейти к оформлению
             </Link>

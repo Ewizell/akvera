@@ -13,7 +13,7 @@ import ConsentCheckbox from "@/components/ConsentCheckbox";
 type Mode = "callback" | "quote";
 
 const inputCls =
-  "h-11 w-full rounded-xl bg-[#f3f4f6] px-4 text-sm text-[#1c2126] outline-none transition-all duration-300 placeholder:text-[#969da5] focus:bg-white focus:ring-2 focus:ring-[#179146]/25";
+  "h-11 w-full rounded-xl bg-[#f3f4f6] px-4 text-sm text-[#1c2126] outline-none transition-all duration-300 placeholder:text-[#969da5] focus:bg-white focus:ring-2 focus:ring-accent/25";
 
 function LeadForm({ mode }: { mode: Mode }) {
   const pathname = usePathname();
@@ -75,7 +75,7 @@ function LeadForm({ mode }: { mode: Mode }) {
   if (done) {
     return (
       <div className="flex flex-col items-center py-10 text-center">
-        <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#179146] to-[#0f172a] text-white shadow-lg shadow-[#179146]/10">
+        <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-accent to-accent-end text-white shadow-lg shadow-accent/10">
           <svg
             viewBox="0 0 16 16"
             fill="none"
@@ -102,7 +102,7 @@ function LeadForm({ mode }: { mode: Mode }) {
         <button
           type="button"
           onClick={() => setDone(false)}
-          className="mt-6 rounded-xl bg-[#f3f4f6] px-5 py-2.5 text-sm font-medium text-[#28313d] transition-all duration-300 hover:bg-gradient-to-br hover:from-[#179146] hover:to-[#0f172a] hover:text-white"
+          className="mt-6 rounded-xl bg-[#f3f4f6] px-5 py-2.5 text-sm font-medium text-[#28313d] transition-all duration-300 hover:bg-gradient-to-br hover:from-accent hover:to-accent-end hover:text-white"
         >
           Отправить ещё одну
         </button>
@@ -182,10 +182,10 @@ function LeadForm({ mode }: { mode: Mode }) {
             rows={4}
             maxLength={3000}
             placeholder="Что нужно: наименование, количество, параметры"
-            className="w-full resize-none rounded-xl bg-[#f3f4f6] px-4 py-3 text-sm text-[#1c2126] outline-none transition-all duration-300 placeholder:text-[#969da5] focus:bg-white focus:ring-2 focus:ring-[#179146]/25"
+            className="w-full resize-none rounded-xl bg-[#f3f4f6] px-4 py-3 text-sm text-[#1c2126] outline-none transition-all duration-300 placeholder:text-[#969da5] focus:bg-white focus:ring-2 focus:ring-accent/25"
           />
 
-          <label className="group flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-[#cfd4d9] bg-[#fafafa] px-4 py-3 text-sm text-[#475569] transition-all duration-300 hover:border-[#179146] hover:bg-[#f4f5f7]">
+          <label className="group flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-[#cfd4d9] bg-[#fafafa] px-4 py-3 text-sm text-[#475569] transition-all duration-300 hover:border-accent hover:bg-[#f4f5f7]">
             <svg
               width="18"
               height="18"
@@ -195,7 +195,7 @@ function LeadForm({ mode }: { mode: Mode }) {
               strokeWidth="1.6"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className="shrink-0 text-[#179146]"
+              className="shrink-0 text-accent"
             >
               <path d="M21 12.5l-8.5 8.5a5 5 0 01-7-7L14 5.5a3.5 3.5 0 015 5L10.5 19a2 2 0 01-3-3L15 8.5" />
             </svg>
@@ -235,7 +235,7 @@ function LeadForm({ mode }: { mode: Mode }) {
       <button
         type="submit"
         disabled={pending}
-        className="group relative flex h-12 w-full items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-[#179146] to-[#0f172a] text-sm font-semibold text-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#179146]/15 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
+        className="group relative flex h-12 w-full items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-accent to-accent-end text-sm font-semibold text-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-accent/15 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
       >
         <span className="relative">
           {pending
@@ -267,7 +267,7 @@ export default function LeadRequestBlock() {
         <div className="relative flex min-h-[520px] flex-col overflow-hidden p-7 sm:p-9 lg:p-10">
           <div className="absolute inset-0 bg-gradient-to-br from-[#28313d] via-[#28313d] to-[#18212b]" />
 
-          <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-[#179146]/10 blur-3xl" />
+          <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-accent/10 blur-3xl" />
 
           <div className="absolute -bottom-32 -left-24 h-80 w-80 rounded-full bg-[#0f172a]/50 blur-3xl" />
 
@@ -304,7 +304,7 @@ export default function LeadRequestBlock() {
                       key={text}
                       className="flex items-center gap-3 text-sm text-white/70"
                     >
-                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#179146]/15 text-[#4fbd7a]">
+                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent/15 text-[#4fbd7a]">
                         <svg
                           width="11"
                           height="11"

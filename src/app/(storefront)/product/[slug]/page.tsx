@@ -210,11 +210,11 @@ const crumbs = [
         <div className="flex gap-[16px] items-center px-[8px]">
           <FavoriteButtonWithLabel
             variantId={variant.id}
-            className="text-[14px] font-manrope font-medium text-[#1c2116] cursor-pointer transition-colors duration-200 hover:text-[#179146]"
+            className="text-[14px] font-manrope font-medium text-[#1c2116] cursor-pointer transition-colors duration-200 hover:text-accent"
           />
           <CompareButtonWithLabel
             variantId={variant.id}
-            className="text-[14px] font-manrope font-medium text-[#1c2116] cursor-pointer transition-colors duration-200 hover:text-[#179146]"
+            className="text-[14px] font-manrope font-medium text-[#1c2116] cursor-pointer transition-colors duration-200 hover:text-accent"
           />
         </div>
       </div>
@@ -232,7 +232,7 @@ const crumbs = [
               <div className="flex flex-col gap-[12px]">
                 {specs.map((spec, i) => (
                   <div key={i} className="flex gap-[6px] items-start">
-                    <span className="bg-[#179146] rounded-[12px] w-[3px] h-[17px] shrink-0" />
+                    <span className="bg-accent rounded-[12px] w-[3px] h-[17px] shrink-0" />
                     <span className="font-manrope font-medium text-[14px] text-[#484f55]">
                       {spec.label}:
                     </span>
@@ -338,7 +338,7 @@ const crumbs = [
                     <div className="flex flex-col gap-[10px]">
                       {applicationAreas.map((item, i) => (
                         <div key={i} className="flex gap-[6px] items-center">
-                          <span className="bg-[#179146] rounded-[12px] w-[3px] h-[17px] shrink-0" />
+                          <span className="bg-accent rounded-[12px] w-[3px] h-[17px] shrink-0" />
                           <span className="font-manrope font-medium text-[14px] text-[#1c2126]">{item}</span>
                         </div>
                       ))}
@@ -354,7 +354,7 @@ const crumbs = [
                     <div className="flex flex-col gap-[10px]">
                       {advantages.map((item, i) => (
                         <div key={i} className="flex gap-[6px] items-start">
-                          <span className="bg-[#179146] rounded-[12px] w-[3px] self-stretch shrink-0" />
+                          <span className="bg-accent rounded-[12px] w-[3px] self-stretch shrink-0" />
                           <span className="font-manrope font-medium text-[14px] text-[#1c2126]">{item}</span>
                         </div>
                       ))}
@@ -396,7 +396,7 @@ const crumbs = [
                   </div>
                   <Link
                     href={`/brands/${variant.product.brand.slug}`}
-                    className="h-[44px] flex items-center justify-center bg-[#179146] hover:bg-[#147a3a] rounded-[10px] font-montserrat font-semibold text-[16px] text-white transition-colors"
+                    className="h-[44px] flex items-center justify-center bg-accent hover:bg-accent-hover rounded-[10px] font-montserrat font-semibold text-[16px] text-white transition-colors"
                   >
                     Все товары бренда
                   </Link>
@@ -418,7 +418,7 @@ const crumbs = [
                           download
                           className="flex gap-[6px] items-center"
                         >
-                          <span className="bg-[#179146] rounded-[12px] w-[3px] h-[17px] shrink-0" />
+                          <span className="bg-accent rounded-[12px] w-[3px] h-[17px] shrink-0" />
                           <span className="flex gap-[4px] items-center font-manrope font-medium text-[14px] text-[#1c2126]">
                             {doc.title}
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

@@ -37,7 +37,7 @@ function RadioOption({
         checked={checked}
         onChange={onChange}
         disabled={disabled}
-        className="w-[17px] h-[17px] accent-[#179146] disabled:accent-[#d9d9d9]"
+        className="w-[17px] h-[17px] accent-accent disabled:accent-[#d9d9d9]"
       />
       {label}
     </label>
@@ -60,7 +60,7 @@ function FormField({
 }
 
 const inputClass =
-  'w-full h-12 border border-[#e5e7e8] rounded-xl px-3.5 text-[14px] text-[#1c2126] bg-white focus:outline-none focus:border-[#179146] transition-colors'
+  'w-full h-12 border border-[#e5e7e8] rounded-xl px-3.5 text-[14px] text-[#1c2126] bg-white focus:outline-none focus:border-accent transition-colors'
 
 export function CheckoutForm() {
   const { items, totalPrice, clearCart } = useCart()
@@ -168,7 +168,7 @@ export function CheckoutForm() {
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="w-fit text-sm font-medium text-[#179146] border border-[#179146] rounded-lg px-3 py-1.5 hover:bg-[#f0faf3] transition-colors"
+            className="w-fit text-sm font-medium text-accent border border-accent rounded-lg px-3 py-1.5 hover:bg-[#f0faf3] transition-colors"
           >
             + Добавить файл
           </button>
@@ -315,7 +315,7 @@ export function CheckoutForm() {
 
         {hasRequestPriceItems && (
           <div className="flex gap-2">
-            <div className="w-[3px] rounded-xl bg-[#179146] shrink-0" />
+            <div className="w-[3px] rounded-xl bg-accent shrink-0" />
             <p className="text-sm text-[#1c2126]">
               Есть товары с ценой по запросу — сумма будет уточнена при обработке заявки
             </p>
@@ -327,7 +327,7 @@ export function CheckoutForm() {
         <button
           type="submit"
           disabled={isPending || !agreed}
-          className="bg-[#179146] text-white rounded-xl py-3 font-semibold hover:bg-[#137a3a] disabled:opacity-50 transition-colors
+          className="bg-accent text-white rounded-xl py-3 font-semibold hover:bg-[#137a3a] disabled:opacity-50 transition-colors
             enabled:hover:scale-[1.02] active:scale-[0.98]"
         >
           {isPending ? 'Отправка...' : 'Отправить заявку'}
@@ -340,7 +340,7 @@ export function CheckoutForm() {
             checked={agreed}
             onChange={(e) => setAgreed(e.target.checked)}
             required
-            className="w-[18px] h-[18px] mt-0.5 accent-[#179146] rounded shrink-0"
+            className="w-[18px] h-[18px] mt-0.5 accent-accent rounded shrink-0"
           />
           <span>
             Я даю{' '}

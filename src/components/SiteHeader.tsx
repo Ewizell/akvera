@@ -18,7 +18,7 @@ const TOP_LINKS = [
 
 // кольцо фокуса для навигации с клавиатуры
 const focusRing =
-  "rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#179146]/40";
+  "rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40";
 
 export default async function SiteHeader() {
   const categories = await getCategoryTree();
@@ -44,7 +44,7 @@ export default async function SiteHeader() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`transition-colors duration-200 hover:text-[#179146] ${focusRing}`}
+                  className={`transition-colors duration-200 hover:text-accent ${focusRing}`}
                 >
                   {link.label}
                 </Link>
@@ -55,14 +55,14 @@ export default async function SiteHeader() {
           <div className="flex gap-8 items-center">
             <a
               href={`mailto:${CONTACTS.email}`}
-              className={`flex gap-1.5 items-center font-bold text-[#475569] text-lg leading-none whitespace-nowrap transition-colors duration-200 hover:text-[#179146] ${focusRing}`}
+              className={`flex gap-1.5 items-center font-bold text-[#475569] text-lg leading-none whitespace-nowrap transition-colors duration-200 hover:text-accent ${focusRing}`}
             >
               <Image src="/icons/fi-br-envelope.svg" alt="" width={18} height={18} />
               {CONTACTS.email}
             </a>
             <a
               href={`tel:${CONTACTS.phone.replace(/[^\d+]/g, "")}`}
-              className={`flex gap-1.5 items-center font-semibold text-[#475569] text-base leading-none whitespace-nowrap transition-colors duration-200 hover:text-[#179146] ${focusRing}`}
+              className={`flex gap-1.5 items-center font-semibold text-[#475569] text-base leading-none whitespace-nowrap transition-colors duration-200 hover:text-accent ${focusRing}`}
             >
               <Image src="/icons/fi-br-interrogation.svg" alt="" width={16} height={16} />
               {CONTACTS.phone}
@@ -74,7 +74,7 @@ export default async function SiteHeader() {
         <div className="relative flex gap-8 items-center w-full">
           <Link
             href="/"
-            className={`font-maven-pro font-bold text-[#179146] text-[40px] shrink-0 transition-opacity duration-200 hover:opacity-80 ${focusRing}`}
+            className={`font-maven-pro font-bold text-accent text-[40px] shrink-0 transition-opacity duration-200 hover:opacity-80 ${focusRing}`}
           >
             AKVERA
           </Link>

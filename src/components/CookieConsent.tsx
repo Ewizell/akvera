@@ -29,7 +29,7 @@ export default function CookieConsent() {
                 <button
           type="button"
           onClick={() => setConsent("accepted")}
-          className="rounded-full bg-[#179146] px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#127a3a]"
+          className="rounded-full bg-accent px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#127a3a]"
         >
           Принять
         </button>

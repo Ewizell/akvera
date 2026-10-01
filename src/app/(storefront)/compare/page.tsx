@@ -146,7 +146,7 @@ export default function ComparePage() {
               type="checkbox"
               checked={pinned}
               onChange={() => togglePinned(attr.key)}
-              className="w-[15px] h-[15px] accent-[#179146]"
+              className="w-[15px] h-[15px] accent-accent"
             />
             <span>
               {attr.label}
@@ -171,7 +171,7 @@ export default function ComparePage() {
 
   return (
     <main className="max-w-7xl mx-auto px-4 py-10 ">
-      <nav className="mb-5 flex flex-wrap items-center gap-3 text-[14px] font-semibold uppercase tracking-[2px] text-[#179146]">
+      <nav className="mb-5 flex flex-wrap items-center gap-3 text-[14px] font-semibold uppercase tracking-[2px] text-accent">
         <Link href="/" className="hover:opacity-80">Главная</Link>
         <span>/</span>
         <span>Сравнение</span>
@@ -199,7 +199,7 @@ export default function ComparePage() {
                   onClick={() => setActiveCategory(id)}
                   className={`pb-3 text-sm font-manrope border-b-2 -mb-px whitespace-nowrap ${
                     activeCategory === id
-                      ? 'border-[#179146] text-[#1c2126] font-medium'
+                      ? 'border-accent text-[#1c2126] font-medium'
                       : 'border-transparent text-[#767d83] hover:text-[#1c2126]'
                   }`}
                 >
@@ -210,7 +210,7 @@ export default function ComparePage() {
                 onClick={() => setActiveCategory(ALL_TAB)}
                 className={`pb-3 text-sm font-manrope border-b-2 -mb-px whitespace-nowrap ${
                   activeCategory === ALL_TAB
-                    ? 'border-[#179146] text-[#1c2126] font-medium'
+                    ? 'border-accent text-[#1c2126] font-medium'
                     : 'border-transparent text-[#767d83] hover:text-[#1c2126]'
                 }`}
               >
@@ -237,7 +237,7 @@ export default function ComparePage() {
                             name="compare-mode"
                             checked={!diffOnly}
                             onChange={() => setDiffOnly(false)}
-                            className="accent-[#179146]"
+                            className="accent-accent"
                           />
                           Все характеристики
                         </label>
@@ -247,7 +247,7 @@ export default function ComparePage() {
                             name="compare-mode"
                             checked={diffOnly}
                             onChange={() => setDiffOnly(true)}
-                            className="accent-[#179146]"
+                            className="accent-accent"
                           />
                           Показать различия
                         </label>

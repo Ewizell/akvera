@@ -34,7 +34,7 @@ export function HomeSteps() {
                 // Фон
                 inverted
                   ? "bg-gradient-to-br from-[#28313d] to-[#3d5570] hover:bg-[#e2f0ef] hover:bg-none"
-                  : "bg-white hover:bg-gradient-to-br hover:from-[#179146] hover:to-[#0f172a]",
+                  : "bg-white hover:bg-gradient-to-br hover:from-accent hover:to-accent-end",
               ].join(" ")}
             >
               {/* Номер */}
@@ -42,8 +42,8 @@ export function HomeSteps() {
                 className={[
                   "relative z-10 flex h-10 w-10 items-center justify-center rounded-xl text-sm font-medium transition-all duration-500",
                   inverted
-                    ? "bg-white/15 text-white group-hover:bg-white group-hover:text-[#179146]"
-                    : "bg-[#f3f4f7] text-[#179146] group-hover:bg-white/15 group-hover:text-white",
+                    ? "bg-white/15 text-white group-hover:bg-white group-hover:text-accent"
+                    : "bg-[#f3f4f7] text-accent group-hover:bg-white/15 group-hover:text-white",
                 ].join(" ")}
               >
                 {String(index + 1).padStart(2, "0")}
@@ -106,7 +106,7 @@ export function HomeAdvantages() {
               "group relative overflow-hidden rounded-2xl p-6 transition-all duration-500",
               inverted
                 ? "bg-gradient-to-br from-[#28313d] to-[#3d5570] hover:bg-[#e2f0ef] hover:bg-none"
-                : "bg-white hover:bg-gradient-to-br hover:from-[#179146] hover:to-[#0f172a]",
+                : "bg-white hover:bg-gradient-to-br hover:from-accent hover:to-accent-end",
             ].join(" ")}
           >
             {/* Иконка */}
@@ -115,7 +115,7 @@ export function HomeAdvantages() {
                 "flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-500",
                 inverted
                   ? "bg-white/15 text-white group-hover:bg-white group-hover:text-[#28313d]"
-                  : "bg-[#f3f4f6] text-[#179146] group-hover:bg-white/15 group-hover:text-white",
+                  : "bg-[#f3f4f6] text-accent group-hover:bg-white/15 group-hover:text-white",
               ].join(" ")}
             >
               <svg
@@ -166,7 +166,7 @@ export function HomeAdvantages() {
 
 export function HomeCta() {
   return (
-    <section className="relative mt-20 overflow-hidden rounded-3xl bg-gradient-to-br from-[#179146] to-[#0f172a]">
+    <section className="relative mt-20 overflow-hidden rounded-3xl bg-gradient-to-br from-accent to-accent-end">
       {/* Декоративный фон */}
       <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-white/[0.06]" />
       <div className="pointer-events-none absolute -bottom-32 left-1/3 h-80 w-80 rounded-full bg-black/[0.08]" />
@@ -223,7 +223,7 @@ export function HomeCta() {
                 bg-[#e5e8eb]
                 transition-all
                 duration-300
-                group-hover:bg-[#179146]
+                group-hover:bg-accent
                 group-hover:text-white
               "
             >

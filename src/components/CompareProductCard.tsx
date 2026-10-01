@@ -42,7 +42,7 @@ export default function CompareProductCard({
         title={isPinned ? 'Открепить колонку' : 'Закрепить колонку при прокрутке'}
         className={`absolute top-2 left-2 z-10 flex h-8 w-8 items-center justify-center rounded-full shadow-sm transition-transform duration-150 ease-out hover:scale-110 active:scale-90 ${
           isPinned
-            ? 'bg-[#179146] text-white opacity-100'
+            ? 'bg-accent text-white opacity-100'
             : 'bg-white/90 text-[#767d83] hover:bg-white hover:text-[#1c2126] opacity-0 group-hover:opacity-100'
         }`}
       >
@@ -93,7 +93,7 @@ export default function CompareProductCard({
           onClick={handleAddToCart}
           aria-label="В корзину"
           title="В корзину"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[8px] bg-[#179146] hover:bg-[#147a3a] text-white transition-colors"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[8px] bg-accent hover:bg-accent-hover text-white transition-colors"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="9" cy="21" r="1" />

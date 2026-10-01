@@ -57,7 +57,7 @@ export function HomeAbout() {
         <div className="px-7 py-5 sm:px-9">
           <Link
             href="/about"
-            className="group inline-flex h-11 items-center gap-3 rounded-xl bg-[#e5e8eb] pl-4 pr-1.5 text-sm font-medium text-[#28313d] transition-all duration-300 hover:bg-gradient-to-br hover:from-[#179146] hover:to-[#0f172a] hover:text-white"
+            className="group inline-flex h-11 items-center gap-3 rounded-xl bg-[#e5e8eb] pl-4 pr-1.5 text-sm font-medium text-[#28313d] transition-all duration-300 hover:bg-gradient-to-br hover:from-accent hover:to-accent-end hover:text-white"
           >
             <span>Подробнее</span>
 
@@ -73,7 +73,7 @@ export function HomeAbout() {
       </div>
 
       {/* Правая карточка со статистикой */}
-      <div className="group relative min-h-[360px] overflow-hidden rounded-2xl bg-gradient-to-br from-[#179146] to-[#0f172a]">
+      <div className="group relative min-h-[360px] overflow-hidden rounded-2xl bg-gradient-to-br from-accent to-accent-end">
         {/* Декоративный свет */}
         <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/[0.07] blur-3xl transition-transform duration-700 group-hover:scale-110" />
 
@@ -81,7 +81,7 @@ export function HomeAbout() {
         <div className="absolute -bottom-24 -left-16 h-64 w-64 rounded-full bg-black/[0.12] blur-3xl" />
 
         {/* Дополнительный градиент */}
-        <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-[#0f172a]/35" />
+        <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-accent-end/35" />
 
         {/* Статистика */}
         <div className="relative flex h-full flex-col justify-between p-6 sm:p-7">
@@ -121,7 +121,7 @@ export function HomeDelivery() {
               "group relative overflow-hidden rounded-2xl p-6 transition-all duration-500 sm:p-7",
               inverted
                 ? "bg-gradient-to-br from-[#28313d] to-[#3d5570] hover:bg-[#e2f0ef] hover:bg-none"
-                : "bg-white hover:bg-gradient-to-br hover:from-[#179146] hover:to-[#0f172a]",
+                : "bg-white hover:bg-gradient-to-br hover:from-accent hover:to-accent-end",
             ].join(" ")}
           >
             {/* Декоративная иконка */}
@@ -129,8 +129,8 @@ export function HomeDelivery() {
               className={[
                 "pointer-events-none absolute right-5 top-5 transition-colors duration-500",
                 inverted
-                  ? "text-white/10 group-hover:text-[#179146]/10"
-                  : "text-[#179146]/10 group-hover:text-white/10",
+                  ? "text-white/10 group-hover:text-accent/10"
+                  : "text-accent/10 group-hover:text-white/10",
               ].join(" ")}
             >
               <svg
@@ -174,8 +174,8 @@ export function HomeDelivery() {
                       className={[
                         "mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full transition-colors duration-500",
                         inverted
-                          ? "bg-white/70 group-hover:bg-[#179146]"
-                          : "bg-[#179146] group-hover:bg-white/70",
+                          ? "bg-white/70 group-hover:bg-accent"
+                          : "bg-accent group-hover:bg-white/70",
                       ].join(" ")}
                     />
 
@@ -223,7 +223,7 @@ export function HomeFaq() {
                 text-[#28313d]
                 transition-colors
                 duration-300
-                hover:text-[#179146]
+                hover:text-accent
                 [&::-webkit-details-marker]:hidden
                 sm:px-7
               "
@@ -246,8 +246,8 @@ export function HomeFaq() {
                   group-hover:bg-[#dfe3e7]
                   group-hover:text-[#28313d]
                   group-open:bg-gradient-to-br
-                  group-open:from-[#179146]
-                  group-open:to-[#0f172a]
+                  group-open:from-accent
+                  group-open:to-accent-end
                   group-open:text-white
                   group-open:rotate-45
                 "
@@ -351,8 +351,8 @@ export function HomeRequisites() {
                   transition-all
                   duration-300
                   hover:bg-gradient-to-br
-                  hover:from-[#179146]
-                  hover:to-[#0f172a]
+                  hover:from-accent
+                  hover:to-accent-end
                 "
               >
                 <div>
@@ -402,7 +402,7 @@ export function HomeRequisites() {
 
       {/* Правая часть — карта */}
       {hasMap && (
-        <div className="relative min-h-[420px] overflow-hidden rounded-2xl bg-gradient-to-br from-[#179146] to-[#0f172a]">
+        <div className="relative min-h-[420px] overflow-hidden rounded-2xl bg-gradient-to-br from-accent to-accent-end">
           <iframe
             src={CONTACTS.mapEmbedUrl}
             title="Карта проезда"

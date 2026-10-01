@@ -54,7 +54,7 @@ export default async function CatalogPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(catalogJsonLd) }}
       />
       <main className="max-w-7xl mx-auto px-4 py-10">
-        <nav className="mb-5 flex items-center gap-3 text-[14px] font-semibold uppercase tracking-[2px] text-[#179146]">
+        <nav className="mb-5 flex items-center gap-3 text-[14px] font-semibold uppercase tracking-[2px] text-accent">
           <span>Главная</span>
           <span>/</span>
         </nav>

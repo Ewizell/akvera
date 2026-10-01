@@ -1,5 +1,7 @@
 'use server'
 
+import { revalidateSite } from '@/lib/revalidate'
+
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { uploadImageServer } from './upload'

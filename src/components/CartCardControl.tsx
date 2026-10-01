@@ -40,7 +40,7 @@ export default function CartCardControl({
           stop(e)
           addItem({ variantId, productName, variantName: '', slug, sku, price, image })
         }}
-        className={`${height} w-[98px] px-2 bg-[#179146] text-white text-sm font-manrope font-medium rounded-[6px] hover:bg-[#147a3b] transition-colors cursor-pointer`}
+        className={`${height} w-[98px] px-2 bg-accent text-white text-sm font-manrope font-medium rounded-[6px] hover:bg-accent-hover transition-colors cursor-pointer`}
       >
         В корзину
       </button>
@@ -83,7 +83,7 @@ export default function CartCardControl({
           stop(e)
           router.push('/cart')
         }}
-        className={`${height} px-2 flex items-center justify-center bg-[#179146] rounded-[6px] hover:bg-[#147a3b] cursor-pointer shrink-0`}
+        className={`${height} px-2 flex items-center justify-center bg-accent rounded-[6px] hover:bg-accent-hover cursor-pointer shrink-0`}
         aria-label="Перейти в корзину"
       >
         <Image src="/icons/fi-rr-arrow-right.svg" alt="" width={24} height={24} className="brightness-0 invert" />

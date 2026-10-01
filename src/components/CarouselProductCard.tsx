@@ -128,7 +128,7 @@ export default function CarouselProductCard({
 
           <button
             onClick={handleAddToCart}
-            className="h-[33px] self-start px-[16px] flex items-center justify-center bg-[#179146] hover:bg-[#147a3a] rounded-[6px] font-manrope font-semibold text-[14px] text-white transition-colors"
+            className="h-[33px] self-start px-[16px] flex items-center justify-center bg-accent hover:bg-accent-hover rounded-[6px] font-manrope font-semibold text-[14px] text-white transition-colors"
           >
             В корзину
           </button>

@@ -115,7 +115,7 @@ useEffect(() => {
         <p className="text-[#767d83] mb-6">
           Добавляйте товары из каталога, нажав на сердце на карточке.
         </p>
-        <Link href="/catalog" className="text-[#179146] hover:underline font-manrope font-medium">
+        <Link href="/catalog" className="text-accent hover:underline font-manrope font-medium">
           Перейти в каталог
         </Link>
       </main>
@@ -124,7 +124,7 @@ useEffect(() => {
 
   return (
     <main className="max-w-7xl mx-auto px-4 py-10">
-      <nav className="mb-5 flex flex-wrap items-center gap-3 text-[14px] font-semibold uppercase tracking-[2px] text-[#179146]">
+      <nav className="mb-5 flex flex-wrap items-center gap-3 text-[14px] font-semibold uppercase tracking-[2px] text-accent">
         <Link href="/" className="hover:opacity-80">Главная</Link>
         <span>/</span>
         <span>Избранное</span>

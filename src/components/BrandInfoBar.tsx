@@ -28,7 +28,7 @@ export default function BrandInfoBar({
 
       <Link
         href="/brands"
-        className="shrink-0 rounded-full border border-[#179146] px-5 py-2 text-sm font-semibold text-[#179146] hover:bg-[#179146] hover:text-white transition-colors whitespace-nowrap"
+        className="shrink-0 rounded-full border border-accent px-5 py-2 text-sm font-semibold text-accent hover:bg-accent hover:text-white transition-colors whitespace-nowrap"
       >
         Все бренды
       </Link>

@@ -16,8 +16,8 @@ export function AboutActivities() {
               "transition-all duration-300",
 
               isLight
-                ? "bg-white hover:bg-gradient-to-br hover:from-[#179146] hover:to-[#0f172a]"
-                : "bg-[#eef0f2] hover:bg-gradient-to-br hover:from-[#179146] hover:to-[#0f172a]",
+                ? "bg-white hover:bg-gradient-to-br hover:from-accent hover:to-accent-end"
+                : "bg-[#eef0f2] hover:bg-gradient-to-br hover:from-accent hover:to-accent-end",
             ].join(" ")}
           >
             {/* Большая декоративная иконка */}
@@ -27,7 +27,7 @@ export function AboutActivities() {
                 absolute
                 -right-5
                 -top-5
-                text-[#179146]/[0.07]
+                text-accent/[0.07]
                 transition-all
                 duration-500
                 group-hover:scale-105
@@ -55,7 +55,7 @@ export function AboutActivities() {
                   text-xs
                   font-semibold
                   tracking-[0.12em]
-                  text-[#179146]
+                  text-accent
                   transition-colors
                   duration-300
                   group-hover:text-white/60
@@ -107,7 +107,7 @@ export function AboutValues() {
     <div className="rounded-2xl bg-white p-6 sm:p-8 lg:p-10">
       {/* Центральный акцент */}
       <div className="max-w-[700px]">
-        <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#179146]">
+        <span className="text-xs font-semibold uppercase tracking-[0.14em] text-accent">
           Наш подход
         </span>
 
@@ -148,10 +148,10 @@ export function AboutValues() {
                   bg-[#f0f2f3]
                   text-xs
                   font-semibold
-                  text-[#179146]
+                  text-accent
                   transition-all
                   duration-300
-                  group-hover:bg-[#179146]
+                  group-hover:bg-accent
                   group-hover:text-white
                 "
               >

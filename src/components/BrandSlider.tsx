@@ -94,7 +94,7 @@ export default function BrandSlider({
               "group relative flex h-[210px] shrink-0 snap-start",
               "w-[calc((100%-12px)/2)]",
               "overflow-hidden rounded-2xl",
-              "bg-[#179146]",
+              "bg-accent",
               "sm:w-[calc((100%-24px)/3)]",
               "lg:w-[calc((100%-36px)/4)]",
               "xl:w-[calc((100%-60px)/6)]",
@@ -116,7 +116,7 @@ export default function BrandSlider({
                 }}
               />
             ) : (
-              <div className="absolute inset-0 bg-gradient-to-br from-[#179146] to-[#0f172a]" />
+              <div className="absolute inset-0 bg-gradient-to-br from-accent to-accent-end" />
             )}
 
             {/* Затемнение */}
@@ -180,8 +180,8 @@ export default function BrandSlider({
           "shadow-sm",
           "transition-all duration-300",
           "hover:bg-gradient-to-br",
-          "hover:from-[#179146]",
-          "hover:to-[#0f172a]",
+          "hover:from-accent",
+          "hover:to-accent-end",
           "hover:text-white",
           "hover:shadow-md",
           "sm:flex",
@@ -214,8 +214,8 @@ export default function BrandSlider({
           "shadow-sm",
           "transition-all duration-300",
           "hover:bg-gradient-to-br",
-          "hover:from-[#179146]",
-          "hover:to-[#0f172a]",
+          "hover:from-accent",
+          "hover:to-accent-end",
           "hover:text-white",
           "hover:shadow-md",
           "sm:flex",

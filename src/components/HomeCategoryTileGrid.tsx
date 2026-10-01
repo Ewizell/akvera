@@ -51,7 +51,7 @@ export default function HomeCategoryTileGrid({
               />
             ) : (
               // Плейсхолдер, если у категории нет картинки
-              <div className="absolute inset-0 bg-gradient-to-br from-[#179146] to-[#0f172a]" />
+              <div className="absolute inset-0 bg-gradient-to-br from-accent to-accent-end" />
             )}
 
             {/* Затемнение */}

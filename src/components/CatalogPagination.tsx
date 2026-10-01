@@ -90,7 +90,7 @@ export default function CatalogPagination({
         className={`shrink-0 ${
           currentPage === 1
             ? "pointer-events-none opacity-30 text-[#1c2126]"
-            : "text-[#1c2126] hover:text-[#179146]"
+            : "text-[#1c2126] hover:text-accent"
         }`}
       >
         <svg className="rotate-180" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -106,7 +106,7 @@ export default function CatalogPagination({
         ) : item === currentPage ? (
           <div
             key={item}
-            className="bg-[#179146] flex items-center justify-center rounded-[14px] size-[28px] shrink-0"
+            className="bg-accent flex items-center justify-center rounded-[14px] size-[28px] shrink-0"
           >
             <span className="font-manrope text-[14px] text-white">{item}</span>
           </div>
@@ -114,7 +114,7 @@ export default function CatalogPagination({
           <Link
             key={item}
             href={buildHref(item)}
-            className="font-manrope text-[14px] text-[#1c2126] hover:text-[#179146]"
+            className="font-manrope text-[14px] text-[#1c2126] hover:text-accent"
           >
             {item}
           </Link>
@@ -127,7 +127,7 @@ export default function CatalogPagination({
         className={`shrink-0 ${
           currentPage === totalPages
             ? "pointer-events-none opacity-30 text-[#1c2126]"
-            : "text-[#1c2126] hover:text-[#179146]"
+            : "text-[#1c2126] hover:text-accent"
         }`}
       >
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">

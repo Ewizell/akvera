@@ -41,7 +41,7 @@ export function ProductGallery({
               className="relative"
             >
               {index === activeIndex && (
-                <span className="absolute -left-2 top-1/2 -translate-y-1/2 h-[60%] w-[2px] rounded-[4px] bg-[#179146]" />
+                <span className="absolute -left-2 top-1/2 -translate-y-1/2 h-[60%] w-[2px] rounded-[4px] bg-accent" />
               )}
               <span className="block relative aspect-square h-[64px] rounded-[4px] overflow-hidden bg-gray-100">
                 <Image

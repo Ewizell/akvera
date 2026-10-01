@@ -31,7 +31,7 @@ export default function CompareButtonWithLabel({ variantId, className }: Compare
         type="button"
         onClick={handleClick}
         className={`flex items-center gap-1 font-manrope font-medium text-[14px] ${
-          active ? 'text-[#179146]' : 'text-[#1c2116]'
+          active ? 'text-accent' : 'text-[#1c2116]'
         } ${className ?? ''}`}
       >
         <Image
