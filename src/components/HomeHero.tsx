@@ -51,11 +51,9 @@ export default function HomeHero({
         const x = (event.clientX - rect.left) / rect.width;
         const y = (event.clientY - rect.top) / rect.height;
 
-        // Координаты от -1 до 1
         const mouseX = (x - 0.5) * 2;
         const mouseY = (y - 0.5) * 2;
 
-        // Небольшое смещение фотографии
         const backgroundX = mouseX * -14;
         const backgroundY = mouseY * -10;
 
@@ -98,12 +96,26 @@ export default function HomeHero({
   return (
     <section
       ref={heroRef}
-      className="relative min-h-[520px] w-full overflow-hidden bg-[#28313d] sm:min-h-[560px]"
+      className="
+        relative
+        min-h-[620px]
+        w-full
+        overflow-hidden
+        bg-[#28313d]
+
+        sm:min-h-[560px]
+      "
     >
-      {/* Фоновое изображение — единственный анимируемый слой */}
+      {/* Фоновое изображение */}
       <div
         ref={backgroundRef}
-        className="absolute -inset-[2%] bg-cover bg-center will-change-transform"
+        className="
+          absolute
+          -inset-[2%]
+          bg-cover
+          bg-[center_center]
+          will-change-transform
+        "
         style={{
           backgroundImage: "url('/hero-background.jpg')",
           transition:
@@ -111,54 +123,210 @@ export default function HomeHero({
         }}
       />
 
-      {/* Затемнение — полностью статичное */}
-      <div className="absolute inset-0 bg-gradient-to-r from-[#18212b]/95 via-[#18212b]/70 to-[#18212b]/10" />
+      {/* Основное затемнение */}
+      <div
+        className="
+          absolute
+          inset-0
+          bg-gradient-to-r
+          from-[#18212b]/95
+          via-[#18212b]/75
+          to-[#18212b]/25
 
-      {/* Затемнение снизу — статичное */}
-      <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-[#18212b]/60 to-transparent" />
+          max-sm:bg-gradient-to-b
+          max-sm:from-[#18212b]/95
+          max-sm:via-[#18212b]/75
+          max-sm:to-[#18212b]/55
+        "
+      />
 
-      {/* Виньетка — статичная */}
-      <div className="pointer-events-none absolute inset-0 shadow-[inset_0_0_120px_rgba(24,33,43,0.35)]" />
+      {/* Нижнее затемнение */}
+      <div
+        className="
+          absolute
+          inset-x-0
+          bottom-0
+          h-48
+          bg-gradient-to-t
+          from-[#18212b]/60
+          to-transparent
 
-      {/* Контент — полностью статичный */}
-      <div className="relative mx-auto flex min-h-[520px] max-w-[1440px] items-center px-6 py-12 sm:min-h-[560px] sm:px-10 lg:px-16">
-        <div className="max-w-[700px]">
+          max-sm:h-64
+          max-sm:from-[#18212b]/85
+        "
+      />
+
+      {/* Виньетка */}
+      <div
+        className="
+          pointer-events-none
+          absolute
+          inset-0
+          shadow-[inset_0_0_120px_rgba(24,33,43,0.35)]
+        "
+      />
+
+      {/* Контент */}
+      <div
+        className="
+          relative
+          mx-auto
+          flex
+          min-h-[620px]
+          max-w-[1440px]
+          items-center
+          px-5
+          py-10
+
+          sm:min-h-[560px]
+          sm:px-10
+          sm:py-12
+
+          lg:px-16
+        "
+      >
+        <div
+          className="
+            w-full
+            max-w-[700px]
+
+            max-sm:pt-8
+          "
+        >
           {/* Заголовок */}
-          <h1 className="max-w-[680px] text-[40px] font-semibold leading-[1.06] tracking-[-0.035em] text-white sm:text-[52px] lg:text-[60px]">
+          <h1
+            className="
+              max-w-[680px]
+              text-[36px]
+              font-semibold
+              leading-[1.04]
+              tracking-[-0.035em]
+              text-white
+
+              min-[400px]:text-[40px]
+
+              sm:text-[52px]
+              sm:leading-[1.06]
+
+              lg:text-[60px]
+            "
+          >
             Оборудование для
             <br />
             инженерных систем
           </h1>
 
           {/* Описание */}
-          <p className="mt-6 max-w-[560px] text-base leading-7 text-white/75 sm:text-lg">
+          <p
+            className="
+              mt-5
+              max-w-[560px]
+              text-[15px]
+              leading-6
+              text-white/75
+
+              sm:mt-6
+              sm:text-lg
+              sm:leading-7
+            "
+          >
             Комплексные поставки оборудования
-            <br />
+            <br className="hidden sm:block" />
+            <span className="sm:hidden"> </span>
             для отопления, водоснабжения и водоотведения.
           </p>
 
           {/* Навигационные кнопки */}
-          <div className="mt-8 flex flex-wrap gap-3">
+          <div
+            className="
+              mt-7
+              flex
+              w-full
+              flex-col
+              gap-2.5
+
+              sm:mt-8
+              sm:flex-row
+              sm:flex-wrap
+              sm:gap-3
+            "
+          >
             {/* Каталог */}
             <Link
               href="/catalog"
-              className="group/button relative flex h-14 min-w-[220px] items-center justify-between overflow-hidden rounded-xl"
+              className="
+                group/button
+                relative
+                flex
+                h-14
+                w-full
+                items-center
+                justify-between
+                overflow-hidden
+                rounded-xl
+
+                sm:min-w-[220px]
+                sm:w-auto
+              "
             >
               <div
-                className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover/button:scale-105"
+                className="
+                  absolute
+                  inset-0
+                  bg-cover
+                  bg-center
+                  transition-transform
+                  duration-500
+                  group-hover/button:scale-105
+                "
                 style={{
                   backgroundImage:
                     "url('/images/home/catalog-button.jpg')",
                 }}
               />
 
-              <div className="absolute inset-0 bg-[#18212b]/60 transition-colors duration-300 group-hover/button:bg-[#18212b]/45" />
+              <div
+                className="
+                  absolute
+                  inset-0
+                  bg-[#18212b]/60
+                  transition-colors
+                  duration-300
+                  group-hover/button:bg-[#18212b]/45
+                "
+              />
 
-              <span className="relative px-5 text-sm font-semibold text-white">
+              <span
+                className="
+                  relative
+                  px-5
+                  text-sm
+                  font-semibold
+                  text-white
+                "
+              >
                 Каталог оборудования
               </span>
 
-              <span className="relative mr-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/15 text-white backdrop-blur-sm transition-transform duration-200 group-hover/button:translate-x-0.5">
+              <span
+                className="
+                  relative
+                  mr-2
+                  flex
+                  h-9
+                  w-9
+                  shrink-0
+                  items-center
+                  justify-center
+                  rounded-lg
+                  bg-white/15
+                  text-white
+                  backdrop-blur-sm
+                  transition-transform
+                  duration-200
+                  group-hover/button:translate-x-0.5
+                "
+              >
                 <ArrowRight size={17} />
               </span>
             </Link>
@@ -166,23 +334,79 @@ export default function HomeHero({
             {/* Бренды */}
             <Link
               href="/brands"
-              className="group/button relative flex h-14 min-w-[170px] items-center justify-between overflow-hidden rounded-xl"
+              className="
+                group/button
+                relative
+                flex
+                h-14
+                w-full
+                items-center
+                justify-between
+                overflow-hidden
+                rounded-xl
+
+                sm:min-w-[170px]
+                sm:w-auto
+              "
             >
               <div
-                className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover/button:scale-105"
+                className="
+                  absolute
+                  inset-0
+                  bg-cover
+                  bg-center
+                  transition-transform
+                  duration-500
+                  group-hover/button:scale-105
+                "
                 style={{
                   backgroundImage:
                     "url('/images/home/brands-button.jpg')",
                 }}
               />
 
-              <div className="absolute inset-0 bg-[#18212b]/60 transition-colors duration-300 group-hover/button:bg-[#18212b]/45" />
+              <div
+                className="
+                  absolute
+                  inset-0
+                  bg-[#18212b]/60
+                  transition-colors
+                  duration-300
+                  group-hover/button:bg-[#18212b]/45
+                "
+              />
 
-              <span className="relative px-5 text-sm font-semibold text-white">
+              <span
+                className="
+                  relative
+                  px-5
+                  text-sm
+                  font-semibold
+                  text-white
+                "
+              >
                 Бренды
               </span>
 
-              <span className="relative mr-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/15 text-white backdrop-blur-sm transition-transform duration-200 group-hover/button:translate-x-0.5">
+              <span
+                className="
+                  relative
+                  mr-2
+                  flex
+                  h-9
+                  w-9
+                  shrink-0
+                  items-center
+                  justify-center
+                  rounded-lg
+                  bg-white/15
+                  text-white
+                  backdrop-blur-sm
+                  transition-transform
+                  duration-200
+                  group-hover/button:translate-x-0.5
+                "
+              >
                 <ArrowRight size={17} />
               </span>
             </Link>
@@ -190,16 +414,54 @@ export default function HomeHero({
 
           {/* Слайдер брендов */}
           {brands.length > 0 && (
-            <div className="brands-marquee mt-8 max-w-[620px] overflow-hidden rounded-xl border border-white/10 bg-white/[0.06] py-3 backdrop-blur-md [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]">
+            <div
+              className="
+                brands-marquee
+                mt-6
+                w-full
+                max-w-[620px]
+                overflow-hidden
+                rounded-xl
+                border
+                border-white/10
+                bg-white/[0.06]
+                py-2.5
+                backdrop-blur-md
+                [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]
+
+                sm:mt-8
+                sm:py-3
+              "
+            >
               <div className="brands-track flex w-max items-center">
-                {/* Список дублируется для бесшовной прокрутки */}
                 {[...brands, ...brands].map((brand, index) => (
                   <Link
                     key={`${brand.id}-${index}`}
                     href={`/brands/${brand.slug}`}
                     aria-hidden={index >= brands.length}
-                    tabIndex={index >= brands.length ? -1 : undefined}
-                    className="flex h-8 shrink-0 items-center whitespace-nowrap px-8 text-sm font-semibold uppercase tracking-wider text-white/70 transition-colors duration-200 hover:text-white"
+                    tabIndex={
+                      index >= brands.length ? -1 : undefined
+                    }
+                    className="
+                      flex
+                      h-8
+                      shrink-0
+                      items-center
+                      whitespace-nowrap
+                      px-5
+                      text-[11px]
+                      font-semibold
+                      uppercase
+                      tracking-[0.12em]
+                      text-white/70
+                      transition-colors
+                      duration-200
+                      hover:text-white
+
+                      sm:px-8
+                      sm:text-sm
+                      sm:tracking-wider
+                    "
                   >
                     {brand.name}
                   </Link>
@@ -208,25 +470,74 @@ export default function HomeHero({
             </div>
           )}
 
-          {/* Статистика каталога */}
+          {/* Статистика */}
           {stats.length > 0 && (
-            <div className="mt-10 border-t border-white/15 pt-5">
-              <dl className="flex flex-wrap items-center gap-y-3">
+            <div
+              className="
+                mt-7
+                border-t
+                border-white/15
+                pt-4
+
+                sm:mt-10
+                sm:pt-5
+              "
+            >
+              <dl
+                className="
+                  grid
+                  grid-cols-2
+                  gap-x-4
+                  gap-y-4
+
+                  sm:flex
+                  sm:flex-wrap
+                  sm:items-center
+                  sm:gap-y-3
+                "
+              >
                 {stats.map((stat, index) => (
                   <div
                     key={stat.label}
                     className={[
-                      "flex items-baseline gap-2 pr-6",
+                      "flex items-baseline gap-2",
+
+                      // Мобильный вид
+                      "min-w-0",
+
+                      // Десктопный вид
+                      "sm:pr-6",
+
                       index > 0
-                        ? "border-l border-white/15 pl-6"
+                        ? "sm:border-l sm:border-white/15 sm:pl-6"
                         : "",
                     ].join(" ")}
                   >
-                    <dt className="text-2xl font-semibold leading-none tracking-[-0.02em] text-white">
+                    <dt
+                      className="
+                        shrink-0
+                        text-xl
+                        font-semibold
+                        leading-none
+                        tracking-[-0.02em]
+                        text-white
+
+                        sm:text-2xl
+                      "
+                    >
                       {stat.value}
                     </dt>
 
-                    <dd className="text-sm text-white/55">
+                    <dd
+                      className="
+                        min-w-0
+                        text-xs
+                        leading-4
+                        text-white/55
+
+                        sm:text-sm
+                      "
+                    >
                       {stat.label}
                     </dd>
                   </div>

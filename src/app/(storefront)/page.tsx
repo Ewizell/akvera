@@ -31,7 +31,7 @@ import { SITE_URL, absoluteUrl } from "@/lib/seo";
 
 export const revalidate = 3600;
 
-const POPULAR_TAG_FRAGMENT = "популяр";
+const POPULAR_TAG_FRAGMENT = "Популяр";
 const NEW_TAG_FRAGMENT = "новинк";
 
 const TITLE =
