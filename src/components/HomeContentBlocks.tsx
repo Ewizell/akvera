@@ -323,27 +323,27 @@ export function HomeRequisites() {
     <div
       className={
         hasMap
-          ? "grid gap-4 lg:grid-cols-[0.9fr_1.1fr]"
-          : "space-y-4"
+          ? "grid gap-3 sm:gap-4 lg:grid-cols-[0.9fr_1.1fr]"
+          : "space-y-3 sm:space-y-4"
       }
     >
       {/* Левая часть */}
-      <div className="overflow-hidden rounded-2xl bg-[#fff]">
-        <div className="p-7 sm:p-8">
-          <p className="text-xs font-medium uppercase tracking-[0.14em] text-[#929aa6]">
+      <div className="overflow-hidden rounded-2xl bg-white">
+        <div className="p-5 sm:p-8">
+          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-[#929aa6] sm:text-xs">
             Контакты
           </p>
 
-          <h3 className="mt-3 text-2xl font-medium tracking-[-0.025em] text-[#28313d]">
+          <h3 className="mt-2.5 text-[24px] font-medium leading-tight tracking-[-0.025em] text-[#28313d] sm:mt-3 sm:text-2xl">
             Свяжитесь с нами
           </h3>
 
-          <p className="mt-3 max-w-[500px] text-sm leading-6 text-[#66717d]">
+          <p className="mt-2.5 max-w-[500px] text-[13px] leading-5 text-[#66717d] sm:mt-3 sm:text-sm sm:leading-6">
             Ответим на вопросы по оборудованию и поставке.
           </p>
 
           {/* Основные контакты */}
-          <div className="mt-7 space-y-3">
+          <div className="mt-5 space-y-2.5 sm:mt-7 sm:space-y-3">
             {items.slice(0, 2).map((item) => (
               <a
                 key={item.label}
@@ -351,25 +351,29 @@ export function HomeRequisites() {
                 className="
                   group
                   flex
+                  min-w-0
                   items-center
                   justify-between
+                  gap-3
                   rounded-xl
                   bg-[#f6f6f6]
-                  px-5
-                  py-4
+                  px-4
+                  py-3.5
                   transition-all
                   duration-300
                   hover:bg-gradient-to-br
                   hover:from-accent
                   hover:to-accent-end
+                  sm:px-5
+                  sm:py-4
                 "
               >
-                <div>
-                  <p className="text-[11px] uppercase tracking-[0.12em] text-[#929aa6] transition-colors duration-300 group-hover:text-white/55">
+                <div className="min-w-0">
+                  <p className="text-[10px] uppercase tracking-[0.12em] text-[#929aa6] transition-colors duration-300 sm:text-[11px] group-hover:text-white/55">
                     {item.label}
                   </p>
 
-                  <p className="mt-1 text-sm font-medium text-[#28313d] transition-colors duration-300 group-hover:text-white">
+                  <p className="mt-1 truncate text-[13px] font-medium text-[#28313d] transition-colors duration-300 sm:text-sm group-hover:text-white">
                     {item.value}
                   </p>
                 </div>
@@ -377,24 +381,24 @@ export function HomeRequisites() {
                 <ArrowRight
                   size={16}
                   strokeWidth={1.7}
-                  className="text-[#929aa6] transition-all duration-300 group-hover:translate-x-1 group-hover:text-white"
+                  className="shrink-0 text-[#929aa6] transition-all duration-300 group-hover:translate-x-1 group-hover:text-white"
                 />
               </a>
             ))}
           </div>
 
           {/* Дополнительная информация */}
-          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <div className="mt-2.5 grid gap-2.5 sm:mt-3 sm:grid-cols-2 sm:gap-3">
             {items.slice(2).map((item) => (
               <div
                 key={item.label}
-                className="rounded-xl bg-[#f6f6f6] px-5 py-4"
+                className="rounded-xl bg-[#f6f6f6] px-4 py-3.5 sm:px-5 sm:py-4"
               >
-                <p className="text-[11px] uppercase tracking-[0.12em] text-[#929aa6]">
+                <p className="text-[10px] uppercase tracking-[0.12em] text-[#929aa6] sm:text-[11px]">
                   {item.label}
                 </p>
 
-                <p className="mt-1.5 text-sm leading-5 text-[#28313d]">
+                <p className="mt-1.5 text-[13px] leading-5 text-[#28313d] sm:text-sm">
                   {item.value}
                 </p>
               </div>
@@ -403,7 +407,7 @@ export function HomeRequisites() {
         </div>
 
         {SHOW_REQUISITES && (
-          <div className="border-t border-[#dfe3e7] px-7 py-5 sm:px-8">
+          <div className="border-t border-[#dfe3e7] px-5 py-4 sm:px-8 sm:py-5">
             <AboutRequisites />
           </div>
         )}
@@ -411,7 +415,7 @@ export function HomeRequisites() {
 
       {/* Правая часть — карта */}
       {hasMap && (
-        <div className="relative min-h-[420px] overflow-hidden rounded-2xl bg-gradient-to-br from-accent to-accent-end">
+        <div className="relative min-h-[300px] overflow-hidden rounded-2xl bg-gradient-to-br from-accent to-accent-end sm:min-h-[380px] lg:min-h-[420px]">
           <iframe
             src={CONTACTS.mapEmbedUrl}
             title="Карта проезда"
@@ -423,12 +427,12 @@ export function HomeRequisites() {
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#18212b]/45 via-transparent to-[#18212b]/10" />
 
           {/* Метка */}
-          <div className="pointer-events-none absolute top-5 left-5 rounded-xl bg-[#18212b]/80 px-4 py-3 backdrop-blur-sm">
-            <p className="text-xs font-medium uppercase tracking-[0.12em] text-white/50">
+          <div className="pointer-events-none absolute left-4 right-4 top-4 rounded-xl bg-[#18212b]/80 px-3.5 py-2.5 backdrop-blur-sm sm:left-5 sm:right-auto sm:top-5 sm:px-4 sm:py-3">
+            <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-white/50 sm:text-xs">
               Мы находимся
             </p>
 
-            <p className="mt-1 text-sm font-medium text-white">
+            <p className="mt-1 text-[13px] font-medium leading-5 text-white sm:text-sm">
               {CONTACTS.address}
             </p>
           </div>

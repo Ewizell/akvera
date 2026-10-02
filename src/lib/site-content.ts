@@ -10,7 +10,7 @@ export const ABOUT_STATS = [
   { value: "XX", label: "лет на рынке" },
   { value: "XX", label: "поставок в год" },
   { value: "XX", label: "регионов доставки" },
-  { value: "XX", label: "часов на ответ по заявке" },
+  { value: "XX", label: "часов на ответ" },
 ];
 
 export type DeliveryIcon = "truck" | "card" | "shield";
@@ -139,7 +139,7 @@ export const VALUES = [
 // Показывать таблицу реквизитов на сайте (false — скрыта, пока не внесены реальные данные)
 export const SHOW_REQUISITES = false;
 export const REQUISITES = [
-  { label: "Полное наименование", value: "ООО «Название»" },
+  { label: "Полное наименование", value: "ООО «АКВЕРА»" },
   { label: "ИНН", value: "XXXXXXXXXX" },
   { label: "КПП", value: "XXXXXXXXX" },
   { label: "ОГРН", value: "XXXXXXXXXXXXX" },

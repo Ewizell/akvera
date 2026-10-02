@@ -51,7 +51,7 @@ export default async function SiteHeader() {
       {/* На телефоне шапка прилипает к верху при скролле (sticky, остаётся в потоке),
     на десктопе (lg+) закреплена сверху (fixed, отступ даёт layout) */}
 <header className="sticky top-0 z-50 w-full bg-white shadow-[0_2px_8px_rgba(15,23,42,0.06)] lg:fixed">
-        <div className="mx-auto flex max-w-[1440px] flex-col gap-3 px-4 py-2 sm:px-6 lg:px-8 lg:py-3 xl:px-20">
+        <div className="mx-auto flex max-w-[1440px] flex-col gap-3 px-4 py-2 pb-3 sm:px-6 lg:px-8 lg:py-3 xl:px-20">
           {/* =====================================================
               Верхняя информационная строка — только от lg
               ===================================================== */}

@@ -75,7 +75,7 @@ function LeadForm({ mode }: { mode: Mode }) {
 
   if (done) {
     return (
-      <div className="flex flex-col items-center py-10 text-center">
+      <div className="flex flex-col items-center py-8 text-center sm:py-10">
         <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-accent to-accent-end text-white shadow-lg shadow-accent/10">
           <svg
             viewBox="0 0 16 16"
@@ -112,10 +112,7 @@ function LeadForm({ mode }: { mode: Mode }) {
   }
 
   return (
-    <form
-      onSubmit={onSubmit}
-      className="space-y-3"
-    >
+    <form onSubmit={onSubmit} className="space-y-3">
       <input
         type="hidden"
         name="sourcePage"
@@ -207,13 +204,15 @@ function LeadForm({ mode }: { mode: Mode }) {
               <path d="M21 12.5l-8.5 8.5a5 5 0 01-7-7L14 5.5a3.5 3.5 0 015 5L10.5 19a2 2 0 01-3-3L15 8.5" />
             </svg>
 
-            {/* Короткая подсказка на телефоне, полная от sm */}
             <span className="min-w-0 truncate">
               {fileNames.length > 0 ? (
                 fileNames.join(", ")
               ) : (
                 <>
-                  <span className="sm:hidden">Прикрепить спецификацию</span>
+                  <span className="sm:hidden">
+                    Прикрепить спецификацию
+                  </span>
+
                   <span className="hidden sm:inline">
                     Прикрепить спецификацию (PDF, Word, Excel, фото)
                   </span>
@@ -229,9 +228,9 @@ function LeadForm({ mode }: { mode: Mode }) {
               className="sr-only"
               onChange={(e) =>
                 setFileNames(
-                  Array.from(
-                    e.target.files ?? []
-                  ).map((f) => f.name)
+                  Array.from(e.target.files ?? []).map(
+                    (f) => f.name
+                  )
                 )
               }
             />
@@ -250,14 +249,21 @@ function LeadForm({ mode }: { mode: Mode }) {
       <button
         type="submit"
         disabled={pending}
-        className="group relative flex h-12 w-full items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-accent to-accent-end text-sm font-semibold text-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-accent/15 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
+        className="group relative flex h-12 w-full min-w-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-accent to-accent-end px-3 text-center text-sm font-semibold leading-tight text-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-accent/15 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60 sm:px-4"
       >
-        <span className="relative">
-          {pending
-            ? "Отправляем…"
-            : mode === "quote"
-              ? "Запросить коммерческое предложение"
-              : "Перезвоните мне"}
+        <span className="relative block min-w-0">
+          {pending ? (
+            "Отправляем…"
+          ) : mode === "quote" ? (
+            <>
+              <span className="sm:hidden">Запросить КП</span>
+              <span className="hidden sm:inline">
+                Запросить коммерческое предложение
+              </span>
+            </>
+          ) : (
+            "Перезвоните мне"
+          )}
         </span>
       </button>
     </form>
@@ -268,7 +274,7 @@ export default function LeadRequestBlock() {
   const [mode, setMode] = useState<Mode>("callback");
 
   const tabCls = (active: boolean) =>
-    `flex-1 rounded-xl px-2 py-3 text-sm font-semibold transition-all duration-300 sm:px-4 ${
+    `flex-1 rounded-xl px-2 py-2.5 text-[13px] font-semibold transition-all duration-300 sm:px-4 sm:py-3 sm:text-sm ${
       active
         ? "bg-white text-[#28313d] shadow-[0_2px_8px_rgba(40,49,61,0.08)]"
         : "text-[#66717d] hover:bg-white/60 hover:text-[#28313d]"
@@ -281,7 +287,9 @@ export default function LeadRequestBlock() {
     >
       <div className="grid overflow-hidden rounded-3xl bg-[#28313d] lg:grid-cols-[0.9fr_1.1fr]">
 
-        {/* Левая часть */}
+        {/* =====================================================
+            Левая часть
+            ===================================================== */}
         <div className="relative flex flex-col overflow-hidden p-5 sm:p-9 lg:min-h-[520px] lg:p-10">
           <div className="absolute inset-0 bg-gradient-to-br from-[#28313d] via-[#28313d] to-[#18212b]" />
 
@@ -291,28 +299,28 @@ export default function LeadRequestBlock() {
 
           <div className="relative flex h-full flex-col">
             <div>
-              <p className="text-xs font-medium uppercase tracking-[0.16em] text-white/45">
+              <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-white/45 sm:text-xs">
                 Свяжитесь с нами
               </p>
 
-              <h2 className="mt-3 max-w-[480px] text-[26px] font-medium leading-[1.1] tracking-[-0.03em] text-white sm:mt-4 sm:text-[36px]">
+              <h2 className="mt-2.5 max-w-[480px] text-[25px] font-medium leading-[1.12] tracking-[-0.03em] text-white sm:mt-4 sm:text-[36px]">
                 Поможем подобрать оборудование под вашу задачу
               </h2>
 
-              <p className="mt-3 max-w-[470px] text-sm leading-6 text-white/60 sm:mt-5 sm:text-[15px] sm:leading-7">
+              <p className="mt-3 max-w-[470px] text-[14px] leading-6 text-white/60 sm:mt-5 sm:text-[15px] sm:leading-7">
                 Расскажите, что вам требуется. Подберём оборудование,
                 проверим наличие и подготовим предложение с учётом вашей
                 задачи.
               </p>
             </div>
 
-            <div className="mt-auto pt-6 sm:pt-10">
+            <div className="mt-6 pt-5 sm:mt-auto sm:pt-10">
               <div className="border-t border-white/10 pt-5 sm:pt-6">
                 <p className="text-xs font-medium uppercase tracking-[0.14em] text-white/35">
                   Что мы можем сделать
                 </p>
 
-                <ul className="mt-5 space-y-3">
+                <ul className="mt-4 space-y-2.5 sm:mt-5 sm:space-y-3">
                   {[
                     "Подобрать оборудование и аналоги",
                     "Проверить стоимость и наличие",
@@ -348,12 +356,14 @@ export default function LeadRequestBlock() {
           </div>
         </div>
 
-        {/* Правая часть */}
-        <div className="bg-[#fff] p-3 sm:p-6 lg:p-7">
-          <div className="rounded-2xl bg-white p-4 shadow-[0_8px_30px_rgba(40,49,61,0.07)] sm:p-7">
+        {/* =====================================================
+            Правая часть
+            ===================================================== */}
+        <div className="bg-white p-0 sm:p-6 lg:p-7">
+          <div className="rounded-none bg-white p-5 sm:rounded-2xl sm:p-7 sm:shadow-[0_8px_30px_rgba(40,49,61,0.07)]">
 
             {/* Переключатель */}
-            <div className="mb-5 flex gap-1 rounded-xl bg-[#f4f5f7] p-1 sm:mb-6">
+            <div className="mb-4 flex gap-1 rounded-xl bg-[#f4f5f7] p-1 sm:mb-6">
               <button
                 type="button"
                 onClick={() => setMode("callback")}
@@ -371,32 +381,15 @@ export default function LeadRequestBlock() {
               </button>
             </div>
 
-            {/* Обе формы лежат в одной ячейке grid: высоту блока задаёт самая
-                высокая из них, поэтому ничего не выходит за границы и не нужен
-                фиксированный min-h. Скрытая форма остаётся в раскладке (invisible),
-                так что при переключении вкладок блок не прыгает. */}
-            <div className="grid">
-              <div
-                className={[
-                  "[grid-area:1/1] transition-opacity duration-300",
-                  mode === "callback"
-                    ? "visible opacity-100"
-                    : "pointer-events-none invisible opacity-0",
-                ].join(" ")}
-              >
+            {/* На мобильном показываем только активную форму.
+                Благодаря этому высота блока соответствует выбранной форме,
+                и пустого места от второй формы нет. */}
+            <div>
+              {mode === "callback" ? (
                 <LeadForm mode="callback" />
-              </div>
-
-              <div
-                className={[
-                  "[grid-area:1/1] transition-opacity duration-300",
-                  mode === "quote"
-                    ? "visible opacity-100"
-                    : "pointer-events-none invisible opacity-0",
-                ].join(" ")}
-              >
+              ) : (
                 <LeadForm mode="quote" />
-              </div>
+              )}
             </div>
           </div>
         </div>
