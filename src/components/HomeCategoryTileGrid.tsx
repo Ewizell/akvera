@@ -26,9 +26,16 @@ export default function HomeCategoryTileGrid({
   items: HomeCategoryTileItem[];
 }) {
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
       {items.map((item, index) => {
         const isFeatured = index === 0;
+
+        // После большой плитки остаётся нечётное число — последняя растягивается
+        // на две колонки, чтобы не висеть одной в ряду (только до lg)
+        const isLastOdd =
+          !isFeatured &&
+          index === items.length - 1 &&
+          (items.length - 1) % 2 === 1;
 
         return (
           <Link
@@ -37,8 +44,9 @@ export default function HomeCategoryTileGrid({
             className={[
               "group relative overflow-hidden rounded-2xl bg-[#28313d]",
               isFeatured
-                ? "min-h-[360px] sm:col-span-2 lg:row-span-2"
-                : "min-h-[175px]",
+                ? "col-span-2 min-h-[220px] sm:min-h-[360px] lg:row-span-2"
+                : "min-h-[150px] sm:min-h-[175px]",
+              isLastOdd ? "max-lg:col-span-2" : "",
             ].join(" ")}
           >
             {/* Изображение */}
@@ -65,10 +73,10 @@ export default function HomeCategoryTileGrid({
             />
 
             {/* Контент */}
-            <div className="relative flex h-full flex-col justify-between p-5 sm:p-6">
+            <div className="relative flex h-full flex-col justify-between p-3.5 sm:p-6">
               {/* Стрелка */}
               <div className="flex justify-end">
-                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm transition-all duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:bg-white/20">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm transition-all duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:bg-white/20 sm:h-9 sm:w-9">
                   <ArrowUpRight
                     size={17}
                     strokeWidth={1.8}
@@ -80,10 +88,11 @@ export default function HomeCategoryTileGrid({
               <div>
                 <h3
                   className={[
-                    "max-w-[360px] font-medium leading-[1.15] text-white",
+                    "max-w-[360px] hyphens-auto break-words font-medium leading-[1.15] text-white",
+isFeatured ? "" : "line-clamp-3",
                     isFeatured
-                      ? "text-2xl sm:text-3xl"
-                      : "text-lg",
+                      ? "text-xl sm:text-3xl"
+                      : "text-[15px] sm:text-lg",
                   ].join(" ")}
                 >
                   {item.name}

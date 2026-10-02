@@ -91,13 +91,16 @@ export default function HomeProductCard({
             fill
             className="
               object-contain
-              p-5
+              p-3
+              sm:p-5
               transition-transform
               duration-500
               ease-out
               group-hover:scale-[1.04]
             "
-            sizes="302px"
+            // Размер под реальную ширину карточки: 2,2 в ряд на телефоне,
+            // 3 на планшете, 4-5 на десктопе
+            sizes="(min-width: 1280px) 20vw, (min-width: 640px) 33vw, 46vw"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-sm text-[#969da5]">
@@ -106,31 +109,32 @@ export default function HomeProductCard({
         )}
 
         {/* Избранное / сравнение */}
-        <div className="absolute right-3 top-3 z-10 flex flex-col gap-2">
+        <div className="absolute right-2 top-2 z-10 flex flex-col gap-1.5 sm:right-3 sm:top-3 sm:gap-2">
           <FavoriteButton variantId={variant.id} />
           <CompareButton variantId={variant.id} />
         </div>
       </div>
 
       {/* Контент */}
-      <div className="flex min-h-0 flex-1 flex-col px-4 pb-4 pt-4">
+      <div className="flex min-h-0 flex-1 flex-col px-3 pb-3 pt-3 sm:px-4 sm:pb-4 sm:pt-4">
         {/* Цена */}
         <div>
-          <p className="text-xl font-semibold tracking-[-0.02em] text-[#28313d]">
+          <p className="text-lg font-semibold tracking-[-0.02em] text-[#28313d] sm:text-xl">
             {variant.price !== null
               ? `${variant.price.toLocaleString("ru-RU")} ₽`
               : "Цена по запросу"}
           </p>
 
           {/* Название */}
-          <p className="mt-2.5 line-clamp-2 text-sm font-medium leading-5 text-[#28313d] transition-colors duration-300 group-hover:text-accent">
+          <p className="mt-2 line-clamp-2 text-[13px] font-medium leading-[18px] text-[#28313d] transition-colors duration-300 group-hover:text-accent sm:mt-2.5 sm:text-sm sm:leading-5">
             {variant.name || variant.product.name}
           </p>
         </div>
 
         {/* Нижняя часть */}
-        <div className="mt-auto pt-5">
-          <div className="flex min-w-0 items-center justify-between gap-3">
+        <div className="mt-auto pt-3 sm:pt-5">
+          {/* На телефоне наличие и артикул друг под другом, от sm — в одну строку */}
+          <div className="flex min-w-0 flex-col items-start gap-1.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
             {/* Наличие */}
             <div className="flex min-w-0 items-center gap-2">
               <span
@@ -155,14 +159,15 @@ export default function HomeProductCard({
             </div>
 
             {/* SKU */}
-            <div className="relative shrink-0">
+            <div className="relative max-w-full min-w-0 sm:shrink-0">
               <button
                 type="button"
                 onClick={copySku}
                 className="
                   group/sku
                   flex
-                  max-w-[105px]
+                  max-w-full
+                  sm:max-w-[105px]
                   cursor-pointer
                   items-center
                   gap-1
@@ -191,7 +196,9 @@ export default function HomeProductCard({
                   className="
                     absolute
                     bottom-full
-                    right-0
+                    left-0
+                    sm:left-auto
+                    sm:right-0
                     z-20
                     mb-2
                     whitespace-nowrap
@@ -216,9 +223,11 @@ export default function HomeProductCard({
             type="button"
             onClick={handleAddToCart}
             className="
-              mt-4
+              mt-3
+              sm:mt-4
               flex
-              h-10
+              h-11
+              sm:h-10
               w-full
               cursor-pointer
               items-center

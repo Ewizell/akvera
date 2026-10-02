@@ -12,11 +12,14 @@ export default function StorefrontLayout({ children }: { children: React.ReactNo
     <CartProvider>
       <CompareProvider>
         <FavoritesProvider>
-          <header>
-            <SiteHeader />
-          </header>
-          <div className="flex-1 pt-[116px]">{children}</div>
+          <SiteHeader />
+          <div className="flex-1 lg:pt-[116px]">{children}</div>
           <Footer />
+          {/* Место под нижнюю панель навигации, чтобы она не закрывала футер */}
+          <div
+            aria-hidden="true"
+            className="h-[calc(4rem+env(safe-area-inset-bottom))] bg-slate-900 lg:hidden"
+          />
           <CookieConsent />
           <YandexMetrika />
         </FavoritesProvider>
@@ -24,6 +27,7 @@ export default function StorefrontLayout({ children }: { children: React.ReactNo
     </CartProvider>
   );
 }
+export const viewport = { viewportFit: "cover" as const };
 export const metadata: Metadata = {
   // ...ваши текущие поля
   verification: {

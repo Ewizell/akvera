@@ -36,28 +36,26 @@ const ICONS: Record<DeliveryIcon, React.ReactNode> = {
 
 export function HomeAbout() {
   return (
-    <div className="grid gap-4 lg:grid-cols-[1fr_0.85fr]">
+    <div className="grid gap-3 sm:gap-4 lg:grid-cols-[1fr_0.85fr]">
       {/* Левая карточка */}
       <div className="flex flex-col overflow-hidden rounded-2xl bg-[#fff]">
-        <div className="flex-1 p-7 sm:p-9 lg:p-10">
-
-
-          <h3 className="mt-4 max-w-[620px] text-2xl font-[500] leading-[1.15] tracking-[-0.025em] text-[#28313d] sm:text-3xl">
+        <div className="flex-1 p-5 sm:p-9 lg:p-10">
+          <h3 className="mt-0 max-w-[620px] text-[22px] font-[500] leading-[1.15] tracking-[-0.025em] text-[#28313d] sm:mt-4 sm:text-3xl">
             Оборудование для инженерных систем
           </h3>
 
-          <div className="mt-5 max-w-[650px] space-y-4 text-[15px] leading-7 text-[#66717d]">
+          <div className="mt-3 max-w-[650px] space-y-3 text-sm leading-6 text-[#66717d] sm:mt-5 sm:space-y-4 sm:text-[15px] sm:leading-7">
             {ABOUT_PARAGRAPHS.map((p) => (
               <p key={p}>{p}</p>
             ))}
           </div>
         </div>
 
-        {/* Нижняя панель */}
-        <div className="px-7 py-5 sm:px-9">
+        {/* Нижняя панель: на телефоне кнопка на всю ширину */}
+        <div className="px-5 pb-5 sm:px-9 sm:py-5">
           <Link
             href="/about"
-            className="group inline-flex h-11 items-center gap-3 rounded-xl bg-[#e5e8eb] pl-4 pr-1.5 text-sm font-medium text-[#28313d] transition-all duration-300 hover:bg-gradient-to-br hover:from-accent hover:to-accent-end hover:text-white"
+            className="group flex h-12 w-full items-center justify-between gap-3 rounded-xl bg-[#e5e8eb] pl-4 pr-1.5 text-sm font-medium text-[#28313d] transition-all duration-300 hover:bg-gradient-to-br hover:from-accent hover:to-accent-end hover:text-white sm:inline-flex sm:h-11 sm:w-auto sm:justify-start"
           >
             <span>Подробнее</span>
 
@@ -73,7 +71,7 @@ export function HomeAbout() {
       </div>
 
       {/* Правая карточка со статистикой */}
-      <div className="group relative min-h-[360px] overflow-hidden rounded-2xl bg-gradient-to-br from-accent to-accent-end">
+      <div className="group relative order-first overflow-hidden rounded-2xl bg-gradient-to-br from-accent to-accent-end sm:min-h-[360px] lg:order-none">
         {/* Декоративный свет */}
         <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/[0.07] blur-3xl transition-transform duration-700 group-hover:scale-110" />
 
@@ -84,12 +82,12 @@ export function HomeAbout() {
         <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-accent-end/35" />
 
         {/* Статистика */}
-        <div className="relative flex h-full flex-col justify-between p-6 sm:p-7">
+        <div className="relative flex h-full flex-col justify-between gap-6 p-5 sm:gap-0 sm:p-7">
           <p className="text-xs font-medium uppercase tracking-[0.14em] text-white/55">
             Akvera в цифрах
           </p>
 
-          <dl className="grid grid-cols-2 gap-x-8 gap-y-8">
+          <dl className="grid grid-cols-2 gap-x-4 gap-y-6 sm:gap-x-8 sm:gap-y-8">
             {ABOUT_STATS.map((stat) => (
               <div key={stat.label}>
                 <dt className="text-2xl font-medium leading-none tracking-[-0.02em] text-white sm:text-3xl">
@@ -110,15 +108,20 @@ export function HomeAbout() {
 
 export function HomeDelivery() {
   return (
-    <div className="grid gap-3 md:grid-cols-3">
+    <div className="grid gap-2.5 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3">
       {DELIVERY_ITEMS.map((item, index) => {
-        const inverted = index % 2 === 1;
+  const inverted = index % 2 === 1;
 
-        return (
-          <div
-            key={item.title}
-            className={[
-              "group relative overflow-hidden rounded-2xl p-6 transition-all duration-500 sm:p-7",
+  // Планшет (2 колонки): нечётная последняя карточка занимает всю ширину
+  const isLastOdd =
+    index === DELIVERY_ITEMS.length - 1 && DELIVERY_ITEMS.length % 2 === 1;
+
+  return (
+    <div
+      key={item.title}
+      className={[
+        isLastOdd ? "sm:max-lg:col-span-2" : "",
+        "group relative overflow-hidden rounded-2xl p-5 transition-all duration-500 sm:p-7",
               inverted
                 ? "bg-gradient-to-br from-[#28313d] to-[#3d5570] hover:bg-[#e2f0ef] hover:bg-none"
                 : "bg-white hover:bg-gradient-to-br hover:from-accent hover:to-accent-end",
@@ -127,7 +130,7 @@ export function HomeDelivery() {
             {/* Декоративная иконка */}
             <div
               className={[
-                "pointer-events-none absolute right-5 top-5 transition-colors duration-500",
+                "pointer-events-none absolute right-3 top-3 transition-colors duration-500 sm:right-5 sm:top-5",
                 inverted
                   ? "text-white/10 group-hover:text-accent/10"
                   : "text-accent/10 group-hover:text-white/10",
@@ -140,7 +143,7 @@ export function HomeDelivery() {
                 strokeWidth="1"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="h-32 w-32"
+                className="h-24 w-24 sm:h-32 sm:w-32"
               >
                 {ICONS[item.icon]}
               </svg>
@@ -159,12 +162,12 @@ export function HomeDelivery() {
                 {item.title}
               </h3>
 
-              <ul className="mt-5 space-y-2.5">
+              <ul className="mt-4 space-y-2 sm:mt-5 sm:space-y-2.5">
                 {item.points.map((point) => (
                   <li
                     key={point}
                     className={[
-                      "flex gap-2.5 text-sm leading-5 transition-colors duration-500",
+                      "flex gap-2.5 text-[13px] leading-5 transition-colors duration-500 sm:text-sm",
                       inverted
                         ? "text-white/65 group-hover:text-[#66717d]"
                         : "text-[#66717d] group-hover:text-white/65",
@@ -193,7 +196,7 @@ export function HomeDelivery() {
 
 export function HomeFaq() {
   return (
-    <div className="space-y-3">
+    <div className="space-y-2.5 sm:space-y-3">
       {FAQ_ITEMS.map((item, index) => {
         const tinted = index % 2 === 1;
 
@@ -214,12 +217,16 @@ export function HomeFaq() {
                 list-none
                 items-center
                 justify-between
-                gap-6
-                px-6
-                py-5
+                gap-3
+                px-4
+                py-4
                 text-[15px]
                 font-medium
                 leading-6
+                select-none
+                sm:gap-6
+                sm:px-7
+                sm:py-5
                 text-[#28313d]
                 transition-colors
                 duration-300
@@ -233,9 +240,11 @@ export function HomeFaq() {
               <span
                 className="
                   flex
-                  h-9
-                  w-9
+                  h-8
+                  w-8
                   shrink-0
+                  sm:h-9
+                  sm:w-9
                   items-center
                   justify-center
                   rounded-xl
@@ -268,10 +277,10 @@ export function HomeFaq() {
               </span>
             </summary>
 
-            <div className="px-6 pb-6 sm:px-7">
+            <div className="px-4 pb-5 sm:px-7 sm:pb-6">
               <div className="h-px bg-[#e9ecef]" />
 
-              <p className="max-w-[850px] pt-5 text-sm leading-6 text-[#66717d]">
+              <p className="max-w-[850px] break-words pt-4 text-sm leading-6 text-[#66717d] sm:pt-5">
                 {item.answer}
               </p>
             </div>

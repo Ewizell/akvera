@@ -312,7 +312,7 @@ export default async function HomePage() {
     "@graph": [
       {
         "@type": "Organization",
-        name: "Akvera",
+        name: "AKVERA",
         url: SITE_URL,
       },
 
@@ -330,7 +330,7 @@ export default async function HomePage() {
 
       {
         "@type": "WebSite",
-        name: "Akvera",
+        name: "AKVERA",
         url: SITE_URL,
         potentialAction: {
           "@type": "SearchAction",
@@ -347,7 +347,7 @@ export default async function HomePage() {
   };
 
   return (
-    <main className="w-full bg-[#f4f5f7]">
+    <main className="w-full overflow-x-clip bg-[#f4f5f7]">
 
       {/* =====================================================
           SEO
@@ -368,7 +368,7 @@ export default async function HomePage() {
       {/* =====================================================
           ОСНОВНОЙ КОНТЕНТ
       ===================================================== */}
-      <div className="mx-auto w-full max-w-[1440px] px-5 pb-16 sm:px-8 lg:px-12">
+      <div className="mx-auto w-full max-w-[1440px] px-5 pb-10 sm:px-8 sm:pb-16 lg:px-12">
 
         {/* ===================================================
             2. ПРЕИМУЩЕСТВА

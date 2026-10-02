@@ -77,11 +77,19 @@ export default function BrandSlider({
         ref={trackRef}
         onScroll={update}
         className="
+          -mx-5
           flex
-          gap-3
-          overflow-x-auto
           snap-x
           snap-mandatory
+          gap-2.5
+          overflow-x-auto
+          overscroll-x-contain
+          scroll-px-5
+          px-5
+          sm:mx-0
+          sm:gap-3
+          sm:scroll-px-0
+          sm:px-0
           [scrollbar-width:none]
           [&::-webkit-scrollbar]:hidden
         "
@@ -91,8 +99,8 @@ export default function BrandSlider({
             key={item.id}
             href={`/brands/${item.slug}`}
             className={[
-              "group relative flex h-[210px] shrink-0 snap-start",
-              "w-[calc((100%-12px)/2)]",
+              "group relative flex h-[170px] shrink-0 snap-start sm:h-[210px]",
+              "w-[calc((100%-20px)/2.2)]",
               "overflow-hidden rounded-2xl",
               "bg-accent",
               "sm:w-[calc((100%-24px)/3)]",
@@ -126,7 +134,7 @@ export default function BrandSlider({
             <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#0f172a]/80 to-transparent" />
 
             {/* Контент */}
-            <div className="relative flex h-full w-full flex-col justify-between p-5">
+            <div className="relative flex h-full w-full flex-col justify-between p-4 sm:p-5">
               <div className="flex justify-end">
                 <span className="
                   flex h-8 w-8 shrink-0
@@ -149,11 +157,11 @@ export default function BrandSlider({
               </div>
 
               <div className="mt-auto">
-                <h3 className="max-w-[180px] text-lg font-medium leading-tight text-white">
+                <h3 className="max-w-[180px] break-words text-base font-medium leading-tight text-white sm:text-lg">
                   {item.name}
                 </h3>
 
-                <p className="mt-1.5 text-xs text-white/65">
+                <p className="mt-1 text-xs text-white/65 sm:mt-1.5">
                   {item.productCount.toLocaleString("ru-RU")}{" "}
                   {pluralizeModels(item.productCount)}
                 </p>

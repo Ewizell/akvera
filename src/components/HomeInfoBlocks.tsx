@@ -26,7 +26,7 @@ export function HomeSteps() {
             <div
               key={step.title}
               className={[
-                "group relative p-6 transition-all duration-500 sm:p-7 lg:p-8",
+                "group relative flex items-start gap-4 p-4 transition-all duration-500 sm:block sm:p-7 lg:p-8",
                 index > 0
                   ? "border-t border-[#dfe3e7] sm:border-l sm:border-t-0"
                   : "",
@@ -40,7 +40,7 @@ export function HomeSteps() {
               {/* Номер */}
               <span
                 className={[
-                  "relative z-10 flex h-10 w-10 items-center justify-center rounded-xl text-sm font-medium transition-all duration-500",
+                  "relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-medium transition-all duration-500",
                   inverted
                     ? "bg-white/15 text-white group-hover:bg-white group-hover:text-accent"
                     : "bg-[#f3f4f7] text-accent group-hover:bg-white/15 group-hover:text-white",
@@ -62,10 +62,10 @@ export function HomeSteps() {
               )}
 
               {/* Контент */}
-              <div className="relative mt-6">
+              <div className="relative min-w-0 sm:mt-6">
                 <h3
                   className={[
-                    "text-base font-medium leading-snug transition-colors duration-500",
+                    "text-[15px] font-medium leading-snug transition-colors duration-500 sm:text-base",
                     inverted
                       ? "text-white group-hover:text-[#28313d]"
                       : "text-[#28313d] group-hover:text-white",
@@ -76,7 +76,7 @@ export function HomeSteps() {
 
                 <p
                   className={[
-                    "mt-2 text-sm leading-6 transition-colors duration-500",
+                    "mt-1.5 text-[13px] leading-5 transition-colors duration-500 sm:mt-2 sm:text-sm sm:leading-6",
                     inverted
                       ? "text-white/65 group-hover:text-[#66717d]"
                       : "text-[#66717d] group-hover:text-white/65",
@@ -95,15 +95,22 @@ export function HomeSteps() {
 
 export function HomeAdvantages() {
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    // Две колонки уже с телефона, четыре от lg
+    <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
       {ADVANTAGES.map((item, index) => {
-        const inverted = index % 2 === 1;
+  const inverted = index % 2 === 1;
 
-        return (
-          <div
-            key={item.title}
-            className={[
-              "group relative overflow-hidden rounded-2xl p-6 transition-all duration-500",
+  // На телефоне (2 колонки) меняем 3-ю и 4-ю карточки местами,
+  // чтобы цвета шли по диагонали. На lg (4 колонки) порядок обычный.
+  const mobileOrder =
+    index === 2 ? "max-lg:order-4" : index === 3 ? "max-lg:order-3" : "";
+
+  return (
+    <div
+      key={item.title}
+      className={[
+        mobileOrder,
+        "group relative overflow-hidden rounded-2xl p-4 transition-all duration-500 sm:p-6",
               inverted
                 ? "bg-gradient-to-br from-[#28313d] to-[#3d5570] hover:bg-[#e2f0ef] hover:bg-none"
                 : "bg-white hover:bg-gradient-to-br hover:from-accent hover:to-accent-end",
@@ -112,7 +119,7 @@ export function HomeAdvantages() {
             {/* Иконка */}
             <span
               className={[
-                "flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-500",
+                "flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-500 sm:h-10 sm:w-10",
                 inverted
                   ? "bg-white/15 text-white group-hover:bg-white group-hover:text-[#28313d]"
                   : "bg-[#f3f4f6] text-accent group-hover:bg-white/15 group-hover:text-white",
@@ -134,10 +141,10 @@ export function HomeAdvantages() {
             </span>
 
             {/* Текст */}
-            <div className="mt-6">
+            <div className="mt-4 sm:mt-6">
               <h3
                 className={[
-                  "text-base font-medium leading-snug transition-colors duration-500",
+                  "text-sm font-medium leading-snug transition-colors duration-500 sm:text-base",
                   inverted
                     ? "text-white group-hover:text-[#28313d]"
                     : "text-[#28313d] group-hover:text-white",
@@ -148,7 +155,7 @@ export function HomeAdvantages() {
 
               <p
                 className={[
-                  "mt-2 text-sm leading-6 transition-colors duration-500",
+                  "mt-1.5 text-[13px] leading-5 transition-colors duration-500 sm:mt-2 sm:text-sm sm:leading-6",
                   inverted
                     ? "text-white/65 group-hover:text-[#66717d]"
                     : "text-[#66717d] group-hover:text-white/65",

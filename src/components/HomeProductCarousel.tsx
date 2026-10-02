@@ -58,10 +58,10 @@ export function HomeProductCarousel({
   }
 
   return (
-    <section className="mt-20">
+    <section className="mt-10 sm:mt-16 lg:mt-20">
       {/* Заголовок */}
-      <div className="mb-7 flex items-center justify-between gap-6">
-        <h2 className="text-[30px] font-semibold leading-tight tracking-[-0.03em] text-[#28313d] sm:text-[34px]">
+      <div className="mb-4 flex items-center justify-between gap-6 sm:mb-7">
+        <h2 className="text-[22px] font-semibold leading-tight tracking-[-0.03em] text-[#28313d] sm:text-[30px] lg:text-[34px]">
           {title}
         </h2>
 
@@ -70,7 +70,7 @@ export function HomeProductCarousel({
             href={href}
             className="
               group
-              flex h-11 shrink-0 items-center
+              hidden h-11 shrink-0 items-center sm:flex
               gap-3
               rounded-xl
               bg-[#f4f5f7]
@@ -126,7 +126,8 @@ export function HomeProductCarousel({
       left-2
       top-1/2
       z-50
-      flex
+      hidden
+      md:flex
       h-10
       w-10
       -translate-y-1/2
@@ -187,16 +188,27 @@ export function HomeProductCarousel({
   <div
     ref={scrollRef}
     className="
+      -mx-5
+      -my-4
       flex
-      items-stretch
-      gap-6
-      overflow-x-auto
-      scroll-smooth
       snap-x
       snap-mandatory
-      px-1
+      items-stretch
+      gap-3
+      overflow-x-auto
+      overscroll-x-contain
+      scroll-smooth
+      scroll-px-5
+      px-5
       py-4
-      -my-4
+      sm:-mx-8
+      sm:gap-4
+      sm:scroll-px-8
+      sm:px-8
+      lg:mx-0
+      lg:gap-6
+      lg:scroll-px-1
+      lg:px-1
       [&::-webkit-scrollbar]:hidden
       [-ms-overflow-style:none]
       [scrollbar-width:none]
@@ -206,10 +218,13 @@ export function HomeProductCarousel({
       <div
         key={variant.id}
         className="
-          w-[calc((100%-96px)/5)]
+          w-[calc((100%-24px)/2.2)]
           shrink-0
           snap-start
           cursor-default
+          sm:w-[calc((100%-32px)/3)]
+          lg:w-[calc((100%-72px)/4)]
+          xl:w-[calc((100%-96px)/5)]
         "
       >
         <HomeProductCard variant={variant} />
@@ -217,6 +232,48 @@ export function HomeProductCarousel({
     ))}
   </div>
 </div>
+
+      {/* Телефон: кнопка на всю ширину под каруселью */}
+      {href && (
+        <Link
+          href={href}
+          className="
+            group
+            mt-4
+            flex h-12 w-full items-center justify-between
+            gap-3
+            rounded-xl
+            bg-white
+            px-2
+            pl-4
+            text-sm font-medium
+            text-[#28313d]
+            transition-all duration-300
+            hover:bg-gradient-to-br
+            hover:from-accent
+            hover:to-accent-end
+            hover:text-white
+            sm:hidden
+          "
+        >
+          <span>{linkLabel}</span>
+
+          <span
+            className="
+              flex h-8 w-8
+              items-center justify-center
+              rounded-lg
+              bg-[#e5e7eb]
+              text-[#28313d]
+              transition-all duration-300
+              group-hover:bg-white/15
+              group-hover:text-white
+            "
+          >
+            <ArrowRight size={16} strokeWidth={1.8} />
+          </span>
+        </Link>
+      )}
     </section>
   );
 }

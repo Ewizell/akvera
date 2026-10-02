@@ -98,12 +98,10 @@ export default function HomeHero({
       ref={heroRef}
       className="
         relative
-        min-h-[620px]
+        min-h-[560px]
         w-full
         overflow-hidden
         bg-[#28313d]
-
-        sm:min-h-[560px]
       "
     >
       {/* Фоновое изображение */}
@@ -172,13 +170,12 @@ export default function HomeHero({
           relative
           mx-auto
           flex
-          min-h-[620px]
+          min-h-[560px]
           max-w-[1440px]
           items-center
           px-5
           py-10
 
-          sm:min-h-[560px]
           sm:px-10
           sm:py-12
 
@@ -197,13 +194,13 @@ export default function HomeHero({
           <h1
             className="
               max-w-[680px]
-              text-[36px]
+              text-[32px]
               font-semibold
               leading-[1.04]
               tracking-[-0.035em]
               text-white
 
-              min-[400px]:text-[40px]
+              min-[400px]:text-[38px]
 
               sm:text-[52px]
               sm:leading-[1.06]
@@ -486,8 +483,8 @@ export default function HomeHero({
               <dl
                 className="
                   grid
-                  grid-cols-2
-                  gap-x-4
+                  grid-cols-3
+                  gap-x-3
                   gap-y-4
 
                   sm:flex
@@ -500,13 +497,11 @@ export default function HomeHero({
                   <div
                     key={stat.label}
                     className={[
-                      "flex items-baseline gap-2",
+                      // Мобильный вид: значение сверху, подпись снизу
+                      "flex min-w-0 flex-col gap-1",
 
-                      // Мобильный вид
-                      "min-w-0",
-
-                      // Десктопный вид
-                      "sm:pr-6",
+                      // Десктопный вид: в одну строку
+                      "sm:flex-row sm:items-baseline sm:gap-2 sm:pr-6",
 
                       index > 0
                         ? "sm:border-l sm:border-white/15 sm:pl-6"

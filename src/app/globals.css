@@ -47,3 +47,13 @@ body {
     animation: none;
   }
 }
+/* Отступ для якорных ссылок (/#faq, /#delivery...) под закреплённой шапкой */
+html {
+  scroll-padding-top: 72px;
+}
+
+@media (min-width: 1024px) {
+  html {
+    scroll-padding-top: 130px;
+  }
+}
