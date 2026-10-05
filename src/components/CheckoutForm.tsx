@@ -1,13 +1,13 @@
-'use client'
+"use client";
 
-import { useRef, useState, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
-import { useCart } from '@/lib/cart-context'
-import { createOrder } from '@/lib/actions/order'
+import { useRef, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { useCart } from "@/lib/cart-context";
+import { createOrder } from "@/lib/actions/order";
 
-type DeliveryMethod = 'delivery' | 'pickup'
-type PaymentMethod = 'invoice' | 'card' | 'sbp'
-type PrepaymentType = 'prepay' | 'half' | 'postpay'
+type DeliveryMethod = "delivery" | "pickup";
+type PaymentMethod = "invoice" | "card" | "sbp";
+type PrepaymentType = "prepay" | "half" | "postpay";
 
 function RadioOption({
   name,
@@ -17,18 +17,25 @@ function RadioOption({
   label,
   disabled,
 }: {
-  name: string
-  value: string
-  checked: boolean
-  onChange: () => void
-  label: string
-  disabled?: boolean
+  name: string;
+  value: string;
+  checked: boolean;
+  onChange: () => void;
+  label: string;
+  disabled?: boolean;
 }) {
   return (
     <label
-      className={`flex items-center gap-1.5 text-[14px] ${
-        disabled ? 'text-[#c8c6c6] cursor-not-allowed' : 'text-[#1c2126] cursor-pointer'
-      }`}
+      className={[
+        "group inline-flex min-h-10 items-center gap-2.5 rounded-xl px-3.5",
+        "text-[13px] font-medium transition-all duration-300",
+        "focus-within:ring-2 focus-within:ring-accent/30",
+        disabled
+          ? "cursor-not-allowed text-[#b8bec4]"
+          : checked
+            ? "bg-white text-[#28313d] shadow-[0_2px_8px_rgba(40,49,61,0.06)]"
+            : "cursor-pointer text-[#66717d] hover:bg-white/60 hover:text-[#28313d]",
+      ].join(" ")}
     >
       <input
         type="radio"
@@ -37,323 +44,561 @@ function RadioOption({
         checked={checked}
         onChange={onChange}
         disabled={disabled}
-        className="w-[17px] h-[17px] accent-accent disabled:accent-[#d9d9d9]"
+        className="sr-only"
       />
-      {label}
+
+      <span
+        className={[
+          "flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition-all duration-200",
+          disabled
+            ? "border-[#d9dde1]"
+            : checked
+              ? "border-accent"
+              : "border-[#aeb6be] group-hover:border-[#7f8993]",
+        ].join(" ")}
+      >
+        {checked && !disabled && (
+          <span className="h-2 w-2 rounded-full bg-accent" />
+        )}
+      </span>
+
+      <span>{label}</span>
     </label>
-  )
+  );
 }
 
 function FormField({
   label,
   children,
 }: {
-  label: string
-  children: React.ReactNode
+  label: string;
+  children: React.ReactNode;
 }) {
   return (
-    <div className="flex-1 min-w-0 flex flex-col gap-1.5">
-      <p className="text-[13px] font-semibold text-[#475569]">{label}</p>
+    <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+      <p className="text-[12px] font-semibold text-[#66717d]">{label}</p>
       {children}
     </div>
-  )
+  );
 }
 
 const inputClass =
-  'w-full h-12 border border-[#e5e7e8] rounded-xl px-3.5 text-[14px] text-[#1c2126] bg-white focus:outline-none focus:border-accent transition-colors'
+  "h-11 w-full rounded-xl border border-[#e1e5e8] bg-white px-3.5 text-[14px] text-[#28313d] transition-all duration-200 placeholder:text-[#a0a8b0] focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/10";
+
+function Section({
+  number,
+  title,
+  children,
+}: {
+  number: string;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="rounded-2xl border border-[#e1e5e8] bg-[#f4f5f7] p-4 sm:p-5">
+      <div className="mb-5 flex items-center gap-3">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-[13px] font-semibold text-[#66717d] shadow-[0_2px_8px_rgba(40,49,61,0.04)]">
+          {number}
+        </span>
+
+        <h2 className="text-[18px] font-semibold tracking-[-0.01em] text-[#28313d]">
+          {title}
+        </h2>
+      </div>
+
+      {children}
+    </section>
+  );
+}
 
 export function CheckoutForm() {
-  const { items, totalPrice, clearCart } = useCart()
-  const router = useRouter()
-  const [isPending, startTransition] = useTransition()
-  const [error, setError] = useState<string | null>(null)
+  const { items, totalPrice, clearCart } = useCart();
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
 
-  const [files, setFiles] = useState<File[]>([])
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [files, setFiles] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>('delivery')
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('invoice')
-  const [prepaymentType, setPrepaymentType] = useState<PrepaymentType>('prepay')
-  const [agreed, setAgreed] = useState(false)
+  const [deliveryMethod, setDeliveryMethod] =
+    useState<DeliveryMethod>("delivery");
+  const [paymentMethod, setPaymentMethod] =
+    useState<PaymentMethod>("invoice");
+  const [prepaymentType, setPrepaymentType] =
+    useState<PrepaymentType>("prepay");
+  const [agreed, setAgreed] = useState(false);
 
-  const hasRequestPriceItems = items.some((item) => item.price === null)
+  const hasRequestPriceItems = items.some((item) => item.price === null);
 
   function handleFilesSelected(e: React.ChangeEvent<HTMLInputElement>) {
-    const selected = Array.from(e.target.files ?? [])
+    const selected = Array.from(e.target.files ?? []);
+
     setFiles((prev) => {
-      const merged = [...prev]
-      for (const f of selected) {
-        if (!merged.some((m) => m.name === f.name && m.size === f.size)) {
-          merged.push(f)
+      const merged = [...prev];
+
+      for (const file of selected) {
+        if (
+          !merged.some(
+            (item) =>
+              item.name === file.name && item.size === file.size
+          )
+        ) {
+          merged.push(file);
         }
       }
-      return merged
-    })
-    // сбрасываем value, чтобы можно было выбрать тот же файл ещё раз
-    e.target.value = ''
+
+      return merged;
+    });
+
+    e.target.value = "";
   }
 
   function removeFile(index: number) {
-    setFiles((prev) => prev.filter((_, i) => i !== index))
+    setFiles((prev) => prev.filter((_, i) => i !== index));
   }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setError(null)
+    e.preventDefault();
+    setError(null);
 
-    const form = e.currentTarget
-    const formData = new FormData(form)
+    const form = e.currentTarget;
+    const formData = new FormData(form);
 
     formData.set(
-      'items',
-      JSON.stringify(items.map((i) => ({ variantId: i.variantId, quantity: i.quantity })))
-    )
-    formData.set('deliveryMethod', deliveryMethod)
-    formData.set('paymentMethod', paymentMethod)
-    formData.set('prepaymentType', prepaymentType)
+      "items",
+      JSON.stringify(
+        items.map((item) => ({
+          variantId: item.variantId,
+          quantity: item.quantity,
+        }))
+      )
+    );
+
+    formData.set("deliveryMethod", deliveryMethod);
+    formData.set("paymentMethod", paymentMethod);
+    formData.set("prepaymentType", prepaymentType);
 
     if (files.length > 0) {
       for (const file of files) {
-        formData.append('attachments', file)
+        formData.append("attachments", file);
       }
     }
 
     startTransition(async () => {
-      const result = await createOrder(formData)
+      const result = await createOrder(formData);
+
       if (result.success) {
-        clearCart()
-        router.push(`/checkout/success/${result.orderId}`)
+        clearCart();
+        router.push(`/checkout/success/${result.orderId}`);
       } else {
-        setError(result.error)
+        setError(result.error);
       }
-    })
+    });
   }
 
   if (items.length === 0) {
-    return <p className="text-gray-600">Корзина пуста.</p>
+    return (
+      <div className="rounded-2xl border border-[#e1e5e8] bg-[#f4f5f7] p-8 text-center">
+        <p className="text-[14px] text-[#66717d]">Корзина пуста.</p>
+      </div>
+    );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col lg:flex-row gap-6 items-start">
-      <div className="flex-1 min-w-0 w-full flex flex-col gap-5">
+    <form
+      onSubmit={handleSubmit}
+      className="flex flex-col items-start gap-5 lg:flex-row"
+    >
+      <div className="flex min-w-0 w-full flex-1 flex-col gap-4">
         {/* 1. Контактные данные */}
-        <div className="bg-white border border-[#e5e7e8] rounded-2xl shadow-[0px_6px_18px_0px_rgba(15,23,42,0.07)] p-6 flex flex-col gap-4">
-          <h2 className="text-2xl font-semibold">1. Контактные данные</h2>
-          <div className="flex gap-4">
-            <FormField label="Имя">
-              <input name="contactName" required className={inputClass} />
-            </FormField>
-            {/* TODO: поле organization пока не сохраняется бэкендом */}
-            <FormField label="Организация">
-              <input name="organization" className={inputClass} />
-            </FormField>
+        <Section number="01" title="Контактные данные">
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4 sm:flex-row">
+              <FormField label="Имя">
+                <input
+                  name="contactName"
+                  required
+                  autoComplete="name"
+                  className={inputClass}
+                />
+              </FormField>
+
+              <FormField label="Организация">
+                <input
+                  name="organization"
+                  autoComplete="organization"
+                  className={inputClass}
+                />
+              </FormField>
+            </div>
+
+            <div className="flex flex-col gap-4 sm:flex-row">
+              <FormField label="Телефон">
+                <input
+                  name="contactPhone"
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  required
+                  className={inputClass}
+                />
+              </FormField>
+
+              <FormField label="Электронная почта">
+                <input
+                  name="contactEmail"
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  className={inputClass}
+                  placeholder="Пришлём подтверждение заявки"
+                />
+              </FormField>
+            </div>
+
+            <div className="flex flex-col gap-3 border-t border-[#dfe3e6] pt-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-[13px] font-semibold text-[#28313d]">
+                    Вложения
+                  </p>
+                  <p className="mt-0.5 text-[12px] text-[#929aa6]">
+                    Карточка компании, ТЗ и другие документы
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="
+                    inline-flex
+                    h-9
+                    shrink-0
+                    items-center
+                    rounded-xl
+                    bg-[#e5e8eb]
+                    px-3.5
+                    text-[13px]
+                    font-medium
+                    text-[#66717d]
+                    transition-all
+                    duration-300
+                    hover:bg-white
+                    hover:text-[#28313d]
+                    hover:shadow-[0_3px_12px_rgba(40,49,61,0.06)]
+                    focus-visible:outline-none
+                    focus-visible:ring-2
+                    focus-visible:ring-accent/30
+                  "
+                >
+                  + Добавить файл
+                </button>
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  onChange={handleFilesSelected}
+                  className="hidden"
+                />
+              </div>
+
+              {files.length > 0 && (
+                <ul className="flex flex-col gap-1.5">
+                  {files.map((file, index) => (
+                    <li
+                      key={`${file.name}-${file.size}-${index}`}
+                      className="
+                        flex
+                        items-center
+                        justify-between
+                        gap-3
+                        rounded-xl
+                        bg-white
+                        px-3
+                        py-2
+                        text-[13px]
+                        text-[#28313d]
+                      "
+                    >
+                      <span className="min-w-0 truncate">{file.name}</span>
+
+                      <button
+                        type="button"
+                        onClick={() => removeFile(index)}
+                        className="
+                          shrink-0
+                          text-[#929aa6]
+                          transition-colors
+                          hover:text-[#28313d]
+                        "
+                        aria-label={`Убрать ${file.name}`}
+                      >
+                        ×
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
-          <div className="flex gap-4">
-            <FormField label="Телефон">
-              <input name="contactPhone" required className={inputClass} />
-            </FormField>
-            <FormField label="Электронная почта">
+        </Section>
+
+        {/* 2. Способ получения */}
+        <Section number="02" title="Способ получения">
+          <div className="flex flex-col gap-4">
+            <div className="inline-flex w-fit max-w-full flex-wrap items-center gap-1 rounded-xl bg-[#e5e8eb] p-1.5">
+              <RadioOption
+                name="deliveryMethod"
+                value="delivery"
+                checked={deliveryMethod === "delivery"}
+                onChange={() => setDeliveryMethod("delivery")}
+                label="Доставка по России"
+              />
+
+              <RadioOption
+                name="deliveryMethod"
+                value="pickup"
+                checked={deliveryMethod === "pickup"}
+                onChange={() => setDeliveryMethod("pickup")}
+                label="Самовывоз со склада"
+              />
+            </div>
+
+            {deliveryMethod === "delivery" && (
+              <div className="border-t border-[#dfe3e6] pt-4">
+                <FormField label="Адрес доставки">
+                  <input
+                    name="deliveryAddress"
+                    className={inputClass}
+                    placeholder="Город, улица, дом"
+                  />
+                </FormField>
+              </div>
+            )}
+
+            <FormField label="Комментарий">
               <input
-                name="contactEmail"
-                type="email"
+                name="comment"
                 className={inputClass}
-                placeholder="Пришлём подтверждение заявки"
+                placeholder="Укажите удобное время или дополнительную информацию"
               />
             </FormField>
           </div>
-          {/* Вложения — нет в макете, оставил как есть, т.к. функциональность уже была */}
-          <div className="flex flex-col gap-2 px-2">
-          <h2 className="text-lg font-semibold">Вложения (Карточка компании, ТЗ)</h2>
-
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="w-fit text-sm font-medium text-accent border border-accent rounded-lg px-3 py-1.5 hover:bg-[#f0faf3] transition-colors"
-          >
-            + Добавить файл
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            multiple
-            onChange={handleFilesSelected}
-            className="hidden"
-          />
-
-          {files.length > 0 && (
-            <ul className="flex flex-col gap-1.5">
-              {files.map((file, i) => (
-                <li
-                  key={`${file.name}-${file.size}-${i}`}
-                  className="flex items-center justify-between gap-2 text-sm text-[#1c2126] bg-[#f4f5f7] rounded-lg px-3 py-1.5"
-                >
-                  <span className="truncate">{file.name}</span>
-                  <button
-                    type="button"
-                    onClick={() => removeFile(i)}
-                    className="text-[#767d83] hover:text-red-600 shrink-0 transition-colors"
-                    aria-label={`Убрать ${file.name}`}
-                  >
-                    ✕
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-        </div>
-        
-
-        {/* 2. Способ получения */}
-        <div className="bg-white border border-[#e5e7e8] rounded-2xl shadow-[0px_6px_18px_0px_rgba(15,23,42,0.07)] p-6 flex flex-col gap-4">
-          <h2 className="text-2xl font-semibold">2. Способ получения</h2>
-          <div className="flex gap-6">
-            <RadioOption
-              name="deliveryMethod"
-              value="delivery"
-              checked={deliveryMethod === 'delivery'}
-              onChange={() => setDeliveryMethod('delivery')}
-              label="Доставка по России"
-            />
-            <RadioOption
-              name="deliveryMethod"
-              value="pickup"
-              checked={deliveryMethod === 'pickup'}
-              onChange={() => setDeliveryMethod('pickup')}
-              label="Самовывоз со склада"
-            />
-          </div>
-
-          {deliveryMethod === 'delivery' && (
-            <>
-              <div className="h-px bg-[#d9d9d9]" />
-              <FormField label="Адрес доставки">
-                <input name="deliveryAddress" className={inputClass} placeholder="Город, улица, дом" />
-              </FormField>
-            </>
-          )}
-
-          <FormField label="Комментарий">
-            <input name="comment" className={inputClass} placeholder="Укажите удобное время" />
-          </FormField>
-        </div>
+        </Section>
 
         {/* 3. Способ оплаты */}
-        <div className="bg-white border border-[#e5e7e8] rounded-2xl shadow-[0px_6px_18px_0px_rgba(15,23,42,0.07)] p-6 flex flex-col gap-4">
-          <h2 className="text-2xl font-semibold">3. Способ оплаты</h2>
-          <div className="flex gap-6">
-            <RadioOption
-              name="paymentMethod"
-              value="invoice"
-              checked={paymentMethod === 'invoice'}
-              onChange={() => setPaymentMethod('invoice')}
-              label="Оплата по счету"
-            />
-            {/* Пока недоступны — включите, когда подключите онлайн-оплату */}
-            <RadioOption
-              name="paymentMethod"
-              value="card"
-              checked={paymentMethod === 'card'}
-              onChange={() => setPaymentMethod('card')}
-              label="Банковской картой"
-              disabled
-            />
-            <RadioOption
-              name="paymentMethod"
-              value="sbp"
-              checked={paymentMethod === 'sbp'}
-              onChange={() => setPaymentMethod('sbp')}
-              label="СБП"
-              disabled
-            />
+        <Section number="03" title="Способ оплаты">
+          <div className="flex flex-col gap-4">
+            <div className="inline-flex w-fit max-w-full flex-wrap items-center gap-1 rounded-xl bg-[#e5e8eb] p-1.5">
+              <RadioOption
+                name="paymentMethod"
+                value="invoice"
+                checked={paymentMethod === "invoice"}
+                onChange={() => setPaymentMethod("invoice")}
+                label="Оплата по счёту"
+              />
+
+              <RadioOption
+                name="paymentMethod"
+                value="card"
+                checked={paymentMethod === "card"}
+                onChange={() => setPaymentMethod("card")}
+                label="Банковской картой"
+                disabled
+              />
+
+              <RadioOption
+                name="paymentMethod"
+                value="sbp"
+                checked={paymentMethod === "sbp"}
+                onChange={() => setPaymentMethod("sbp")}
+                label="СБП"
+                disabled
+              />
+            </div>
+
+            <div className="border-t border-[#dfe3e6] pt-4">
+              <p className="mb-2 text-[12px] font-semibold text-[#66717d]">
+                Условия оплаты
+              </p>
+
+              <div className="inline-flex w-fit max-w-full flex-wrap items-center gap-1 rounded-xl bg-[#e5e8eb] p-1.5">
+                <RadioOption
+                  name="prepaymentType"
+                  value="prepay"
+                  checked={prepaymentType === "prepay"}
+                  onChange={() => setPrepaymentType("prepay")}
+                  label="Предоплата"
+                />
+
+                <RadioOption
+                  name="prepaymentType"
+                  value="half"
+                  checked={prepaymentType === "half"}
+                  onChange={() => setPrepaymentType("half")}
+                  label="50/50"
+                />
+
+                <RadioOption
+                  name="prepaymentType"
+                  value="postpay"
+                  checked={prepaymentType === "postpay"}
+                  onChange={() => setPrepaymentType("postpay")}
+                  label="Постоплата"
+                />
+              </div>
+            </div>
           </div>
-
-          <div className="h-px bg-[#d9d9d9]" />
-
-          <div className="flex gap-6">
-            <RadioOption
-              name="prepaymentType"
-              value="prepay"
-              checked={prepaymentType === 'prepay'}
-              onChange={() => setPrepaymentType('prepay')}
-              label="Предоплата"
-            />
-            <RadioOption
-              name="prepaymentType"
-              value="half"
-              checked={prepaymentType === 'half'}
-              onChange={() => setPrepaymentType('half')}
-              label="50/50"
-            />
-            <RadioOption
-              name="prepaymentType"
-              value="postpay"
-              checked={prepaymentType === 'postpay'}
-              onChange={() => setPrepaymentType('postpay')}
-              label="Постоплата"
-            />
-          </div>
-        </div>
-
-        
-
-        {error && <p className="text-red-600 text-sm">{error}</p>}
+        </Section>
       </div>
 
       {/* Ваша заявка */}
-      <div className="bg-white border border-[#e5e7e8] rounded-2xl shadow-[0px_6px_18px_0px_rgba(15,23,42,0.07)] p-6 w-full lg:w-[360px] shrink-0 flex flex-col gap-4">
-        <h2 className="text-2xl font-semibold">Ваша заявка</h2>
+      <aside
+        className="
+          w-full
+          shrink-0
+          rounded-2xl
+          border
+          border-[#e1e5e8]
+          bg-[#f4f5f7]
+          p-4
+          sm:p-5
+          lg:sticky
+          lg:top-24
+          lg:w-[360px]
+        "
+      >
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-[18px] font-semibold text-[#28313d]">
+              Ваша заявка
+            </h2>
 
-        <div className="flex flex-col gap-2 text-[14px] text-[#475569]">
-          {items.map((item) => (
-            <p key={item.variantId}>
-              {item.productName}
-              {item.variantName ? ` — ${item.variantName}` : ''} × {item.quantity}
+            <span className="rounded-lg bg-white px-2.5 py-1 text-[12px] font-medium text-[#929aa6]">
+              {items.length}{" "}
+              {items.length === 1
+                ? "товар"
+                : items.length < 5
+                  ? "товара"
+                  : "товаров"}
+            </span>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            {items.map((item) => (
+              <div
+                key={item.variantId}
+                className="
+                  flex
+                  items-start
+                  justify-between
+                  gap-3
+                  rounded-xl
+                  bg-white
+                  px-3
+                  py-2.5
+                "
+              >
+                <span className="min-w-0 line-clamp-2 text-[13px] text-[#66717d]">
+                  {item.productName}
+                  {item.variantName ? ` — ${item.variantName}` : ""}
+                </span>
+
+                <span className="shrink-0 text-[13px] font-semibold text-[#28313d]">
+                  × {item.quantity}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {hasRequestPriceItems && (
+            <div className="flex gap-2.5 rounded-xl bg-white px-3 py-3">
+              <div className="w-[3px] shrink-0 rounded-full bg-accent" />
+
+              <p className="text-[12px] leading-relaxed text-[#66717d]">
+                Есть товары с ценой по запросу — сумма будет уточнена при
+                обработке заявки.
+              </p>
+            </div>
+          )}
+
+          <div className="border-t border-[#dfe3e6] pt-4">
+            <p className="text-[12px] font-medium text-[#929aa6]">
+              Предварительная сумма
             </p>
-          ))}
-        </div>
 
-        {hasRequestPriceItems && (
-          <div className="flex gap-2">
-            <div className="w-[3px] rounded-xl bg-accent shrink-0" />
-            <p className="text-sm text-[#1c2126]">
-              Есть товары с ценой по запросу — сумма будет уточнена при обработке заявки
+            <p className="mt-1 text-[26px] font-semibold tracking-[-0.02em] text-[#28313d]">
+              {totalPrice.toLocaleString("ru-RU")} ₽
             </p>
           </div>
-        )}
 
-        <p className="text-[26px] font-bold">{totalPrice.toLocaleString('ru-RU')} ₽</p>
+          {error && (
+            <p className="rounded-xl bg-[#fff1f1] px-3 py-2.5 text-[13px] text-[#c23b3b]">
+              {error}
+            </p>
+          )}
 
-        <button
-          type="submit"
-          disabled={isPending || !agreed}
-          className="bg-accent text-white rounded-xl py-3 font-semibold hover:bg-[#137a3a] disabled:opacity-50 transition-colors
-            enabled:hover:scale-[1.02] active:scale-[0.98]"
-        >
-          {isPending ? 'Отправка...' : 'Отправить заявку'}
-        </button>
+          <label className="order-1 flex cursor-pointer items-start gap-2.5 text-[12px] leading-relaxed text-[#767d83] lg:order-2">
+            <input
+              type="checkbox"
+              name="consent"
+              checked={agreed}
+              onChange={(e) => setAgreed(e.target.checked)}
+              required
+              className="mt-0.5 h-4 w-4 shrink-0 accent-accent"
+            />
 
-        <label className="flex items-start gap-2 text-[14px] text-[#767d83] cursor-pointer">
-          <input
-            type="checkbox"
-            name="consent"
-            checked={agreed}
-            onChange={(e) => setAgreed(e.target.checked)}
-            required
-            className="w-[18px] h-[18px] mt-0.5 accent-accent rounded shrink-0"
-          />
-          <span>
-            Я даю{' '}
-            <a href="/consent" target="_blank" className="text-[#0082b2] font-medium">
-              согласие на обработку персональных данных
-            </a>{' '}
-            и ознакомлен(а) с{' '}
-            <a href="/privacy" target="_blank" className="text-[#0082b2] font-medium">
-              политикой обработки персональных данных
-            </a>
-          </span>
-        </label>
-      </div>
+            <span>
+              Я даю{" "}
+              <a
+                href="/consent"
+                target="_blank"
+                className="font-medium text-accent hover:underline"
+              >
+                согласие на обработку персональных данных
+              </a>{" "}
+              и ознакомлен(а) с{" "}
+              <a
+                href="/privacy"
+                target="_blank"
+                className="font-medium text-accent hover:underline"
+              >
+                политикой обработки персональных данных
+              </a>
+            </span>
+          </label>
+
+          <button
+            type="submit"
+            disabled={isPending || !agreed}
+            className="
+              order-2
+              flex
+              h-12
+              w-full
+              items-center
+              justify-center
+              rounded-xl
+              bg-gradient-to-br
+              from-accent
+              to-accent-end
+              text-[14px]
+              font-semibold
+              text-white
+              shadow-[0_4px_14px_rgba(23,145,70,0.14)]
+              transition-all
+              duration-300
+              hover:shadow-[0_6px_18px_rgba(23,145,70,0.18)]
+              disabled:cursor-not-allowed
+              disabled:opacity-50
+              lg:order-1
+            "
+          >
+            {isPending ? "Отправка..." : "Отправить заявку"}
+          </button>
+        </div>
+      </aside>
     </form>
-  )
+  );
 }

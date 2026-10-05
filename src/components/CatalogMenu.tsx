@@ -14,7 +14,10 @@ type CategoryNode = {
   children: CategoryNode[];
 };
 
+// ============================================================
 // Рекурсивный пункт правой панели
+// ============================================================
+
 function CategoryColumnEntry({
   category,
   basePath,
@@ -52,13 +55,13 @@ function CategoryColumnEntry({
               justify-center
               rounded
               border
-              border-gray-300
+              border-[#d8dde2]
               text-[10px]
               leading-none
-              text-gray-400
+              text-[#929aa6]
               transition-colors
-              hover:border-accent
-              hover:text-accent
+              hover:border-[#179146]
+              hover:text-[#179146]
             "
           >
             {isOpen ? "−" : "+"}
@@ -68,7 +71,7 @@ function CategoryColumnEntry({
         <Link
           href={path}
           onClick={onNavigate}
-          className={`min-w-0 flex-1 break-words text-sm transition-colors hover:text-accent ${
+          className={`min-w-0 flex-1 break-words text-sm transition-colors hover:text-[#179146] ${
             depth === 0
               ? "text-[#28313d]"
               : "text-[#64748b]"
@@ -78,7 +81,7 @@ function CategoryColumnEntry({
         </Link>
 
         {typeof category.productCount === "number" && (
-          <span className="mt-0.5 shrink-0 text-xs text-gray-400">
+          <span className="mt-0.5 shrink-0 text-xs text-[#929aa6]">
             {category.productCount}
           </span>
         )}
@@ -90,7 +93,7 @@ function CategoryColumnEntry({
             ml-1
             grid
             border-l
-            border-gray-100
+            border-[#edf0f2]
             pl-2.5
             transition-[grid-template-rows]
             duration-250
@@ -121,6 +124,10 @@ function CategoryColumnEntry({
   );
 }
 
+// ============================================================
+// Каталог
+// ============================================================
+
 export default function CatalogMenu({
   categories,
 }: {
@@ -138,6 +145,10 @@ export default function CatalogMenu({
 
   const ref = useRef<HTMLDivElement>(null);
 
+  // ==========================================================
+  // Закрытие по клику вне меню
+  // ==========================================================
+
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (
@@ -148,10 +159,7 @@ export default function CatalogMenu({
       }
     }
 
-    document.addEventListener(
-      "mousedown",
-      handleClickOutside
-    );
+    document.addEventListener("mousedown", handleClickOutside);
 
     return () => {
       document.removeEventListener(
@@ -160,6 +168,10 @@ export default function CatalogMenu({
       );
     };
   }, []);
+
+  // ==========================================================
+  // Блокировка скролла на мобильных
+  // ==========================================================
 
   useEffect(() => {
     if (!open) return;
@@ -178,6 +190,10 @@ export default function CatalogMenu({
       document.body.style.overflow = original;
     };
   }, [open]);
+
+  // ==========================================================
+  // Раскрытие / закрытие подкатегории
+  // ==========================================================
 
   function toggle(id: string) {
     setOpenIds((prev) => {
@@ -273,9 +289,9 @@ export default function CatalogMenu({
           max-w-[calc(100vw-32px)]
           origin-top
           overflow-hidden
-          rounded-xl
+          rounded-2xl
           border
-          border-gray-100
+          border-[#e9ecef]
           bg-white
           shadow-[0_20px_60px_rgba(15,23,42,0.12)]
           md:flex
@@ -306,9 +322,10 @@ export default function CatalogMenu({
             shrink-0
             overflow-y-auto
             border-r
-            border-gray-100
-            py-2
-            lg:w-[280px]
+            border-[#e9ecef]
+            bg-[#fafbfb]
+            py-3
+            lg:w-[300px]
           "
         >
           {categories.map((category) => {
@@ -317,15 +334,19 @@ export default function CatalogMenu({
 
             return (
               <div
-  key={category.id}
-  onMouseEnter={() => setActiveRootId(category.id)}
-  onClick={() => setActiveRootId(category.id)}
-  className={`flex items-center justify-between gap-2 pl-3.5 pr-3 py-2.5 cursor-pointer border-l-[3px] rounded-r-lg transition-colors duration-150 ${
-    isActive
-      ? "bg-[#f3f4f6] border-l-accent text-[#28313d]"
-      : "border-l-transparent text-[#475569] hover:bg-gray-50"
-  }`}
->
+                key={category.id}
+                onMouseEnter={() =>
+                  setActiveRootId(category.id)
+                }
+                onClick={() =>
+                  setActiveRootId(category.id)
+                }
+                className={`group mx-2 flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200 ${
+                  isActive
+                    ? "bg-[#e2f0ef]"
+                    : "hover:bg-[#f3f4f6]"
+                }`}
+              >
                 <Link
                   href={`/category/${category.slug}`}
                   onClick={close}
@@ -334,56 +355,108 @@ export default function CatalogMenu({
                     min-w-0
                     flex-1
                     items-center
-                    gap-2
-                    text-sm
+                    gap-3
                   "
                 >
-                  {/* Иконка категории */}
+                  {/* =================================================
+                      ИКОНКА
+                  ================================================= */}
 
-                  {category.iconUrl && (
-                    <img
-                      src={category.iconUrl}
-                      alt=""
-                      className="h-4 w-4 shrink-0 object-contain"
-                    />
+                  {category.iconUrl ? (
+                    <span
+                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors duration-200 ${
+                        isActive
+                          ? "bg-white"
+                          : "bg-white"
+                      }`}
+                    >
+                      <img
+                        src={category.iconUrl}
+                        alt=""
+                        className="h-4 w-4 object-contain"
+                      />
+                    </span>
+                  ) : (
+                    <span
+                      className="
+                        flex
+                        h-8
+                        w-8
+                        shrink-0
+                        items-center
+                        justify-center
+                        rounded-lg
+                        bg-white
+                      "
+                    >
+                      <span
+                        className={`h-1.5 w-1.5 rounded-full ${
+                          isActive
+                            ? "bg-[#179146]"
+                            : "bg-[#aeb6bf]"
+                        }`}
+                      />
+                    </span>
                   )}
 
-                  {/* Название */}
+                  {/* =================================================
+                      ПОЛНОЕ НАЗВАНИЕ
+
+                      ВАЖНО:
+                      здесь НЕТ hover:text-[#179146].
+                      Поэтому при наведении обычная категория
+                      остаётся серой.
+                  ================================================= */}
 
                   <span
-                    className={`
-                      min-w-0
-                      flex-1
-                      truncate
-                      transition-colors
-                      ${
-                        isActive
-                          ? "text-accent"
-                          : "text-[#475569]"
-                      }
-                    `}
+                    className={`min-w-0 flex-1 whitespace-normal break-words text-[14px] font-medium leading-5 ${
+                      isActive
+                        ? "text-[#179146]"
+                        : "text-[#475569]"
+                    }`}
                   >
                     {category.name}
                   </span>
 
-                  {/* Количество */}
+                  {/* =================================================
+                      КОЛИЧЕСТВО ТОВАРОВ
+                  ================================================= */}
 
                   {typeof category.productCount ===
                     "number" && (
                     <span
-                      className={`
-                        shrink-0
-                        text-xs
-                        ${
-                          isActive
-                            ? "text-accent/60"
-                            : "text-gray-400"
-                        }
-                      `}
+                      className={`shrink-0 text-xs ${
+                        isActive
+                          ? "text-[#179146]/60"
+                          : "text-[#929aa6]"
+                      }`}
                     >
                       {category.productCount}
                     </span>
                   )}
+
+                  {/* =================================================
+                      СТРЕЛКА
+                  ================================================= */}
+
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className={`shrink-0 transition-all duration-200 ${
+                      isActive
+                        ? "translate-x-0 text-[#179146]"
+                        : "-translate-x-1 text-transparent group-hover:translate-x-0 group-hover:text-[#929aa6]"
+                    }`}
+                    aria-hidden="true"
+                  >
+                    <path d="M9 18l6-6-6-6" />
+                  </svg>
                 </Link>
               </div>
             );
@@ -394,11 +467,13 @@ export default function CatalogMenu({
             ПРАВАЯ ПАНЕЛЬ
         ================================================= */}
 
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto bg-white p-6">
           {activeRoot &&
           activeRoot.children.length > 0 ? (
             <>
-              {/* Заголовок категории */}
+              {/* =================================================
+                  ЗАГОЛОВОК КАТЕГОРИИ
+              ================================================= */}
 
               <Link
                 href={`/category/${activeRoot.slug}`}
@@ -414,7 +489,7 @@ export default function CatalogMenu({
                   leading-tight
                   text-[#28313d]
                   transition-colors
-                  hover:text-accent
+                  hover:text-[#179146]
                 "
               >
                 <span>{activeRoot.name}</span>
@@ -434,7 +509,7 @@ export default function CatalogMenu({
                     duration-300
                     group-hover:-translate-y-0.5
                     group-hover:translate-x-0.5
-                    group-hover:text-accent
+                    group-hover:text-[#179146]
                   "
                   aria-hidden="true"
                 >
@@ -454,7 +529,9 @@ export default function CatalogMenu({
                 </span>
               </Link>
 
-              {/* Подкатегории */}
+              {/* =================================================
+                  ПОДКАТЕГОРИИ
+              ================================================= */}
 
               <div className="grid grid-cols-3 items-start gap-x-8">
                 {[0, 1, 2].map((columnIndex) => (
@@ -483,7 +560,7 @@ export default function CatalogMenu({
               </div>
             </>
           ) : activeRoot ? (
-            <div className="flex h-full items-center justify-center text-sm text-gray-400">
+            <div className="flex h-full items-center justify-center text-sm text-[#929aa6]">
               У этой категории пока нет подкатегорий
             </div>
           ) : null}
@@ -492,7 +569,6 @@ export default function CatalogMenu({
 
       {/* =====================================================
           MOBILE / TABLET
-          Логику не меняем
       ===================================================== */}
 
       <div

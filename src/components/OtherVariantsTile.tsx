@@ -13,14 +13,14 @@ export function OtherVariantsTile({ variants }: { variants: OtherVariant[] }) {
   if (variants.length === 0) return null
 
   return (
-    <section className="mt-10">
-      <h2 className="text-lg font-semibold mb-4">Другие исполнения</h2>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+    <section className="mt-6 sm:mt-10">
+      <h2 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Другие исполнения</h2>
+      <div className="-mx-5 flex snap-x gap-3 overflow-x-auto px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-4 sm:overflow-visible sm:px-0 md:grid-cols-4">
         {variants.map((v) => (
           <Link
             key={v.id}
             href={`/product/${v.slug}`}
-            className="border rounded-lg p-3 hover:shadow-md transition-shadow bg-white"
+            className="w-[140px] shrink-0 snap-start border rounded-lg p-3 hover:shadow-md transition-shadow bg-white sm:w-auto"
           >
             <div className="relative aspect-square bg-gray-50 rounded overflow-hidden mb-2">
               {v.image ? (

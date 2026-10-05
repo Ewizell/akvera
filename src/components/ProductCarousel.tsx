@@ -57,9 +57,9 @@ export function ProductCarousel({
   }
 
   return (
-    <section className="mt-12">
+    <section className="mt-8 sm:mt-12">
       <div className="mb-[16px] flex items-center justify-between gap-4">
-        <p className="font-manrope font-bold text-[24px] text-[#1c2126]">{title}</p>
+        <p className="font-manrope font-bold text-[20px] sm:text-[24px] text-[#1c2126]">{title}</p>
 
         {href && (
           <Link
@@ -89,7 +89,7 @@ export function ProductCarousel({
       <div className="relative">
         <button
           onClick={() => scroll('left')}
-          className="absolute left-[-16px] top-1/2 -translate-y-1/2 z-10 size-[32px] rounded-full bg-[#f0f0f0] hover:bg-[#e5e5e5] flex items-center justify-center text-[#1c2126] transition-colors"
+          className="absolute left-[-16px] top-1/2 -translate-y-1/2 z-10 size-[32px] rounded-full bg-[#f0f0f0] hover:bg-[#e5e5e5] hidden items-center justify-center sm:flex text-[#1c2126] transition-colors"
           aria-label="Прокрутить влево"
         >
           <ChevronIcon direction="left" />
@@ -105,12 +105,12 @@ export function ProductCarousel({
 
         <div
           ref={scrollRef}
-          className="flex items-stretch gap-[24px] overflow-x-auto scroll-smooth snap-x snap-mandatory pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+          className="flex items-stretch gap-3 sm:gap-4 lg:gap-[24px] overflow-x-auto scroll-smooth snap-x snap-mandatory pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
         >
           {variants.map((variant) => (
             <div
               key={variant.id}
-              className="shrink-0 snap-start w-[calc((100%-96px)/5)]"
+              className="shrink-0 snap-start w-[42%] sm:w-[calc((100%-32px)/3)] lg:w-[calc((100%-96px)/5)]"
             >
               <CarouselProductCard variant={variant} />
             </div>

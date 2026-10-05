@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import Link from "next/link";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { notFound } from "next/navigation";
 import CategoryTileGrid from "@/components/CategoryTileGrid";
 import CategoryProductListing from "@/components/CategoryProductListing";
@@ -153,30 +153,25 @@ export default async function CategoryPage({
     }));
 
     return (
-      <main className="max-w-7xl mx-auto px-4 py-10">
-        <nav className="mb-5 flex flex-wrap items-center gap-3 text-[14px] font-semibold uppercase tracking-[2px] text-accent">
-          {crumbs.map((c, i) => (
-            <span key={i} className="flex items-center gap-3">
-              {c.href ? (
-                <Link href={c.href} className="hover:opacity-80">
-                  {c.label}
-                </Link>
-              ) : (
-                <span>{c.label}</span>
-              )}
-              {i < crumbs.length - 1 && <span>/</span>}
-            </span>
-          ))}
-        </nav>
+      <main className="w-full bg-[#f4f5f7]">
+        <div className="mx-auto w-full max-w-[1440px] px-5 py-5 sm:px-8 sm:py-10 lg:px-12">
+          <Breadcrumbs items={crumbs} />
 
-        <div className="mb-8 flex items-end justify-between">
-          <h1 className="text-[36px] font-bold leading-[1.2] text-[#0f172a]">{category.name}</h1>
-          <ShowAllProductsButton href={`${tilePath}/all`} />
+          <div className="mt-3 mb-5 flex flex-col gap-4 sm:mt-5 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
+            <h1 className="text-[24px] font-semibold leading-tight tracking-[-0.03em] text-[#28313d] sm:text-[34px] lg:text-[36px]">
+              {category.name}
+            </h1>
+            <div className="w-full sm:w-auto sm:shrink-0 [&>*]:w-full sm:[&>*]:w-auto">
+              <ShowAllProductsButton href={`${tilePath}/all`} />
+            </div>
+          </div>
+
+          <CategoryTileGrid items={tileItems} />
+
+          <div className="mt-10 sm:mt-14">
+            <LeadRequestBlock />
+          </div>
         </div>
-
-        <CategoryTileGrid items={tileItems} />
-
-        <LeadRequestBlock />
       </main>
     );
   }

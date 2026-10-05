@@ -30,7 +30,7 @@ type TreeNode = {
   children?: TreeNode[];
 };
 
-// Оставляем только то, что нужно мобильному меню (и что можно передать в клиентский компонент)
+// Оставляем только то, что нужно мобильному меню
 function toMenuCategories(nodes: TreeNode[]): MobileMenuCategory[] {
   return nodes.map((node) => ({
     id: node.id,
@@ -48,25 +48,29 @@ export default async function SiteHeader() {
 
   return (
     <>
-      {/* На телефоне шапка прилипает к верху при скролле (sticky, остаётся в потоке),
-    на десктопе (lg+) закреплена сверху (fixed, отступ даёт layout) */}
-<header className="sticky top-0 z-50 w-full bg-white shadow-[0_2px_8px_rgba(15,23,42,0.06)] lg:fixed">
-        <div className="mx-auto flex max-w-[1440px] flex-col gap-3 px-4 py-2 pb-3 sm:px-6 lg:px-8 lg:py-3 xl:px-20">
+      {/* =========================================================
+          Шапка
+          ========================================================= */}
+      <header className="sticky top-0 z-50 w-full bg-white/85 shadow-[0_2px_12px_rgba(40,49,61,0.05)] backdrop-blur-md lg:fixed">
+        <div className="mx-auto flex max-w-[1440px] flex-col gap-3 px-4 py-2.5 pb-3 sm:px-6 lg:px-8 lg:py-3 xl:px-20">
+
           {/* =====================================================
-              Верхняя информационная строка — только от lg
+              Верхняя информационная строка — только lg+
               ===================================================== */}
           <div className="hidden w-full items-center justify-between gap-6 lg:flex">
-            <div className="flex min-w-0 items-center gap-[27px]">
-              {/* Адрес — только на широких экранах, чтобы не переполнять строку */}
-              <div className="hidden items-center gap-1.5 min-[1360px]:flex">
+            <div className="flex min-w-0 items-center gap-6">
+
+              {/* Адрес — только на очень широких экранах */}
+              <div className="hidden items-center gap-1.5 min-[1400px]:flex">
                 <Image
                   src="/icons/fi-br-marker.svg"
                   alt=""
                   width={16}
                   height={16}
+                  className="opacity-70"
                 />
 
-                <span className="whitespace-nowrap text-base font-semibold leading-none text-[#475569]">
+                <span className="whitespace-nowrap text-[14px] font-medium leading-none text-[#475569]">
                   {CONTACTS.address}
                 </span>
               </div>
@@ -74,7 +78,7 @@ export default async function SiteHeader() {
               {/* Информационные ссылки */}
               <nav
                 aria-label="Информация о компании"
-                className="flex items-center gap-3 whitespace-nowrap text-[14px] font-medium leading-none text-[#475569]"
+                className="flex items-center gap-4 whitespace-nowrap text-[14px] font-medium leading-none text-[#475569]"
               >
                 {TOP_LINKS.map((link) => (
                   <Link
@@ -89,16 +93,17 @@ export default async function SiteHeader() {
             </div>
 
             {/* Контакты */}
-            <div className="flex shrink-0 items-center gap-6 xl:gap-8">
+            <div className="flex shrink-0 items-center gap-5 xl:gap-7">
               <a
                 href={`mailto:${CONTACTS.email}`}
-                className={`flex items-center gap-1.5 whitespace-nowrap text-base font-bold leading-none text-[#475569] transition-colors duration-200 hover:text-accent xl:text-lg ${focusRing}`}
+                className={`flex items-center gap-1.5 whitespace-nowrap text-[15px] font-semibold leading-none text-[#28313d] transition-colors duration-200 hover:text-accent ${focusRing}`}
               >
                 <Image
                   src="/icons/fi-br-envelope.svg"
                   alt=""
-                  width={18}
-                  height={18}
+                  width={17}
+                  height={17}
+                  className="opacity-70"
                 />
 
                 {CONTACTS.email}
@@ -106,13 +111,14 @@ export default async function SiteHeader() {
 
               <a
                 href={phoneHref}
-                className={`flex items-center gap-1.5 whitespace-nowrap text-base font-semibold leading-none text-[#475569] transition-colors duration-200 hover:text-accent ${focusRing}`}
+                className={`flex items-center gap-1.5 whitespace-nowrap text-[15px] font-semibold leading-none text-[#28313d] transition-colors duration-200 hover:text-accent ${focusRing}`}
               >
                 <Image
                   src="/icons/fi-br-interrogation.svg"
                   alt=""
                   width={16}
                   height={16}
+                  className="opacity-70"
                 />
 
                 {CONTACTS.phone}
@@ -121,77 +127,89 @@ export default async function SiteHeader() {
           </div>
 
           {/* =====================================================
-              Основная строка (один набор компонентов для всех экранов)
-
-              Телефон:  [логотип] [поиск ........] [звонок]
-                        Каталог, корзина, избранное и профиль — в нижней
-                        панели (BottomNav), сравнение — только на десктопе.
-              Десктоп:  [логотип] [каталог] [поиск ........]
-                        [избранное][сравнение][корзина] [вход]
+              Основная строка
               ===================================================== */}
-          <div className="relative flex w-full items-center gap-2 lg:gap-x-6 xl:gap-x-8">
-{/* Логотип: на телефоне знак-иконка, на десктопе (lg+) текстовый вариант */}
-<Link
-  href="/"
-  aria-label="AKVERA — главная"
-  className={`shrink-0 transition-opacity duration-200 hover:opacity-80 ${focusRing}`}
->
-  {/* Телефон. alt пустой: название уже есть в aria-label ссылки */}
-  <Image
-    src="/icons/favicon-akvera.svg"
-    alt=""
-    width={36}
-    height={36}
-    priority
-    className="h-9 w-9 lg:hidden"
-  />
+          <div className="relative flex w-full items-center gap-2 lg:gap-x-5 xl:gap-x-6">
 
-  {/* Десктоп */}
-  <span className="hidden font-maven-pro text-[40px] font-bold leading-none text-accent lg:block">
-    AKVERA
-  </span>
-</Link>
+            {/* ===================================================
+                Логотип
+                =================================================== */}
+            <Link
+              href="/"
+              aria-label="AKVERA — главная"
+              className={`shrink-0 transition-opacity duration-200 hover:opacity-80 ${focusRing}`}
+            >
+              {/* Мобильный логотип */}
+              <Image
+                src="/icons/favicon-akvera.svg"
+                alt=""
+                width={36}
+                height={36}
+                priority
+                className="h-9 w-9 lg:hidden"
+              />
 
-            {/* Каталог — на телефоне это вкладка «Каталог» в нижней панели */}
+              {/* Десктопный логотип */}
+              <span className="hidden font-maven-pro text-[36px] font-bold leading-none tracking-[-0.04em] text-accent lg:block">
+                AKVERA
+              </span>
+            </Link>
+
+            {/* ===================================================
+                Каталог — только desktop
+                =================================================== */}
             <div className="hidden lg:block">
               <CatalogMenu categories={categories} />
             </div>
 
-            {/* Поиск: занимает всё свободное место между логотипом и кнопками.
-                min-w-0 обязателен, иначе поле не сжимается на узких экранах */}
+            {/* ===================================================
+                Поиск
+                =================================================== */}
             <div className="min-w-0 flex-1">
               <SearchBox />
             </div>
 
-            {/* Правая часть: на десктопе — избранное / сравнение / корзина,
-                на телефоне — только кнопка звонка */}
-            <div className="flex shrink-0 items-center gap-1.5 lg:gap-3">
-              {/* Избранное — на телефоне во вкладке нижней панели */}
-              <div className="hidden lg:block">
+            {/* ===================================================
+                Правая часть
+                =================================================== */}
+            <div className="flex shrink-0 items-center gap-1 lg:gap-1.5">
+
+              {/* Избранное / сравнение / корзина
+                  Без общей фоновой подложки */}
+              <div className="hidden items-center gap-0.5 lg:flex">
                 <FavoritesCounterButton />
-              </div>
-
-              {/* Сравнение — только на десктопе */}
-              <div className="hidden lg:block">
                 <CompareCounterButton />
-              </div>
-
-              {/* Корзина — на телефоне во вкладке нижней панели */}
-              <div className="hidden lg:block">
                 <CartButton />
               </div>
 
-              {/* Звонок — только на телефоне (высота h-11 как у поля поиска) */}
+              {/* Телефон — только мобильные */}
               <a
                 href={phoneHref}
                 aria-label={`Позвонить: ${CONTACTS.phone}`}
-                className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-[#475569] transition-colors hover:text-accent lg:hidden"
+                className="
+                  flex
+                  h-11
+                  w-11
+                  shrink-0
+                  items-center
+                  justify-center
+                  rounded-xl
+                  bg-[#e2f0ef]
+                  text-[#28313d]
+                  transition-colors
+                  duration-200
+                  hover:bg-[#179146]
+                  hover:text-white
+                  lg:hidden
+                "
               >
                 <Phone size={20} />
               </a>
             </div>
 
-            {/* Авторизация — на телефоне это вкладка «Профиль» в нижней панели */}
+            {/* ===================================================
+                Авторизация — только desktop
+                =================================================== */}
             <div className="hidden shrink-0 lg:block">
               <HeaderAuthLink />
             </div>
@@ -199,7 +217,9 @@ export default async function SiteHeader() {
         </div>
       </header>
 
-      {/* Нижняя панель навигации — только телефон/планшет (до lg) */}
+      {/* =========================================================
+          Нижняя панель — телефон / планшет
+          ========================================================= */}
       <BottomNav
         categories={menuCategories}
         links={TOP_LINKS}

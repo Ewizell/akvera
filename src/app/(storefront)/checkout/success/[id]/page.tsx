@@ -8,82 +8,191 @@ export default async function CheckoutSuccessPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
+
   const order = await prisma.order.findUnique({
     where: { id },
-    include: { items: { include: { variant: true } } },
+    include: {
+      items: {
+        include: {
+          variant: true,
+        },
+      },
+    },
   })
 
   if (!order) notFound()
 
   const total = order.items.reduce(
-    (sum, item) => (item.priceAtOrder !== null ? sum + Number(item.priceAtOrder) * item.quantity : sum),
+    (sum, item) =>
+      item.priceAtOrder !== null
+        ? sum + Number(item.priceAtOrder) * item.quantity
+        : sum,
     0
   )
-  const hasRequestPriceItems = order.items.some((item) => item.priceAtOrder === null)
+
+  const hasRequestPriceItems = order.items.some(
+    (item) => item.priceAtOrder === null
+  )
 
   return (
-    <main className="bg-[#f8fafc] py-16">
-      <div className="max-w-[640px] mx-auto px-4">
-        <div className="bg-white border border-[#e5e7e8] rounded-2xl shadow-[0px_6px_18px_0px_rgba(15,23,42,0.07)] p-8 flex flex-col items-center text-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-[#e7f5ec] flex items-center justify-center">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#179146" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20 6 9 17l-5-5" />
-            </svg>
-          </div>
+    <main className="min-h-[calc(100vh-80px)] bg-[#f4f5f7] px-5 py-8 sm:px-8 sm:py-12 lg:px-10 lg:py-16">
+      <div className="mx-auto max-w-[680px]">
+        <div className="overflow-hidden rounded-2xl border border-[#e5e8eb] bg-white">
+          {/* Верхний блок */}
+          <div className="flex flex-col items-center px-5 py-8 text-center sm:px-8 sm:py-10">
+            {/* Иконка успешной отправки */}
+            <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-[#e8f6ed]">
+              <svg
+                width="28"
+                height="28"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-accent"
+              >
+                <path d="M20 6 9 17l-5-5" />
+              </svg>
+            </div>
 
-          <h1 className="text-[28px] font-semibold text-[#1c2126]">Заявка принята</h1>
+            <h1 className="text-[24px] font-semibold leading-tight text-[#28313d] sm:text-[28px]">
+              Заявка принята
+            </h1>
 
-          <p className="text-[#475569] text-[15px] max-w-md">
-            Мы свяжемся с вами по телефону{' '}
-            <span className="font-medium text-[#1c2126]">{order.contactPhone}</span> в ближайшее время.
-          </p>
-
-          <div className="flex items-center gap-2 bg-[#f4f5f7] rounded-lg px-4 py-2 font-semibold text-[24px] text-accent">
-            Номер заявки:
-            <span className="font-mono text-[36px] text-[#475569]">№{order.orderNumber}</span>
-          </div>
-
-          <div className="h-px w-full bg-[#e5e7e8] my-2" />
-
-          <div className="w-full flex flex-col gap-2 text-left">
-            {order.items.map((item) => (
-              <div key={item.id} className="flex justify-between text-[14px] text-[#1c2126] py-1">
-                <span>
-                  {item.variant.name} × {item.quantity}
-                </span>
-                <span className="font-medium">
-                  {item.priceAtOrder !== null
-                    ? `${(Number(item.priceAtOrder) * item.quantity).toLocaleString('ru-RU')} ₽`
-                    : 'По запросу'}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          <div className="h-px w-full bg-[#e5e7e8]" />
-
-          <div className="w-full flex justify-between items-center">
-            <span className="text-[15px] text-[#475569]">Итого</span>
-            <span className="text-[22px] font-bold text-[#1c2126]">
-              {total.toLocaleString('ru-RU')} ₽{hasRequestPriceItems && <span className="text-[14px] font-normal text-[#767d83]"> +</span>}
-            </span>
-          </div>
-          {hasRequestPriceItems && (
-            <p className="text-xs text-[#767d83] -mt-2 w-full text-left">
-              Часть товаров с ценой по запросу — сумма будет уточнена при обработке заявки
+            <p className="mt-3 max-w-[500px] text-[14px] leading-6 text-[#66717d] sm:text-[15px]">
+              Спасибо за обращение. Мы свяжемся с вами по телефону{' '}
+              <span className="font-medium text-[#28313d]">
+                {order.contactPhone}
+              </span>{' '}
+              в ближайшее время.
             </p>
-          )}
 
-          <Link
-            href="/catalog"
-            className="w-full bg-accent text-white text-center rounded-xl py-3 font-semibold hover:bg-[#137a3a] transition-colors mt-2"
-          >
-            Вернуться в каталог
-          </Link>
+            {/* Номер заявки */}
+            <div className="mt-7 flex flex-col items-center">
+              <span className="text-[13px] font-medium text-[#929aa6]">
+                Номер заявки
+              </span>
 
-          <Link href="/" className="w-full h-[44px] flex items-center justify-center bg-[#f0f0f0] hover:bg-[#e5e5e5] rounded-[12px] font-montserrat font-semibold text-[16px] text-[#1c2116] transition-colors">
-            На главную
-          </Link>
+              <span className="mt-1 font-mono text-[32px] font-semibold leading-none tracking-[-0.02em] text-accent sm:text-[40px]">
+                №{order.orderNumber}
+              </span>
+            </div>
+          </div>
+
+          {/* Состав заявки */}
+          <div className="border-t border-[#e5e8eb] px-5 py-6 sm:px-8">
+            <div className="flex flex-col gap-4">
+              <h2 className="text-[16px] font-semibold text-[#28313d]">
+                Состав заявки
+              </h2>
+
+              <div className="flex flex-col">
+                {order.items.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-start justify-between gap-4 border-t border-[#eef0f2] py-3 first:border-t-0"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[14px] leading-5 text-[#28313d]">
+                        {item.variant.name}
+                      </p>
+
+                      <p className="mt-1 text-[13px] text-[#929aa6]">
+                        Количество: {item.quantity}
+                      </p>
+                    </div>
+
+                    <div className="shrink-0 text-right text-[14px] font-medium text-[#28313d]">
+                      {item.priceAtOrder !== null
+                        ? `${(
+                            Number(item.priceAtOrder) * item.quantity
+                          ).toLocaleString('ru-RU')} ₽`
+                        : 'По запросу'}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Итоговая стоимость */}
+              <div className="mt-1 border-t border-[#e5e8eb] pt-4">
+                <div className="flex items-center justify-between gap-4">
+                  <span className="text-[14px] text-[#66717d]">
+                    Итого
+                  </span>
+
+                  <span className="text-[20px] font-semibold text-[#28313d]">
+                    {total.toLocaleString('ru-RU')} ₽
+                    {hasRequestPriceItems && (
+                      <span className="text-[14px] font-normal text-[#929aa6]">
+                        {' '}
+                        +
+                      </span>
+                    )}
+                  </span>
+                </div>
+
+                {hasRequestPriceItems && (
+                  <div className="mt-3 flex gap-2">
+                    <span className="mt-0.5 h-4 w-[3px] shrink-0 rounded-full bg-accent" />
+
+                    <p className="text-[13px] leading-5 text-[#66717d]">
+                      Часть товаров имеет цену по запросу. Итоговая сумма
+                      будет уточнена менеджером при обработке заявки.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Действия */}
+          <div className="border-t border-[#e5e8eb] px-5 py-5 sm:px-8">
+            <div className="flex flex-col gap-2.5">
+              <Link
+                href="/catalog"
+                className="
+                  flex h-11 items-center justify-center
+                  rounded-xl
+                  bg-accent
+                  px-4
+                  text-[14px]
+                  font-semibold
+                  text-white
+                  transition-colors
+                  duration-200
+                  hover:bg-accent-hover
+                  focus-visible:outline-none
+                  focus-visible:ring-2
+                  focus-visible:ring-accent/30
+                "
+              >
+                Вернуться в каталог
+              </Link>
+
+              <Link
+                href="/"
+                className="
+                  flex h-11 items-center justify-center
+                  rounded-xl
+                  bg-[#e5e8eb]
+                  px-4
+                  text-[14px]
+                  font-semibold
+                  text-[#28313d]
+                  transition-colors
+                  duration-200
+                  hover:bg-[#dce0e4]
+                  focus-visible:outline-none
+                  focus-visible:ring-2
+                  focus-visible:ring-accent/30
+                "
+              >
+                На главную
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </main>

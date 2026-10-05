@@ -19,12 +19,19 @@ function pluralizeModels(n: number) {
 
 export default function CategoryTileGrid({ items }: { items: CategoryTileItem[] }) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-      {items.map((item) => (
+    <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 lg:gap-6">
+      {items.map((item, index) => {
+        // Нечётное число плиток: последняя занимает обе колонки (только на телефоне)
+        const isLastOdd =
+          index === items.length - 1 && items.length % 2 === 1;
+
+        return (
         <Link
           key={item.slug}
           href={item.href}
-          className="group relative flex h-[260px] flex-col justify-between overflow-hidden rounded-2xl p-6"
+          className={`group relative flex h-[170px] flex-col justify-between overflow-hidden rounded-2xl p-4 sm:h-[220px] sm:p-5 lg:h-[260px] lg:p-6 ${
+            isLastOdd ? "max-sm:col-span-2" : ""
+          }`}
         >
           {item.imageUrl ? (
             <div
@@ -53,12 +60,14 @@ export default function CategoryTileGrid({ items }: { items: CategoryTileItem[] 
             </div>
           )}
           <div className="absolute inset-0 bg-[#0f172a]/30" />
+          {/* Нижний градиент: подпись читается на любом фото */}
+          <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#0f172a]/60 to-transparent" />
 
           <div className="relative flex items-start justify-between gap-3">
-            <h3 className="max-w-[220px] text-[16px] font-semibold leading-normal text-white [word-break:break-word]">
+            <h3 className="max-w-[220px] text-[14px] font-semibold leading-[1.2] text-white [word-break:break-word] sm:text-[16px] sm:leading-normal">
               {item.name}
             </h3>
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl bg-white/[0.13] transition-colors group-hover:bg-white/25">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-white/[0.13] transition-colors group-hover:bg-white/25 sm:h-8 sm:w-8 sm:rounded-2xl">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path
                   d="M1 7H13M13 7L7.5 1.5M13 7L7.5 12.5"
@@ -71,11 +80,12 @@ export default function CategoryTileGrid({ items }: { items: CategoryTileItem[] 
             </span>
           </div>
 
-          <p className="relative text-[13px] text-white/90">
+          <p className="relative text-xs text-white/90 sm:text-[13px]">
             {item.productCount} {pluralizeModels(item.productCount)}
           </p>
         </Link>
-      ))}
+        );
+      })}
     </div>
   );
 }

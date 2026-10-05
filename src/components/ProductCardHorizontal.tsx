@@ -39,17 +39,19 @@ export default function ProductCardHorizontal({ product }: { product: CatalogCar
   return (
     <Link
       href={`/product/${product.slug}`}
-      className="relative bg-white border border-[#e5e7e8] rounded-[16px] flex gap-3 p-3 w-full min-w-0 overflow-hidden hover:shadow-md transition-shadow"
+      className="relative bg-white border border-[#e5e7e8] rounded-[16px] flex flex-wrap sm:flex-nowrap gap-3 p-3 w-full min-w-0 overflow-hidden hover:shadow-md transition-shadow"
     >
-      <div className="relative size-[216px] shrink-0 bg-gray-50 rounded-xl overflow-hidden">
+      <div className="relative order-1 size-[104px] shrink-0 bg-gray-50 rounded-xl overflow-hidden sm:size-[216px]">
         <ProductImageHoverSlider images={product.images} alt={product.name} />
 
         {product.tags.length > 0 && (
           <div className="absolute left-2.5 top-2.5 z-10 flex flex-wrap gap-1.5 max-w-[85%]">
-            {product.tags.map((tag) => (
+            {product.tags.map((tag, i) => (
               <span
                 key={tag.id}
-                className="h-[26px] flex items-center px-2 bg-accent rounded-lg text-white text-xs font-manrope font-medium truncate max-w-full"
+                className={`h-[26px] items-center px-2 bg-accent rounded-lg text-white text-[11px] sm:text-xs font-manrope font-medium truncate max-w-full ${
+                  i > 0 ? 'hidden sm:flex' : 'flex'
+                }`}
               >
                 {tag.name}
               </span>
@@ -58,8 +60,8 @@ export default function ProductCardHorizontal({ product }: { product: CatalogCar
         )}
       </div>
 
-      <div className="flex-1 min-w-0 flex flex-col gap-2.5 self-stretch">
-        <p className="font-manrope font-medium text-[#1c2126] text-base">
+      <div className="order-2 flex-1 min-w-0 flex flex-col gap-2 sm:gap-2.5 self-stretch">
+        <p className="font-manrope font-medium text-[#1c2126] text-sm line-clamp-3 sm:text-base sm:line-clamp-none">
           {product.variantName || product.name}
         </p>
 
@@ -82,13 +84,13 @@ export default function ProductCardHorizontal({ product }: { product: CatalogCar
         </div>
 
         {product.shortDescription && (
-          <p className="font-manrope font-medium text-[#1c2126] text-[13px] line-clamp-3 mb-1">
+          <p className="hidden sm:block font-manrope font-medium text-[#1c2126] text-[13px] line-clamp-3 mb-1">
             {product.shortDescription}
           </p>
         )}
 
         {product.attrs.length > 0 && (
-          <div className="flex flex-wrap gap-x-2.5 gap-y-1 font-manrope font-medium text-[#767d83] text-[13px]">
+          <div className="hidden sm:flex flex-wrap gap-x-2.5 gap-y-1 font-manrope font-medium text-[#767d83] text-[13px]">
             {product.attrs.map((attr, i) => (
               <span key={i}>{attr.value}</span>
             ))}
@@ -96,13 +98,15 @@ export default function ProductCardHorizontal({ product }: { product: CatalogCar
         )}
       </div>
 
-      <div className="flex flex-col gap-3 items-start pl-4 border-l border-[#e5e7e8] w-[150px] shrink-0">
-        <p className="font-manrope font-bold text-[#1c2126] text-xl">
-          {product.price ? `${product.price.toLocaleString('ru-RU')} ₽` : 'Цена по запросу'}
-        </p>
-        <p className="font-manrope font-medium text-[#767d83] text-[14px]">
-          {product.stock > 0 ? `${product.stock} шт. на складе` : 'По запросу'}
-        </p>
+      <div className="order-4 flex w-full items-center justify-between gap-3 border-t border-[#e5e7e8] pt-3 sm:order-3 sm:w-[150px] sm:shrink-0 sm:flex-col sm:items-start sm:justify-start sm:border-l sm:border-t-0 sm:pl-4 sm:pt-0 sm:gap-3">
+        <div className="flex flex-col gap-1 sm:gap-3">
+          <p className="font-manrope font-bold text-[#1c2126] text-lg sm:text-xl">
+            {product.price ? `${product.price.toLocaleString('ru-RU')} ₽` : 'Цена по запросу'}
+          </p>
+          <p className="font-manrope font-medium text-[#767d83] text-xs sm:text-[14px]">
+            {product.stock > 0 ? `${product.stock} шт. на складе` : 'По запросу'}
+          </p>
+        </div>
         <CartCardControl
           variantId={product.variantId}
           productName={product.name}
@@ -113,9 +117,11 @@ export default function ProductCardHorizontal({ product }: { product: CatalogCar
         />
       </div>
 
-      <div className="flex flex-col gap-2 shrink-0">
+      <div className="order-3 flex flex-col gap-2 shrink-0 sm:order-4">
         <FavoriteButton variantId={product.variantId} />
-        <CompareButton variantId={product.variantId} />
+        <div className="hidden lg:block">
+          <CompareButton variantId={product.variantId} />
+        </div>
       </div>
     </Link>
   )

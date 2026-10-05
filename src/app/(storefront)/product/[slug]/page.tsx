@@ -159,7 +159,13 @@ const crumbs = [
     ...(variant.name ? { model: variant.name } : {}),
     ...(variant.sku ? { sku: variant.sku } : {}),
     ...(variant.product.brand ? { brand: { "@type": "Brand", name: variant.product.brand.name } } : {}),
-    ...(variant.images[0] ? { image: variant.images.map((img) => `${siteUrl}${img.url}`) } : {}),
+    ...(variant.images[0]
+      ? {
+          image: variant.images.map((img) =>
+            img.url.startsWith("http") ? img.url : `${siteUrl}${img.url}`,
+          ),
+        }
+      : {}),
     ...(description ? { description: description.replace(/<[^>]*>/g, "").slice(0, 5000) } : {}),
     offers: {
       "@type": "Offer",
@@ -173,7 +179,7 @@ const crumbs = [
   };
 
     return (
-    <main className="max-w-[1440px] mx-auto px-[80px] py-10">
+    <main className="max-w-[1440px] mx-auto px-5 py-5 sm:px-8 sm:py-10 lg:px-[80px]">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
@@ -186,7 +192,7 @@ const crumbs = [
       <Breadcrumbs items={crumbs} />
 
       <div className="flex items-end justify-between gap-6">
-        <h1 className="flex-1 font-manrope font-bold text-[24px] text-[#1c2126]">
+        <h1 className="flex-1 font-manrope font-bold text-[20px] leading-tight sm:text-[24px] text-[#1c2126]">
           {variant.name || variant.product.name}
         </h1>
       </div>
@@ -201,31 +207,35 @@ const crumbs = [
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_1px_328px] gap-[24px] mt-[16px] items-center">
-        <div className="flex gap-[16px] items-center">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_1px_328px] gap-3 lg:gap-[24px] mt-3 lg:mt-[16px] items-center">
+        <div className="flex flex-wrap gap-x-[16px] gap-y-2 items-center">
           {variant.sku && <CopyField label="Артикул:" value={variant.sku} />}
           <CopyField label="Код товара:" value={variant.id} />
         </div>
         <div className="hidden lg:block" />
-        <div className="flex gap-[16px] items-center px-[8px]">
+        <div className="flex gap-[16px] items-center lg:px-[8px]">
           <FavoriteButtonWithLabel
             variantId={variant.id}
             className="text-[14px] font-manrope font-medium text-[#1c2116] cursor-pointer transition-colors duration-200 hover:text-accent"
           />
-          <CompareButtonWithLabel
-            variantId={variant.id}
-            className="text-[14px] font-manrope font-medium text-[#1c2116] cursor-pointer transition-colors duration-200 hover:text-accent"
-          />
+          <div className="hidden lg:block">
+            <CompareButtonWithLabel
+              variantId={variant.id}
+              className="text-[14px] font-manrope font-medium text-[#1c2116] cursor-pointer transition-colors duration-200 hover:text-accent"
+            />
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_1px_328px] gap-[24px] mt-[24px] items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_1px_328px] gap-5 lg:gap-[24px] mt-5 lg:mt-[24px] items-start">
         {/* Галерея + характеристики */}
-        <div className="flex flex-col lg:flex-row gap-[24px]">
-          <ProductGallery images={variant.images} productName={variant.product.name} />
+        <div className="contents lg:flex lg:flex-row lg:gap-[24px]">
+          <div className="order-1 min-w-0 lg:contents">
+            <ProductGallery images={variant.images} productName={variant.product.name} />
+          </div>
 
           {specs.length > 0 && (
-            <div className="flex flex-col gap-[14px] py-[12px] lg:border-l lg:border-[#f0f0f0] lg:pl-[24px] w-full lg:w-[312px]">
+            <div className="order-3 flex flex-col gap-[14px] border-t border-[#f0f0f0] pt-4 pb-[12px] lg:order-none lg:border-t-0 lg:border-l lg:py-[12px] lg:pl-[24px] w-full lg:w-[312px]">
               <p className="font-manrope font-semibold text-[18px] text-[#1c2126]">
                 Характеристики товара:
               </p>
@@ -250,9 +260,9 @@ const crumbs = [
         <div className="hidden lg:block bg-[#d9d9d9] w-px self-stretch" />
 
         {/* Цена / действия */}
-        <div className="flex flex-col gap-[16px]">
-          <div className="flex flex-col gap-[4px] px-[8px]">
-            <p className="font-montserrat font-semibold text-[28px] text-[#1c2126]">
+        <div className="order-2 flex flex-col gap-[16px] lg:order-none">
+          <div className="flex flex-col gap-[4px] lg:px-[8px]">
+            <p className="font-montserrat font-semibold text-[24px] sm:text-[28px] text-[#1c2126]">
               {variant.price
                 ? `${Number(variant.price).toLocaleString("ru-RU")} ₽`
                 : "Цена по запросу"}
@@ -319,10 +329,10 @@ const crumbs = [
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_1px_328px] gap-[24px] pt-[18px]">
           <div className="flex flex-col gap-[16px] w-full">
             {description && (
-              <div className="flex flex-col gap-[14px] pb-[12px] px-[12px] text-[#1c2126]">
+              <div className="flex flex-col gap-[14px] pb-[12px] sm:px-[12px] text-[#1c2126]">
                 <p className="font-montserrat font-semibold text-[18px]">Описание:</p>
                 <div
-                  className="prose prose-sm max-w-none font-manrope text-[14px]"
+                  className="prose prose-sm max-w-none break-words font-manrope text-[14px] [&_img]:h-auto [&_img]:max-w-full [&_table]:block [&_table]:overflow-x-auto"
                   dangerouslySetInnerHTML={{ __html: description }}
                 />
               </div>

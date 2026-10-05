@@ -64,7 +64,7 @@ export default function CarouselProductCard({
             alt={image.alt ?? variant.name}
             fill
             className="object-contain"
-            sizes="302px"
+            sizes="(max-width: 640px) 42vw, 302px"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
@@ -74,35 +74,37 @@ export default function CarouselProductCard({
 
         <div className="absolute right-2.5 top-2.5 z-10 flex flex-col gap-2">
           <FavoriteButton variantId={variant.id} />
-          <CompareButton variantId={variant.id} />
+          <div className="hidden lg:block">
+            <CompareButton variantId={variant.id} />
+          </div>
         </div>
       </div>
 
-      <div className="flex flex-col gap-3 p-3 flex-1 min-h-0">
+      <div className="flex flex-col gap-2.5 p-2.5 sm:gap-3 sm:p-3 flex-1 min-h-0">
         <div>
-          <p className="font-manrope font-bold text-[#1c2126] text-xl">
+          <p className="font-manrope font-bold text-[#1c2126] text-base sm:text-xl">
             {variant.price !== null
               ? `${variant.price.toLocaleString('ru-RU')} ₽`
               : 'Цена по запросу'}
           </p>
 
-          <p className="font-manrope font-medium text-[#1c2126] text-sm mt-3 line-clamp-2">
+          <p className="font-manrope font-medium text-[#1c2126] text-[13px] leading-snug mt-2 line-clamp-3 sm:text-sm sm:mt-3 sm:line-clamp-2">
             {variant.name || variant.product.name}
           </p>
         </div>
 
-        <div className="mt-auto flex flex-col gap-3">
-          <div className="flex items-center gap-2 w-full min-w-0">
-            <p className="font-manrope font-medium text-[#767d83] text-[14px] truncate min-w-0 flex-1">
+        <div className="mt-auto flex flex-col gap-2.5 sm:gap-3">
+          <div className="flex flex-col items-start gap-0.5 w-full min-w-0 sm:flex-row sm:items-center sm:gap-2">
+            <p className="font-manrope font-medium text-[#767d83] text-xs sm:text-[14px] truncate min-w-0 max-w-full sm:flex-1">
               {variant.stock > 0
                 ? `${variant.stock} шт. на складе`
                 : 'По запросу'}
             </p>
 
-            <div className="relative shrink-0">
+            <div className="relative min-w-0 max-w-full shrink-0">
               <button
                 onClick={copySku}
-                className="flex items-center gap-0.5 shrink-0 max-w-[90px] cursor-pointer group/sku"
+                className="flex items-center gap-0.5 max-w-full sm:shrink-0 sm:max-w-[90px] cursor-pointer group/sku"
                 aria-label="Скопировать артикул"
               >
                 <span className="font-manrope font-medium text-[#767d83] text-sm truncate group-hover/sku:text-[#1c2126] group-hover/sku:underline">
@@ -119,7 +121,7 @@ export default function CarouselProductCard({
               </button>
 
               {copied && (
-                <div className="absolute right-0 bottom-full mb-1 whitespace-nowrap bg-gray-900 text-white text-xs px-2 py-1 rounded font-manrope z-20">
+                <div className="absolute left-0 sm:left-auto sm:right-0 bottom-full mb-1 whitespace-nowrap bg-gray-900 text-white text-xs px-2 py-1 rounded font-manrope z-20">
                   Скопировано
                 </div>
               )}
@@ -128,7 +130,7 @@ export default function CarouselProductCard({
 
           <button
             onClick={handleAddToCart}
-            className="h-[33px] self-start px-[16px] flex items-center justify-center bg-accent hover:bg-accent-hover rounded-[6px] font-manrope font-semibold text-[14px] text-white transition-colors"
+            className="h-9 w-full sm:h-[33px] sm:w-auto sm:self-start px-[16px] flex items-center justify-center bg-accent hover:bg-accent-hover rounded-[6px] font-manrope font-semibold text-[13px] sm:text-[14px] text-white transition-colors"
           >
             В корзину
           </button>

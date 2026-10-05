@@ -1,8 +1,11 @@
-import { prisma } from "@/lib/prisma";
-import ShowAllProductsButton from "@/components/ShowAllProductsButton";
 import type { Metadata } from "next";
+
+import { prisma } from "@/lib/prisma";
+
+import ShowAllProductsButton from "@/components/ShowAllProductsButton";
 import CategoryTileGrid from "@/components/CategoryTileGrid";
 import LeadRequestBlock from "@/components/LeadRequestBlock";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 export const revalidate = 3600;
 
@@ -14,10 +17,18 @@ export const metadata: Metadata = {
 
 export default async function CatalogPage() {
   const categories = await prisma.category.findMany({
-    where: { parentId: null },
-    orderBy: { name: "asc" },
+    where: {
+      parentId: null,
+    },
+    orderBy: {
+      name: "asc",
+    },
     include: {
-      _count: { select: { products: true } },
+      _count: {
+        select: {
+          products: true,
+        },
+      },
     },
   });
 
@@ -49,28 +60,70 @@ export default async function CatalogPage() {
 
   return (
     <>
+      {/* SEO */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(catalogJsonLd) }}
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(catalogJsonLd),
+        }}
       />
-      <main className="max-w-7xl mx-auto px-4 py-10">
-        <nav className="mb-5 flex items-center gap-3 text-[14px] font-semibold uppercase tracking-[2px] text-accent">
-          <span>Главная</span>
-          <span>/</span>
-        </nav>
 
-        <div className="mb-8 flex items-end justify-between">
-          <h1 className="text-[36px] font-bold leading-[1.2] text-[#0f172a]">Каталог</h1>
-          <ShowAllProductsButton href="/catalog/all" />
+      <main className="w-full bg-[#f4f5f7]">
+        <div className="mx-auto w-full max-w-[1440px] px-5 pb-8 pt-4 sm:px-8 sm:pb-16 sm:pt-9 lg:px-12 lg:pb-20">
+          {/* =====================================================
+              ХЛЕБНЫЕ КРОШКИ
+          ===================================================== */}
+
+          <Breadcrumbs
+            items={[
+              {
+                label: "Главная",
+                href: "/",
+              },
+              {
+                label: "Каталог",
+              },
+            ]}
+          />
+
+          {/* =====================================================
+              ЗАГОЛОВОК
+              На телефоне кнопка «Показать все товары» идёт под заголовком
+              на всю ширину, от sm — справа от него
+          ===================================================== */}
+
+          <div className="mb-5 flex flex-col gap-4 sm:mb-10 sm:mt-8 sm:flex-row sm:items-end sm:justify-between sm:gap-5">
+            <div className="min-w-0">
+              <h1 className="text-[26px] font-semibold leading-[1.15] tracking-[-0.03em] text-[#28313d] sm:text-[36px]">
+                Каталог оборудования
+              </h1>
+            </div>
+
+            <div className="w-full sm:w-auto sm:shrink-0 [&>*]:w-full sm:[&>*]:w-auto">
+              <ShowAllProductsButton href="/catalog/all" />
+            </div>
+          </div>
+
+          {/* =====================================================
+              КАТЕГОРИИ
+          ===================================================== */}
+
+          {categories.length > 0 ? (
+            <CategoryTileGrid items={tileItems} />
+          ) : (
+            <div className="rounded-2xl bg-white px-6 py-12 text-center sm:py-20">
+              <p className="text-sm leading-6 text-[#66717d]">
+                Категории пока не добавлены
+              </p>
+            </div>
+          )}
+
+          {/* =====================================================
+              ЗАЯВКА
+          ===================================================== */}
+
+          <LeadRequestBlock />
         </div>
-
-        {categories.length > 0 ? (
-          <CategoryTileGrid items={tileItems} />
-        ) : (
-          <p className="text-gray-500 text-center py-20">Категории пока не добавлены</p>
-        )}
-
-        <LeadRequestBlock />
       </main>
     </>
   );

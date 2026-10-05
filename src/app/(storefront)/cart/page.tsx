@@ -8,6 +8,7 @@ import { ProductCarousel, type CarouselVariant } from '@/components/ProductCarou
 import { getRecentlyViewed } from '@/lib/recently-viewed'
 import FavoriteButton from '@/components/FavoriteButton'
 import RemoveFromCartButton from '@/components/RemoveFromCartButton'
+import { Breadcrumbs } from '@/components/Breadcrumbs'
 // TODO: подставьте реальный хук избранного и проверьте имя метода
 // (в памяти проекта — FavoritesProvider/useFavorites с toggle по variantId)
 import { useFavorites } from '@/lib/favorites-context'
@@ -73,10 +74,10 @@ export default function CartPage({ popularVariants = [] }: CartPageProps) {
 
   if (items.length === 0) {
     return (
-      <main className="max-w-3xl mx-auto px-4 py-20 text-center">
-        <h1 className="text-2xl font-semibold mb-4">Корзина пуста</h1>
+      <main className="max-w-3xl mx-auto px-5 py-12 sm:py-20 text-center">
+        <h1 className="text-xl sm:text-2xl font-semibold mb-4">Корзина пуста</h1>
         <p className="text-gray-500 mb-6">Добавьте товары из каталога, чтобы оформить заявку</p>
-        <Link href="/catalog" className="inline-block bg-accent text-white px-6 py-3 rounded-xl hover:bg-[#137a3a]">
+        <Link href="/catalog" className="block sm:inline-block bg-accent text-white px-6 py-3 rounded-xl hover:bg-[#137a3a]">
           Перейти в каталог
         </Link>
       </main>
@@ -84,30 +85,31 @@ export default function CartPage({ popularVariants = [] }: CartPageProps) {
   }
 
   return (
-    <main className="bg-[#f8fafc] py-10">
-      <div className="max-w-[1280px] mx-auto px-4 md:px-20">
-        <nav className="flex gap-3 text-[14px] tracking-[1px] uppercase font-semibold text-accent mb-6">
-          <Link href="/">Главная</Link>
-          <span>/</span>
-          <span>корзина</span>
-        </nav>
+    <main className="bg-[#f8fafc] py-5 sm:py-10">
+      <div className="max-w-[1280px] mx-auto px-5 sm:px-8 lg:px-20">
+        <Breadcrumbs
+          items={[
+            { label: 'Главная', href: '/' },
+            { label: 'Корзина' },
+          ]}
+        />
 
-        <h1 className="text-[36px] font-semibold mb-6">Корзина</h1>
+        <h1 className="text-[26px] sm:text-[36px] font-semibold mb-4 sm:mb-6">Корзина</h1>
 
         <div className="flex flex-col lg:flex-row gap-6 items-start">
           {/* Левая колонка — товары */}
-          <div className="bg-white border border-[#e5e7e8] rounded-2xl shadow-[0px_6px_18px_0px_rgba(15,23,42,0.07)] flex-1 w-full">
-            <div className="flex items-center justify-between px-6 py-6">
-              <h2 className="text-2xl font-semibold">Ваша заявка</h2>
+          <div className="bg-white border border-[#e5e7e8] rounded-2xl shadow-[0px_6px_18px_0px_rgba(15,23,42,0.07)] flex-1 min-w-0 w-full">
+            <div className="flex items-center justify-between gap-3 px-4 py-4 sm:px-6 sm:py-6">
+              <h2 className="text-xl sm:text-2xl font-semibold">Ваша заявка</h2>
               <button
                 onClick={clearCart}
-                className="text-sm underline transition-all duration-150 ease-out hover:scale-105 hover:text-red-600 active:scale-95"
+                className="shrink-0 text-sm underline transition-all duration-150 ease-out hover:scale-105 hover:text-red-600 active:scale-95"
               >
                 Очистить корзину
               </button>
             </div>
 
-            <div className="flex items-center gap-4 px-6 pb-3">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 pb-3 sm:px-6">
                 <label className="flex items-center gap-2 text-sm cursor-pointer select-none group">
                   <input
                     type="checkbox"
@@ -130,7 +132,7 @@ export default function CartPage({ popularVariants = [] }: CartPageProps) {
 
             <div className="border-t border-[#e5e7e8]">
               {items.map((item) => (
-                <div key={item.variantId} className="flex gap-3 p-6 border-b last:border-b-0 border-[#e5e7e8]">
+                <div key={item.variantId} className="flex flex-wrap sm:flex-nowrap gap-3 p-4 sm:p-6 border-b last:border-b-0 border-[#e5e7e8]">
                   <input
                     type="checkbox"
                     checked={selected.has(item.variantId)}
@@ -138,7 +140,7 @@ export default function CartPage({ popularVariants = [] }: CartPageProps) {
                     className="w-[17px] h-[17px] mt-1 accent-accent rounded shrink-0"
                   />
 
-                  <Link href={`/product/${item.slug}`} className="relative w-[108px] h-[108px] bg-gray-100 rounded shrink-0">
+                  <Link href={`/product/${item.slug}`} className="relative w-[84px] h-[84px] sm:w-[108px] sm:h-[108px] bg-gray-100 rounded shrink-0">
                     {item.image ? (
                       <Image src={item.image} alt={item.productName} fill className="object-contain p-2" />
                     ) : (
@@ -149,7 +151,7 @@ export default function CartPage({ popularVariants = [] }: CartPageProps) {
                   </Link>
 
                   <div className="flex-1 min-w-0 flex flex-col gap-2">
-                    <Link href={`/product/${item.slug}`} className="text-sm hover:underline">
+                    <Link href={`/product/${item.slug}`} className="text-sm hover:underline line-clamp-3 sm:line-clamp-none">
                       {item.productName}
                       {item.variantName ? ` — ${item.variantName}` : ''}
                     </Link>
@@ -162,23 +164,23 @@ export default function CartPage({ popularVariants = [] }: CartPageProps) {
                     </div>
                   </div>
 
-                  <div className="flex flex-col items-end justify-between shrink-0">
-                    <p className="font-bold text-[20px]">
+                  <div className="flex w-full flex-row-reverse items-center justify-between sm:w-auto sm:shrink-0 sm:flex-col sm:items-end">
+                    <p className="font-bold text-lg sm:text-[20px]">
                       {item.price ? `${(item.price * item.quantity).toLocaleString('ru-RU')} ₽` : 'По запросу'}
                     </p>
 
-                    <div className="flex items-center gap-1 bg-[#eeeff1] rounded-md h-[33px] px-2">
+                    <div className="flex items-center gap-1 bg-[#eeeff1] rounded-md h-9 sm:h-[33px] px-1 sm:px-2">
                       <button
                         onClick={() => updateQuantity(item.variantId, item.quantity - 1)}
                         disabled={item.quantity <= 1}
-                        className="disabled:opacity-30 px-1 text-lg leading-none"
+                        className="disabled:opacity-30 px-2.5 sm:px-1 text-lg leading-none"
                       >
                         −
                       </button>
                       <span className="text-sm w-6 text-center">{item.quantity}</span>
                       <button
                         onClick={() => updateQuantity(item.variantId, item.quantity + 1)}
-                        className="px-1 text-lg leading-none"
+                        className="px-2.5 sm:px-1 text-lg leading-none"
                       >
                         +
                       </button>
@@ -190,8 +192,8 @@ export default function CartPage({ popularVariants = [] }: CartPageProps) {
           </div>
 
           {/* Правая колонка — итого */}
-          <div className="bg-white border border-[#e5e7e8] rounded-2xl shadow-[0px_6px_18px_0px_rgba(15,23,42,0.07)] p-6 w-full lg:w-[360px] shrink-0 flex flex-col gap-4">
-            <h2 className="text-2xl font-semibold">Условия заказа</h2>
+          <div className="bg-white border border-[#e5e7e8] rounded-2xl shadow-[0px_6px_18px_0px_rgba(15,23,42,0.07)] p-5 sm:p-6 w-full lg:w-[360px] shrink-0 flex flex-col gap-4">
+            <h2 className="text-xl sm:text-2xl font-semibold">Условия заказа</h2>
 
             <div className="flex justify-between text-[15px] text-[#475569]">
               <span>Товары, {totalCount} шт.</span>
@@ -211,7 +213,7 @@ export default function CartPage({ popularVariants = [] }: CartPageProps) {
               </div>
             )}
 
-            <p className="text-[26px] font-bold">Итого: {totalPrice.toLocaleString('ru-RU')} ₽</p>
+            <p className="text-2xl sm:text-[26px] font-bold">Итого: {totalPrice.toLocaleString('ru-RU')} ₽</p>
 
             <Link
               href="/checkout"
@@ -245,13 +247,13 @@ export default function CartPage({ popularVariants = [] }: CartPageProps) {
       </div>
 
       {popularVariants.length > 0 && (
-        <div className="max-w-[1280px] mx-auto px-4 md:px-20 mt-16">
+        <div className="max-w-[1280px] mx-auto px-5 sm:px-8 lg:px-20 mt-10 sm:mt-16">
           <ProductCarousel title="Популярные товары" variants={popularVariants} />
         </div>
       )}
 
       {recentlyViewed.length > 0 && (
-        <div className="max-w-[1280px] mx-auto px-4 md:px-20 mt-16">
+        <div className="max-w-[1280px] mx-auto px-5 sm:px-8 lg:px-20 mt-10 sm:mt-16">
           <ProductCarousel title="Вы недавно смотрели" variants={recentlyViewed} />
         </div>
       )}
