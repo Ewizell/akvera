@@ -552,16 +552,31 @@ function ProductRow({
                     {variant.attributes &&
                       Object.keys(variant.attributes).length > 0 && (
                         <div className="mt-2 flex flex-wrap gap-1.5">
-                          {Object.entries(variant.attributes).map(
-                            ([key, value]) => (
+                          {Object.entries(variant.attributes)
+                            .filter(([key]) => key !== 'customAttributes')
+                            .map(([key, value]) => (
                               <span
                                 key={key}
                                 className="rounded-md bg-[#f4f5f7] px-2 py-1 text-[10px] text-[#6f7985]"
                               >
                                 {key}: {String(value)}
                               </span>
-                            )
-                          )}
+                            ))}
+
+                          {(
+                            (variant.attributes.customAttributes as
+                              | { label: string; value: string }[]
+                              | undefined) ?? []
+                          )
+                            .filter((a) => a.label && a.value)
+                            .map((a, i) => (
+                              <span
+                                key={`custom-${i}`}
+                                className="rounded-md bg-[#f4f5f7] px-2 py-1 text-[10px] text-[#6f7985]"
+                              >
+                                {a.label}: {a.value}
+                              </span>
+                            ))}
                         </div>
                       )}
                   </div>
@@ -608,7 +623,12 @@ export default function ProductList({
 }) {
   const router = useRouter()
   const [creating, setCreating] = useState(false)
-  const [editing, setEditing] = useState<Product | null>(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
+
+  const editing = useMemo(
+    () => products.find((p) => p.id === editingId) ?? null,
+    [products, editingId]
+  )
 
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
@@ -805,7 +825,7 @@ export default function ProductList({
   }
 
   function handleEdit(product: Product) {
-    setEditing(product)
+    setEditingId(product.id)
   }
 
   function handleCategorySelect(id: string | null) {
@@ -1125,7 +1145,7 @@ export default function ProductList({
           categories={categories}
           brands={brands}
           tags={tags}
-          onClose={() => setEditing(null)}
+          onClose={() => setEditingId(null)}
         />
       )}
     </div>

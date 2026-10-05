@@ -105,22 +105,74 @@ type Tag = {
 }
 
 const inputCls =
-  'h-11 w-full rounded-xl border-0 bg-[#f4f5f7] px-3.5 text-sm text-[#28313d] outline-none ring-1 ring-transparent transition placeholder:text-[#a1a8b3] focus:bg-white focus:ring-2 focus:ring-[#28394c]/15 disabled:cursor-not-allowed disabled:opacity-60'
+  'h-11 w-full rounded-xl border-0 bg-[#f4f5f7] px-3.5 text-sm text-[#28313d] outline-none ring-1 ring-transparent transition-[background-color,box-shadow] duration-150 placeholder:text-[#a1a8b3] hover:bg-[#f1f3f5] focus:bg-white focus:ring-2 focus:ring-[#28394c]/15 focus-visible:ring-2 focus-visible:ring-[#28394c]/25 disabled:cursor-not-allowed disabled:opacity-60'
 
 const textareaCls =
-  'w-full rounded-xl border-0 bg-[#f4f5f7] px-3.5 py-3 text-sm text-[#28313d] outline-none ring-1 ring-transparent transition placeholder:text-[#a1a8b3] focus:bg-white focus:ring-2 focus:ring-[#28394c]/15'
+  'w-full rounded-xl border-0 bg-[#f4f5f7] px-3.5 py-3 text-sm text-[#28313d] outline-none ring-1 ring-transparent transition-[background-color,box-shadow] duration-150 placeholder:text-[#a1a8b3] hover:bg-[#f1f3f5] focus:bg-white focus:ring-2 focus:ring-[#28394c]/15 focus-visible:ring-2 focus-visible:ring-[#28394c]/25'
 
 const labelCls =
   'mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-[#7b8592]'
 
 const cardCls =
-  'rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/[0.04]'
+  'rounded-2xl bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,0.03)] ring-1 ring-black/[0.05]'
+
+const dashPanelCls =
+  'rounded-2xl bg-white p-4 shadow-[0_1px_2px_rgba(16,24,40,0.025)] ring-1 ring-black/[0.05]'
+
+type ViewMode = 'tabs' | 'dashboard'
+
+const VIEW_MODE_KEY = 'akvera_admin_product_view'
+
+function PanelTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <h3 className="text-xs font-bold uppercase tracking-wide text-[#28394c]">
+      {children}
+    </h3>
+  )
+}
+
+function ViewModeSwitch({
+  value,
+  onChange,
+}: {
+  value: ViewMode
+  onChange: (mode: ViewMode) => void
+}) {
+  const options: { mode: ViewMode; label: string }[] = [
+    { mode: 'tabs', label: 'Вкладки' },
+    { mode: 'dashboard', label: 'Дашборд' },
+  ]
+
+  return (
+    <div
+      role="group"
+      aria-label="Вид отображения"
+      className="flex items-center gap-0.5 rounded-xl bg-[#eef1f4] p-1 ring-1 ring-black/[0.04]"
+    >
+      {options.map((o) => (
+        <button
+          key={o.mode}
+          type="button"
+          onClick={() => onChange(o.mode)}
+          aria-pressed={value === o.mode}
+          className={`cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold transition-[background-color,color,box-shadow,transform] duration-150 ${
+            value === o.mode
+              ? 'bg-white text-[#28394c] shadow-sm ring-1 ring-black/[0.03]'
+              : 'text-[#8b949f] hover:bg-white/60 hover:text-[#4f5a67]'
+          }`}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  )
+}
 
 const primaryButtonCls =
-  'inline-flex h-10 items-center justify-center rounded-xl bg-[#28394c] px-4 text-sm font-semibold text-white transition hover:bg-[#1e2a38] disabled:cursor-not-allowed disabled:opacity-50'
+  'inline-flex h-10 cursor-pointer items-center justify-center rounded-xl bg-[#28394c] px-4 text-sm font-semibold text-white transition-[background-color,transform,box-shadow] duration-150 hover:bg-[#1e2a38] hover:shadow-sm active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#28394c]/25 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none'
 
 const secondaryButtonCls =
-  'inline-flex h-10 items-center justify-center rounded-xl bg-[#f4f5f7] px-4 text-sm font-semibold text-[#4f5a67] transition hover:bg-[#e9ecef] disabled:cursor-not-allowed disabled:opacity-50'
+  'inline-flex h-10 cursor-pointer items-center justify-center rounded-xl bg-[#f4f5f7] px-4 text-sm font-semibold text-[#4f5a67] transition-[background-color,transform] duration-150 hover:bg-[#e9ecef] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#28394c]/15 disabled:cursor-not-allowed disabled:opacity-50'
 
 function Spinner() {
   return (
@@ -530,7 +582,7 @@ function CustomAttributesEditor({
             },
           ])
         }
-        className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-[#28394c] hover:underline"
+        className="mt-3 inline-flex cursor-pointer items-center gap-2 text-xs font-semibold text-[#28394c] transition hover:underline"
       >
         <span className="flex h-5 w-5 items-center justify-center rounded-md bg-[#eef1f4]">
           +
@@ -592,10 +644,12 @@ function VariantFormFields({
   variant,
   attrSchema,
   allTags,
+  layout = 'tabs',
 }: {
   variant?: Variant
   attrSchema: CategoryAttribute[]
   allTags: Tag[]
+  layout?: ViewMode
 }) {
   const isCreate = !variant
 
@@ -620,32 +674,43 @@ function VariantFormFields({
   const [tab, setTab] =
     useState<VariantTab>('Общее')
 
-  return (
-    <div>
-      <div className="mb-5 flex gap-1 overflow-x-auto border-b border-[#e7eaed]">
-        {VARIANT_TABS.map((t) => (
-          <button
-            key={t}
-            type="button"
-            onClick={() => setTab(t)}
-            className={`shrink-0 border-b-2 px-3.5 py-2.5 text-xs font-semibold transition ${
-              tab === t
-                ? 'border-[#28394c] text-[#28394c]'
-                : 'border-transparent text-[#8b949f] hover:text-[#4f5a67]'
-            }`}
-          >
-            {t}
-          </button>
-        ))}
-      </div>
+  const dashboard = layout === 'dashboard'
 
-      <div
-        className={
-          tab === 'Общее'
-            ? 'space-y-5'
-            : 'hidden'
-        }
-      >
+  function sectionCls(t: VariantTab, spacing: string) {
+    if (dashboard) return `${dashPanelCls} ${spacing}`
+    return tab === t ? spacing : 'hidden'
+  }
+
+  return (
+    <div
+      onInvalidCapture={() => setTab('Общее')}
+      className={
+        dashboard
+          ? 'grid grid-cols-1 items-start gap-4 2xl:grid-cols-2'
+          : ''
+      }
+    >
+      {!dashboard && (
+        <div className="mb-5 flex gap-1 overflow-x-auto border-b border-[#e7eaed]">
+          {VARIANT_TABS.map((t) => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => setTab(t)}
+              className={`shrink-0 cursor-pointer border-b-2 px-3.5 py-2.5 text-xs font-semibold transition-colors ${
+                tab === t
+                  ? 'border-[#28394c] text-[#28394c]'
+                  : 'border-transparent text-[#8b949f] hover:text-[#4f5a67]'
+              }`}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div className={sectionCls('Общее', 'space-y-5')}>
+        {dashboard && <PanelTitle>Общее</PanelTitle>}
         <div>
           <label className={labelCls}>
             Название исполнения
@@ -728,13 +793,8 @@ function VariantFormFields({
         </div>
       </div>
 
-      <div
-        className={
-          tab === 'Характеристики'
-            ? 'space-y-6'
-            : 'hidden'
-        }
-      >
+      <div className={sectionCls('Характеристики', 'space-y-6')}>
+        {dashboard && <PanelTitle>Характеристики</PanelTitle>}
         <div>
           <div className="mb-3 flex items-center gap-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#eef1f4] text-[#28394c]">
@@ -798,13 +858,8 @@ function VariantFormFields({
         </div>
       </div>
 
-      <div
-        className={
-          tab === 'Контент'
-            ? 'space-y-6'
-            : 'hidden'
-        }
-      >
+      <div className={sectionCls('Контент', 'space-y-6')}>
+        {dashboard && <PanelTitle>Контент</PanelTitle>}
         <div>
           <p className="text-sm font-semibold text-[#28313d]">
             Область применения
@@ -842,13 +897,8 @@ function VariantFormFields({
         </div>
       </div>
 
-      <div
-        className={
-          tab === 'SEO'
-            ? 'space-y-5'
-            : 'hidden'
-        }
-      >
+      <div className={sectionCls('SEO', 'space-y-5')}>
+        {dashboard && <PanelTitle>SEO</PanelTitle>}
         <div>
           <label className={labelCls}>
             Meta Title
@@ -875,8 +925,8 @@ function VariantFormFields({
               variant?.metaDescription ?? ''
             }
             rows={3}
-            maxLength={160}
-            placeholder="До 160 символов"
+            maxLength={230}
+            placeholder="До 230 символов (в поиске обычно виден фрагмент до ~160–200)"
             className={textareaCls}
           />
         </div>
@@ -906,12 +956,14 @@ function VariantRow({
   attrSchema,
   allTags,
   startEditing,
+  layout,
 }: {
   variant: Variant
   isOnlyVariant: boolean
   attrSchema: CategoryAttribute[]
   allTags: Tag[]
   startEditing?: boolean
+  layout: ViewMode
 }) {
   const router = useRouter()
   const [editing, setEditing] = useState(
@@ -924,7 +976,10 @@ function VariantRow({
   const [error, setError] =
     useState<string | null>(null)
 
-  function handleSave(formData: FormData) {
+  function handleSave(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const formData = new FormData(event.currentTarget)
+
     startTransition(async () => {
       const result = await updateVariant(
         variant.id,
@@ -972,7 +1027,7 @@ function VariantRow({
       <li
         className={`${cardCls} overflow-hidden ring-2 ring-[#28394c]/10`}
       >
-        <div className="mb-5 flex items-center gap-3">
+        <div className="mb-5 flex items-center gap-3 border-b border-[#edf0f2] pb-4">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#28394c] to-[#3d5570] text-white">
             <SectionIcon type="product" />
           </div>
@@ -988,11 +1043,12 @@ function VariantRow({
           </div>
         </div>
 
-        <form action={handleSave}>
+        <form onSubmit={handleSave}>
           <VariantFormFields
             variant={variant}
             attrSchema={attrSchema}
             allTags={allTags}
+            layout={layout}
           />
 
           {error && (
@@ -1153,7 +1209,7 @@ function VariantRow({
     ) ?? variant.images[0]
 
   return (
-    <li className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/[0.04] transition hover:shadow-md sm:p-5">
+    <li className="group rounded-2xl bg-white p-4 shadow-[0_1px_2px_rgba(16,24,40,0.03)] ring-1 ring-black/[0.05] transition-[box-shadow,transform] duration-200 hover:-translate-y-px hover:shadow-md sm:p-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex min-w-0 gap-3">
           {mainImage ? (
@@ -1161,7 +1217,7 @@ function VariantRow({
               <img
                 src={mainImage.url}
                 alt=""
-                className="h-full w-full object-cover"
+                className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-[1.03]"
               />
             </div>
           ) : (
@@ -1205,14 +1261,14 @@ function VariantRow({
               </span>
             </div>
 
-            <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#687382]">
-              <span className="font-semibold text-[#28313d]">
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-[#687382]">
+              <span className="rounded-lg bg-[#f4f5f7] px-2.5 py-1 font-semibold text-[#28313d]">
                 {variant.price !== null
                   ? `${variant.price} ₽`
                   : 'Цена по запросу'}
               </span>
 
-              <span>
+              <span className="rounded-lg bg-[#f8faf9] px-2.5 py-1 text-[#4f6f5b] ring-1 ring-[#e2ece5]">
                 Остаток: {variant.stock}
               </span>
             </div>
@@ -1252,7 +1308,7 @@ function VariantRow({
           <button
             type="button"
             onClick={() => setEditing(true)}
-            className="inline-flex h-9 items-center gap-2 rounded-xl bg-[#eef1f4] px-3 text-xs font-semibold text-[#28394c] transition hover:bg-[#e3e7eb]"
+            className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-xl bg-[#eef1f4] px-3 text-xs font-semibold text-[#28394c] transition-[background-color,transform] duration-150 hover:bg-[#e3e7eb] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#28394c]/15"
           >
             <svg
               viewBox="0 0 20 20"
@@ -1279,7 +1335,7 @@ function VariantRow({
               type="button"
               onClick={handleDelete}
               disabled={isPending}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[#fff7f7] text-[#b33a3a] ring-1 ring-[#f0d5d5] transition hover:bg-[#ffefef] disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl bg-[#fff7f7] text-[#b33a3a] ring-1 ring-[#f0d5d5] transition-[background-color,transform] duration-150 hover:bg-[#ffefef] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b33a3a]/20 disabled:cursor-not-allowed disabled:opacity-50"
               title="Удалить исполнение"
               aria-label="Удалить исполнение"
             >
@@ -1350,6 +1406,25 @@ export default function ProductEditModal({
         ? 'Исполнения'
         : 'Основное'
     )
+
+  const [viewMode, setViewMode] = useState<ViewMode>('tabs')
+  const dashboard = viewMode === 'dashboard'
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(VIEW_MODE_KEY)
+      if (saved === 'tabs' || saved === 'dashboard') {
+        setViewMode(saved)
+      }
+    } catch {}
+  }, [])
+
+  function changeViewMode(mode: ViewMode) {
+    setViewMode(mode)
+    try {
+      localStorage.setItem(VIEW_MODE_KEY, mode)
+    } catch {}
+  }
 
   const [isPending, startTransition] =
     useTransition()
@@ -1445,7 +1520,10 @@ export default function ProductEditModal({
     }
   }, [isPending, onClose])
 
-  function handleSubmit(formData: FormData) {
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const formData = new FormData(event.currentTarget)
+
     startTransition(async () => {
       const result = await updateProduct(
         product.id,
@@ -1476,8 +1554,11 @@ export default function ProductEditModal({
   }
 
   function handleAddVariant(
-    formData: FormData
+    event: React.FormEvent<HTMLFormElement>
   ) {
+    event.preventDefault()
+    const formData = new FormData(event.currentTarget)
+
     startTransition(async () => {
       const result = await createVariant(
         product.id,
@@ -1510,11 +1591,19 @@ export default function ProductEditModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-[#18212b]/45 p-3 backdrop-blur-[3px] sm:p-5"
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-[#18212b]/50 p-0 backdrop-blur-[4px] sm:p-3 ${
+        dashboard ? 'p-2' : ''
+      }`}
       onMouseDown={handleBackdropClick}
     >
-      <div className="flex h-full max-h-[94vh] w-full max-w-[1100px] flex-col overflow-hidden rounded-2xl bg-[#f7f8fa] shadow-2xl ring-1 ring-black/[0.08]">
-        <div className="shrink-0 border-b border-[#e7eaed] bg-white">
+      <div
+        className={`flex h-full w-full flex-col overflow-hidden rounded-none bg-[#f7f8fa] shadow-2xl ring-1 ring-black/[0.08] sm:rounded-2xl ${
+          dashboard
+            ? 'max-h-full max-w-none'
+            : 'max-h-[94vh] max-w-[1100px]'
+        }`}
+      >
+        <div className="sticky top-0 z-20 shrink-0 border-b border-[#e7eaed] bg-white/95 shadow-[0_1px_3px_rgba(16,24,40,0.03)] backdrop-blur-sm">
           <div className="px-4 py-4 sm:px-6">
             <div className="flex items-start justify-between gap-4">
               <div className="flex min-w-0 items-center gap-3">
@@ -1533,13 +1622,19 @@ export default function ProductEditModal({
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={onClose}
-                disabled={isPending}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-[#8b949f] transition hover:bg-[#f4f5f7] hover:text-[#28313d] disabled:cursor-not-allowed disabled:opacity-40"
-                aria-label="Закрыть"
-              >
+              <div className="flex shrink-0 items-center gap-2">
+                <ViewModeSwitch
+                  value={viewMode}
+                  onChange={changeViewMode}
+                />
+
+                <button
+                  type="button"
+                  onClick={onClose}
+                  disabled={isPending}
+                  className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-xl text-[#8b949f] transition-[background-color,color,transform] duration-150 hover:bg-[#f4f5f7] hover:text-[#28313d] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#28394c]/15 disabled:cursor-not-allowed disabled:opacity-40"
+                  aria-label="Закрыть"
+                >
                 <svg
                   viewBox="0 0 20 20"
                   fill="none"
@@ -1553,15 +1648,17 @@ export default function ProductEditModal({
                   />
                 </svg>
               </button>
+              </div>
             </div>
 
-            <div className="mt-4 flex gap-1 overflow-x-auto">
-              {TOP_TABS.map((t) => (
+            {!dashboard && (
+              <div className="mt-4 flex gap-1 overflow-x-auto">
+                {TOP_TABS.map((t) => (
                 <button
                   key={t}
                   type="button"
                   onClick={() => setTopTab(t)}
-                  className={`shrink-0 border-b-2 px-4 py-2.5 text-xs font-semibold transition ${
+                  className={`shrink-0 cursor-pointer border-b-2 px-4 py-2.5 text-xs font-semibold transition-colors ${
                     topTab === t
                       ? 'border-[#28394c] text-[#28394c]'
                       : 'border-transparent text-[#8b949f] hover:text-[#4f5a67]'
@@ -1583,18 +1680,30 @@ export default function ProductEditModal({
                 </button>
               ))}
             </div>
+             )}
           </div>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto">
-          <div className="mx-auto w-full max-w-[900px] p-4 sm:p-6">
-            {topTab === 'Основное' && (
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+          <div
+            className={`mx-auto w-full p-4 sm:p-6 ${
+              dashboard ? 'max-w-none' : 'max-w-[900px]'
+            }`}
+          >
+            <div
+              className={
+                dashboard
+                  ? 'grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]'
+                  : ''
+              }
+            >
+            {(dashboard || topTab === 'Основное') && (
               <form
-                action={handleSubmit}
+                onSubmit={handleSubmit}
                 className="space-y-4"
               >
                 <div className={cardCls}>
-                  <div className="mb-5 flex items-center gap-3">
+                  <div className="mb-5 flex items-center gap-3 border-b border-[#edf0f2] pb-4">
                     <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#28394c] to-[#3d5570] text-white">
                       <SectionIcon type="product" />
                     </div>
@@ -1769,8 +1878,8 @@ export default function ProductEditModal({
                           product.shortDescription ?? ''
                         }
                         rows={3}
-                        maxLength={200}
-                        placeholder="Покажется в каталоге под названием (до 200 символов)"
+                        maxLength={230}
+                        placeholder="Покажется в каталоге под названием (до 230 символов)"
                         className={textareaCls}
                       />
 
@@ -1832,7 +1941,7 @@ export default function ProductEditModal({
                 </div>
 
                 <div className={cardCls}>
-                  <div className="mb-5 flex items-center gap-3">
+                  <div className="mb-5 flex items-center gap-3 border-b border-[#edf0f2] pb-4">
                     <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#eef1f4] text-[#28394c]">
                       <SectionIcon type="tags" />
                     </div>
@@ -1858,7 +1967,7 @@ export default function ProductEditModal({
                 </div>
 
                 <div className={cardCls}>
-                  <div className="mb-5 flex items-center gap-3">
+                  <div className="mb-5 flex items-center gap-3 border-b border-[#edf0f2] pb-4">
                     <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#eef1f4] text-[#28394c]">
                       <SectionIcon type="documents" />
                     </div>
@@ -1953,7 +2062,7 @@ export default function ProductEditModal({
               </form>
             )}
 
-            {topTab === 'Исполнения' && (
+            {(dashboard || topTab === 'Исполнения') && (
               <div>
                 <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                   <div>
@@ -1995,6 +2104,7 @@ export default function ProductEditModal({
                           v.id ===
                           initialVariantId
                         }
+                        layout={viewMode}
                       />
                     )
                   )}
@@ -2039,7 +2149,7 @@ export default function ProductEditModal({
                           )
                         }
                         disabled={isPending}
-                        className="flex h-9 w-9 items-center justify-center rounded-xl text-[#8b949f] transition hover:bg-[#f4f5f7] hover:text-[#28313d]"
+                        className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl text-[#8b949f] transition-[background-color,color,transform] duration-150 hover:bg-[#f4f5f7] hover:text-[#28313d] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#28394c]/15"
                         aria-label="Отменить добавление"
                       >
                         <svg
@@ -2059,13 +2169,14 @@ export default function ProductEditModal({
 
                     <form
                       key={addFormKey}
-                      action={handleAddVariant}
+                      onSubmit={handleAddVariant}
                     >
                       <VariantFormFields
                         attrSchema={
                           attrSchema
                         }
                         allTags={tags}
+                        layout={viewMode}
                       />
 
                       {addError && (
@@ -2132,7 +2243,7 @@ export default function ProductEditModal({
                     onClick={() =>
                       setAddingVariant(true)
                     }
-                    className="group flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-[#d9dee3] bg-white py-5 text-sm font-semibold text-[#687382] transition hover:border-[#9da8b3] hover:bg-[#fbfcfc] hover:text-[#28394c]"
+                    className="group flex w-full cursor-pointer items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-[#d9dee3] bg-white py-5 text-sm font-semibold text-[#687382] transition hover:border-[#9da8b3] hover:bg-[#fbfcfc] hover:text-[#28394c]"
                   >
                     <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#eef1f4] text-lg leading-none text-[#28394c] transition group-hover:bg-[#e4e8ec]">
                       +
@@ -2143,11 +2254,12 @@ export default function ProductEditModal({
                 )}
               </div>
             )}
+            </div>
           </div>
         </div>
 
         {isPending && (
-          <div className="flex shrink-0 items-center gap-2 border-t border-[#e7eaed] bg-white px-4 py-2.5 text-xs font-medium text-[#687382] sm:px-6">
+          <div className="sticky bottom-0 z-20 flex shrink-0 items-center gap-2 border-t border-[#e7eaed] bg-white/95 px-4 py-2.5 text-xs font-medium text-[#687382] shadow-[0_-1px_3px_rgba(16,24,40,0.03)] backdrop-blur-sm sm:px-6">
             <Spinner />
             Сохранение изменений...
           </div>

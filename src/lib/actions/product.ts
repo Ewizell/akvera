@@ -120,6 +120,7 @@ export async function updateProduct(id: string, formData: FormData) {
   }
 
   revalidatePath('/admin/products')
+  revalidatePath('/product', 'layout')
   revalidatePath('/category', 'layout')
   revalidatePath('/catalog')
   return { success: true }

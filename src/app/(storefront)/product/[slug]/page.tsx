@@ -311,7 +311,7 @@ const crumbs = [
               </p>
               <p>
                 Наши{" "}
-                <Link href="/contacts" className="font-medium text-[#0082b2]">
+                <Link href="/#requisites" className="font-medium text-[#0082b2]">
                   менеджеры
                 </Link>{" "}
                 предоставят информацию по обращению, проконсультируют по продукции и помогут с оформлением заказа.

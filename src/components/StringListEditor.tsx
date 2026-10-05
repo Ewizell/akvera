@@ -16,6 +16,27 @@ export default function StringListEditor({
 }) {
   const [items, setItems] = useState<string[]>(initial ?? [])
 
+  const [bulkOpen, setBulkOpen] = useState(false)
+  const [bulkText, setBulkText] = useState('')
+
+  function addBulk() {
+    const lines = bulkText
+      .split(/\r?\n/)
+      .map((line) =>
+        line.replace(/^\s*(?:[-–—•*·]|\d+[.)])\s*/, '').trim()
+      )
+      .filter(Boolean)
+
+    if (lines.length === 0) return
+
+    setItems((prev) => [
+      ...prev.filter((item) => item.trim() !== ''),
+      ...lines,
+    ])
+    setBulkText('')
+    setBulkOpen(false)
+  }
+
   function updateItem(index: number, value: string) {
     setItems((prev) =>
       prev.map((item, i) => (i === index ? value : item))
@@ -136,16 +157,64 @@ export default function StringListEditor({
         ))}
       </div>
 
-      <button
-        type="button"
-        onClick={() => setItems((prev) => [...prev, ''])}
-        className="mt-3 inline-flex items-center gap-2 rounded-xl bg-white px-3.5 py-2.5 text-sm font-medium text-[#28394c] ring-1 ring-black/[0.05] transition hover:bg-[#f4f5f7]"
-      >
-        <span className="flex h-5 w-5 items-center justify-center rounded-md bg-[#28394c] text-sm leading-none text-white">
-          +
-        </span>
-        Добавить пункт
-      </button>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() => setItems((prev) => [...prev, ''])}
+          className="inline-flex items-center gap-2 rounded-xl bg-white px-3.5 py-2.5 text-sm font-medium text-[#28394c] ring-1 ring-black/[0.05] transition hover:bg-[#f4f5f7]"
+        >
+          <span className="flex h-5 w-5 items-center justify-center rounded-md bg-[#28394c] text-sm leading-none text-white">
+            +
+          </span>
+          Добавить пункт
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setBulkOpen((v) => !v)}
+          className="inline-flex items-center gap-2 rounded-xl bg-[#eef1f4] px-3.5 py-2.5 text-sm font-medium text-[#28394c] transition hover:bg-[#e3e7eb]"
+        >
+          Вставить списком
+        </button>
+      </div>
+
+      {bulkOpen && (
+        <div className="mt-3 rounded-xl bg-white p-3 ring-1 ring-black/[0.05]">
+          <p className="mb-2 text-xs leading-5 text-[#969faa]">
+            Один пункт на строку. Можно вставить столбец из Excel или список из Word.
+          </p>
+
+          <textarea
+            value={bulkText}
+            onChange={(e) => setBulkText(e.target.value)}
+            rows={6}
+            placeholder={'Низкое энергопотребление\nПростой монтаж\nДлительный срок службы'}
+            className="w-full rounded-xl border-0 bg-[#f4f5f7] px-3.5 py-3 text-sm text-[#28313d] outline-none ring-1 ring-transparent transition placeholder:text-[#a1a8b3] focus:bg-white focus:ring-2 focus:ring-[#28394c]/15"
+          />
+
+          <div className="mt-2 flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setBulkOpen(false)
+                setBulkText('')
+              }}
+              className="inline-flex h-9 items-center rounded-xl bg-[#f4f5f7] px-3.5 text-xs font-semibold text-[#4f5a67] transition hover:bg-[#e9ecef]"
+            >
+              Отмена
+            </button>
+
+            <button
+              type="button"
+              onClick={addBulk}
+              disabled={bulkText.trim() === ''}
+              className="inline-flex h-9 items-center rounded-xl bg-[#28394c] px-3.5 text-xs font-semibold text-white transition hover:bg-[#1e2a38] disabled:opacity-50"
+            >
+              Добавить в список
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
