@@ -92,10 +92,16 @@ export async function getCatalogProducts(
   const { categoryId, categoryIds, brand, q, tags, sort, priceMin, priceMax, inStock, attrValues, attrRanges } =
     filters;
 
-  const categoryFilter = categoryId
-    ? { id: categoryId }
+  // основная ИЛИ дополнительная категория
+  const categoryWhere = categoryId
+    ? { OR: [{ categoryId }, { categories: { some: { id: categoryId } } }] }
     : categoryIds && categoryIds.length > 0
-    ? { id: { in: categoryIds } }
+    ? {
+        OR: [
+          { categoryId: { in: categoryIds } },
+          { categories: { some: { id: { in: categoryIds } } } },
+        ],
+      }
     : undefined;
 
   // условия по JSONB-атрибутам варианта: одно условие на ключ, все условия объединяются через AND
@@ -149,7 +155,7 @@ export async function getCatalogProducts(
   const baseWhere = {
     product: {
       isHidden: false,
-      category: categoryFilter,
+      ...(categoryWhere ? { AND: [categoryWhere] } : {}),
       brand: brand ? { slug: brand } : undefined,
     },
     ...(andConditions.length > 0 ? { AND: andConditions } : {}),
@@ -255,10 +261,15 @@ export async function getCatalogProducts(
 export async function getPriceRange(
   filters: Pick<CatalogFilters, "categoryId" | "categoryIds" | "brand" | "tags">
 ): Promise<{ min: number; max: number }> {
-  const categoryFilter = filters.categoryId
-    ? { id: filters.categoryId }
+  const categoryWhere = filters.categoryId
+    ? { OR: [{ categoryId: filters.categoryId }, { categories: { some: { id: filters.categoryId } } }] }
     : filters.categoryIds && filters.categoryIds.length > 0
-    ? { id: { in: filters.categoryIds } }
+    ? {
+        OR: [
+          { categoryId: { in: filters.categoryIds } },
+          { categories: { some: { id: { in: filters.categoryIds } } } },
+        ],
+      }
     : undefined;
 
   const result = await prisma.productVariant.aggregate({
@@ -266,7 +277,7 @@ export async function getPriceRange(
       price: { not: null },
       product: {
         isHidden: false,
-        category: categoryFilter,
+        ...(categoryWhere ? { AND: [categoryWhere] } : {}),
         brand: filters.brand ? { slug: filters.brand } : undefined,
         tags: filters.tags && filters.tags.length > 0 ? { some: { slug: { in: filters.tags } } } : undefined,
       },
@@ -303,12 +314,12 @@ export async function getAttributeFilterOptions(
   });
   if (!category || category.attributes.length === 0) return [];
 
-  const productCategoryFilter = categoryId ? { id: categoryId } : { id: { in: categoryIds! } };
+  const ids = categoryId ? [categoryId] : categoryIds!;
   const variants = await prisma.productVariant.findMany({
     where: {
       product: {
         isHidden: false,
-        category: productCategoryFilter,
+        OR: [{ categoryId: { in: ids } }, { categories: { some: { id: { in: ids } } } }],
         brand: brandSlug ? { slug: brandSlug } : undefined,
       },
     },
@@ -437,13 +448,45 @@ export type CategoryTreeNode = {
   children: CategoryTreeNode[];
 };
 
+// Кол-во видимых товаров в каждой категории с учётом всех вложенных подкатегорий.
+// Товар считается один раз на категорию, даже если лежит в нескольких ветках.
+export async function getCategoryProductCounts(): Promise<Map<string, number>> {
+  const [categories, products] = await Promise.all([
+    prisma.category.findMany({ select: { id: true, parentId: true } }),
+    prisma.product.findMany({
+      where: { isHidden: false },
+      select: { categoryId: true, categories: { select: { id: true } } },
+    }),
+  ]);
+
+  const parentOf = new Map(categories.map((c) => [c.id, c.parentId]));
+  const counts = new Map<string, number>();
+
+  for (const p of products) {
+    const covered = new Set<string>();
+    for (const startId of [p.categoryId, ...p.categories.map((c) => c.id)]) {
+      let id: string | null | undefined = startId;
+      while (id && !covered.has(id)) {
+        covered.add(id);
+        id = parentOf.get(id);
+      }
+    }
+    for (const id of covered) counts.set(id, (counts.get(id) ?? 0) + 1);
+  }
+
+  return counts;
+}
+
 export async function buildCategoryTree(
   rootId: string,
   rootAncestorSlugs: string[]
 ): Promise<CategoryTreeNode | null> {
-  const all = await prisma.category.findMany({
-    select: { id: true, name: true, slug: true, parentId: true, _count: { select: { products: true } } },
-  });
+  const [all, counts] = await Promise.all([
+    prisma.category.findMany({
+      select: { id: true, name: true, slug: true, parentId: true },
+    }),
+    getCategoryProductCounts(),
+  ]);
   const byParent = new Map<string, typeof all>();
   for (const c of all) {
     const key = c.parentId ?? "__root__";
@@ -467,7 +510,7 @@ export async function buildCategoryTree(
       id: cat.id,
       name: cat.name,
       slug: cat.slug,
-      productCount: cat._count.products,
+      productCount: counts.get(cat.id) ?? 0,
       allProductsHref: hasChildren ? `${pagePath}/all` : pagePath,
       ownProductsHref: hasChildren ? `${pagePath}/own` : null,
       children,
@@ -488,10 +531,13 @@ export async function getCategoryChildren(
   categoryId: string,
   pathSlugs: string[] // цепочка slug'ов от корня до текущей категории (для построения href)
 ): Promise<CategoryChildItem[]> {
-  const children = await prisma.category.findMany({
-    where: { parentId: categoryId, isHidden: false },
-    select: { id: true, name: true, slug: true, _count: { select: { products: true } } },
-  });
+  const [children, counts] = await Promise.all([
+    prisma.category.findMany({
+      where: { parentId: categoryId, isHidden: false },
+      select: { id: true, name: true, slug: true },
+    }),
+    getCategoryProductCounts(),
+  ]);
 
   return children
     .slice()
@@ -500,7 +546,7 @@ export async function getCategoryChildren(
       id: c.id,
       name: c.name,
       slug: c.slug,
-      productCount: c._count.products,
+      productCount: counts.get(c.id) ?? 0,
       href: `/category/${[...pathSlugs, c.slug].join("/")}`,
     }));
 }
@@ -515,23 +561,30 @@ export type BrandCategoryItem = {
 export async function getBrandCategories(brandSlug: string): Promise<BrandCategoryItem[]> {
   const products = await prisma.product.findMany({
     where: { isHidden: false, brand: { slug: brandSlug } },
-    select: { category: { select: { id: true, name: true, slug: true, imageUrl: true } } },
+    select: {
+      category: { select: { id: true, name: true, slug: true, imageUrl: true } },
+      categories: { select: { id: true, name: true, slug: true, imageUrl: true } },
+    },
   });
 
   const map = new Map<string, BrandCategoryItem>();
   for (const p of products) {
-    if (!p.category) continue;
-    const existing = map.get(p.category.id);
-    if (existing) {
-      existing.productCount += 1;
-    } else {
-      map.set(p.category.id, {
-        id: p.category.id,
-        name: p.category.name,
-        slug: p.category.slug,
-        imageUrl: p.category.imageUrl ?? null,
-        productCount: 1,
-      });
+    const cats = [p.category, ...p.categories].filter(Boolean) as {
+      id: string; name: string; slug: string; imageUrl: string | null
+    }[];
+    for (const c of cats) {
+      const existing = map.get(c.id);
+      if (existing) {
+        existing.productCount += 1;
+      } else {
+        map.set(c.id, {
+          id: c.id,
+          name: c.name,
+          slug: c.slug,
+          imageUrl: c.imageUrl ?? null,
+          productCount: 1,
+        });
+      }
     }
   }
 

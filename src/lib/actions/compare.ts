@@ -2,6 +2,9 @@
 
 import { prisma } from '@/lib/prisma'
 
+// товары без категории группируются в отдельную вкладку сравнения
+const NO_CATEGORY_ID = '__none__'
+
 export type CompareVariant = {
   variantId: string
   productId: string
@@ -59,10 +62,10 @@ export async function getCompareVariants(variantIds: string[]): Promise<CompareV
     price: v.price ? Number(v.price) : null,
     image: v.images[0]?.url ?? null,
     brandName: v.product.brand?.name ?? null,
-    categoryId: v.product.categoryId,
-    categoryName: v.product.category.name,
+    categoryId: v.product.categoryId ?? NO_CATEGORY_ID,
+    categoryName: v.product.category?.name ?? 'Без категории',
     attributes: v.attributes as Record<string, unknown>,
-    categoryAttributes: v.product.category.attributes.map((a) => ({
+    categoryAttributes: (v.product.category?.attributes ?? []).map((a) => ({
       key: a.key,
       label: a.label,
       fieldType: a.fieldType,

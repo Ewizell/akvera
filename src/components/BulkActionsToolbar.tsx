@@ -7,6 +7,8 @@ import {
   bulkUpdateBrand,
   bulkAddTags,
   bulkRemoveTags,
+  bulkAddCategories,
+  bulkRemoveCategories,
   previewBulkCategoryChange,
   applyBulkCategoryChange,
 } from "@/lib/actions/product";
@@ -46,10 +48,14 @@ type ModalType =
   | "category"
   | "brand"
   | "tagsAdd"
-  | "tagsRemove";
+  | "tagsRemove"
+  | "catsAdd"
+  | "catsRemove";
 
 const inputClassName =
   "h-11 w-full rounded-xl border-0 bg-[#f4f5f7] px-3.5 text-sm text-[#28313d] outline-none ring-1 ring-transparent transition focus:bg-white focus:ring-2 focus:ring-[#28394c]/15";
+
+const NO_CATEGORY = "__none__";
 
 const secondaryButtonClassName =
   "inline-flex h-10 items-center justify-center rounded-xl bg-[#f4f5f7] px-3.5 text-sm font-semibold text-[#4f5a67] transition hover:bg-[#e9ecef] disabled:cursor-not-allowed disabled:opacity-40";
@@ -58,7 +64,7 @@ const primaryButtonClassName =
   "inline-flex h-10 items-center justify-center rounded-xl bg-[#28394c] px-4 text-sm font-semibold text-white transition hover:bg-[#1e2a38] disabled:cursor-not-allowed disabled:opacity-40";
 
 function ModalIcon({ type }: { type: Exclude<ModalType, null> }) {
-  if (type === "category") {
+  if (type === "category" || type === "catsAdd" || type === "catsRemove") {
     return (
       <svg
         viewBox="0 0 20 20"
@@ -154,6 +160,9 @@ export default function BulkActionsToolbar({
   const [selectedTagIds, setSelectedTagIds] =
     useState<string[]>([]);
 
+  const [selectedExtraCatIds, setSelectedExtraCatIds] =
+    useState<string[]>([]);
+
   const [categoryStep, setCategoryStep] = useState<"select" | "review">("select");
   const [categoryPreview, setCategoryPreview] = useState<{
     newCategoryName: string;
@@ -175,6 +184,7 @@ export default function BulkActionsToolbar({
     setModal(null);
     setSelectedOptionId("");
     setSelectedTagIds([]);
+    setSelectedExtraCatIds([]);
     setCategoryStep("select");
     setCategoryPreview(null);
     setTransferChoices({});
@@ -226,7 +236,10 @@ export default function BulkActionsToolbar({
     if (!selectedOptionId) return;
 
     startTransition(async () => {
-      const result = await previewBulkCategoryChange(selectedIds, selectedOptionId);
+      const result = await previewBulkCategoryChange(
+        selectedIds,
+        selectedOptionId === NO_CATEGORY ? null : selectedOptionId
+      );
 
       if (!result.success) {
         setErrorMessage(result.error ?? "Не удалось выполнить операцию.");
@@ -275,7 +288,11 @@ export default function BulkActionsToolbar({
     );
 
     startTransition(async () => {
-      const result = await applyBulkCategoryChange(selectedIds, selectedOptionId, transfers);
+      const result = await applyBulkCategoryChange(
+        selectedIds,
+        selectedOptionId === NO_CATEGORY ? null : selectedOptionId,
+        transfers
+      );
 
       if (!result.success) {
         setErrorMessage(result.error ?? "Не удалось выполнить операцию.");
@@ -331,6 +348,31 @@ export default function BulkActionsToolbar({
         ? prev.filter((tagId) => tagId !== id)
         : [...prev, id]
     );
+  }
+
+  function toggleExtraCat(id: string) {
+    setSelectedExtraCatIds((prev) =>
+      prev.includes(id)
+        ? prev.filter((catId) => catId !== id)
+        : [...prev, id]
+    );
+  }
+
+  function handleApplyExtraCategories(mode: "add" | "remove") {
+    if (selectedExtraCatIds.length === 0) return;
+
+    startTransition(async () => {
+      if (mode === "add") {
+        await bulkAddCategories(selectedIds, selectedExtraCatIds);
+      } else {
+        await bulkRemoveCategories(selectedIds, selectedExtraCatIds);
+      }
+
+      setModal(null);
+      setSelectedExtraCatIds([]);
+      onClear();
+      router.refresh();
+    });
   }
 
   return (
@@ -461,6 +503,32 @@ export default function BulkActionsToolbar({
               Теги
             </button>
 
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedExtraCatIds([]);
+                setModal("catsAdd");
+              }}
+              disabled={disabled}
+              className={secondaryButtonClassName}
+            >
+              <span className="mr-1 text-base leading-none">+</span>
+              Доп. категория
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedExtraCatIds([]);
+                setModal("catsRemove");
+              }}
+              disabled={disabled}
+              className={secondaryButtonClassName}
+            >
+              <span className="mr-1 text-base leading-none">−</span>
+              Доп. категория
+            </button>
+
             <div className="hidden h-7 w-px bg-[#e8ebee] lg:block" />
 
             <button
@@ -574,6 +642,7 @@ export default function BulkActionsToolbar({
                     <option value="" disabled>
                       — Выберите категорию —
                     </option>
+                    <option value={NO_CATEGORY}>Без категории</option>
 
                     {categories.map((category) => (
                       <option key={category.id} value={category.id}>
@@ -955,6 +1024,142 @@ export default function BulkActionsToolbar({
                   </span>
                 )}
 
+                Применить
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {(modal === "catsAdd" || modal === "catsRemove") && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#18212b]/45 p-4 backdrop-blur-[3px]"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              closeModal();
+            }
+          }}
+        >
+          <div className="flex max-h-[90vh] w-full max-w-[520px] flex-col overflow-hidden rounded-2xl bg-[#f7f8fa] shadow-2xl ring-1 ring-black/[0.08]">
+            <div className="flex items-start justify-between border-b border-[#e7eaed] bg-white px-5 py-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#28394c] to-[#3d5570] text-white">
+                  <ModalIcon type={modal} />
+                </div>
+
+                <div>
+                  <h3 className="text-base font-semibold text-[#28313d]">
+                    {modal === "catsAdd"
+                      ? "Добавить в категории"
+                      : "Убрать из категорий"}
+                  </h3>
+
+                  <p className="mt-0.5 text-xs text-[#8b949f]">
+                    {modal === "catsAdd"
+                      ? "Товары также появятся в выбранных категориях"
+                      : "Товары пропадут из выбранных дополнительных категорий"}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={closeModal}
+                disabled={isPending}
+                className="flex h-9 w-9 items-center justify-center rounded-xl text-[#8b949f] transition hover:bg-[#f4f5f7] hover:text-[#28313d] disabled:opacity-40"
+                aria-label="Закрыть"
+              >
+                <svg viewBox="0 0 20 20" fill="none" className="h-5 w-5" stroke="currentColor" strokeWidth="1.6">
+                  <path strokeLinecap="round" d="M5 5l10 10M15 5L5 15" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="overflow-y-auto p-5">
+              <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/[0.04]">
+                <div className="mb-3 flex items-center justify-between">
+                  <div className="text-xs text-[#969faa]">
+                    Выбрано:{" "}
+                    <span className="font-semibold text-[#5f6976]">
+                      {selectedExtraCatIds.length}
+                    </span>
+                  </div>
+
+                  {selectedExtraCatIds.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setSelectedExtraCatIds([])}
+                      className="text-xs font-semibold text-[#687382] hover:text-[#28394c]"
+                    >
+                      Сбросить
+                    </button>
+                  )}
+                </div>
+
+                <div className="max-h-64 space-y-1.5 overflow-y-auto pr-1">
+                  {categories.map((category) => {
+                    const checked = selectedExtraCatIds.includes(category.id);
+
+                    return (
+                      <label
+                        key={category.id}
+                        className={`flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 transition ${
+                          checked
+                            ? "bg-[#eef1f4] ring-1 ring-[#dfe4e8]"
+                            : "hover:bg-[#f4f5f7]"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => toggleExtraCat(category.id)}
+                          className="h-4 w-4 rounded border-[#cbd1d8] text-[#28394c] focus:ring-[#28394c]/20"
+                        />
+
+                        <span
+                          className={`text-sm ${
+                            checked
+                              ? "font-semibold text-[#28313d]"
+                              : "text-[#5f6976]"
+                          }`}
+                        >
+                          {category.name}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+
+                <p className="mt-3 text-xs leading-5 text-[#969faa]">
+                  Основная категория товара не меняется. Если выбранная категория
+                  у товара уже основная, она не добавится повторно.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 border-t border-[#e7eaed] bg-white px-5 py-4">
+              <button
+                type="button"
+                onClick={closeModal}
+                disabled={isPending}
+                className={secondaryButtonClassName}
+              >
+                Отмена
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  handleApplyExtraCategories(modal === "catsAdd" ? "add" : "remove")
+                }
+                disabled={selectedExtraCatIds.length === 0 || isPending}
+                className={primaryButtonClassName}
+              >
+                {isPending && (
+                  <span className="mr-2">
+                    <Spinner />
+                  </span>
+                )}
                 Применить
               </button>
             </div>

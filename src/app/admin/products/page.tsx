@@ -16,6 +16,11 @@ export default async function ProductsPage() {
               attributes: true,
             },
           },
+          categories: {
+            select: {
+              id: true,
+            },
+          },
           brand: true,
           documents: {
             include: {
@@ -70,6 +75,7 @@ export default async function ProductsPage() {
     id: product.id,
     name: product.name,
     categoryId: product.categoryId,
+    extraCategoryIds: product.categories.map((c) => c.id),
     brandId: product.brandId,
     description: product.description,
     shortDescription: product.shortDescription,
@@ -77,18 +83,20 @@ export default async function ProductsPage() {
     applicationAreas: product.applicationAreas,
     advantages: product.advantages,
 
-    category: {
-      name: product.category.name,
-      attributes: product.category.attributes.map(
-        (attribute) => ({
-          id: attribute.id,
-          key: attribute.key,
-          label: attribute.label,
-          fieldType: attribute.fieldType,
-          unit: attribute.unit,
-        }),
-      ),
-    },
+    category: product.category
+      ? {
+          name: product.category.name,
+          attributes: product.category.attributes.map(
+            (attribute) => ({
+              id: attribute.id,
+              key: attribute.key,
+              label: attribute.label,
+              fieldType: attribute.fieldType,
+              unit: attribute.unit,
+            }),
+          ),
+        }
+      : null,
 
     documents: product.documents.map((doc) => ({
       id: doc.id,

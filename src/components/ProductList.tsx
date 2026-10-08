@@ -47,7 +47,8 @@ type ProductVariant = {
 type Product = {
   id: string
   name: string
-  categoryId: string
+  categoryId: string | null
+  extraCategoryIds: string[]
   brandId: string | null
   description: string | null
   shortDescription: string | null
@@ -62,7 +63,7 @@ type Product = {
   category: {
     name: string
     attributes: CategoryAttributeSchema[]
-  }
+  } | null
   variants: ProductVariant[]
   tagIds: string[]
 }
@@ -83,6 +84,8 @@ type Tag = {
   id: string
   name: string
 }
+
+const NO_CATEGORY = '__none__'
 
 function formatPrice(price: number | null) {
   if (price === null) return 'Цена по запросу'
@@ -286,9 +289,24 @@ function ProductRow({
                     {product.name}
                   </h3>
 
-                  <span className="rounded-lg bg-[#eef1f4] px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-[#687382]">
-                    {product.category.name}
+                  <span
+                    className={`rounded-lg px-2 py-1 text-[10px] font-semibold uppercase tracking-wide ${
+                      product.category
+                        ? 'bg-[#eef1f4] text-[#687382]'
+                        : 'bg-[#fff9ed] text-[#9a6b19]'
+                    }`}
+                  >
+                    {product.category?.name ?? 'Без категории'}
                   </span>
+
+                  {product.extraCategoryIds.length > 0 && (
+                    <span
+                      title="Дополнительные категории"
+                      className="rounded-lg bg-[#eef1f4] px-2 py-1 text-[10px] font-semibold tracking-wide text-[#687382]"
+                    >
+                      +{product.extraCategoryIds.length}
+                    </span>
+                  )}
 
                   {product.isHidden && (
                     <span className="rounded-lg bg-[#fff0f0] px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-[#b33a3a]">
@@ -643,17 +661,33 @@ export default function ProductList({
   const [isPending, startTransition] = useTransition()
 
   const categoryCounts = useMemo(() => {
+    const parentOf = new Map(categories.map((c) => [c.id, c.parentId]))
     const counts: Record<string, number> = {}
 
     for (const product of products) {
-      counts[product.categoryId] = (counts[product.categoryId] ?? 0) + 1
+      const covered = new Set<string>()
+      for (const startId of [product.categoryId, ...product.extraCategoryIds]) {
+        let id: string | null | undefined = startId
+        while (id && !covered.has(id)) {
+          covered.add(id)
+          id = parentOf.get(id)
+        }
+      }
+      for (const id of covered) {
+        counts[id] = (counts[id] ?? 0) + 1
+      }
     }
 
     return counts
-  }, [products])
+  }, [products, categories])
+
+  const uncategorizedCount = useMemo(
+    () => products.filter((p) => !p.categoryId).length,
+    [products]
+  )
 
   const selectedCategoryDescendants = useMemo(() => {
-    if (!selectedCategoryId) return null
+    if (!selectedCategoryId || selectedCategoryId === NO_CATEGORY) return null
 
     const ids = new Set<string>([selectedCategoryId])
 
@@ -675,9 +709,12 @@ export default function ProductList({
     const query = search.trim().toLowerCase()
 
     let result = products.filter((product) => {
-      if (
+      if (selectedCategoryId === NO_CATEGORY) {
+        if (product.categoryId) return false
+      } else if (
         selectedCategoryDescendants &&
-        !selectedCategoryDescendants.has(product.categoryId)
+        !(product.categoryId && selectedCategoryDescendants.has(product.categoryId)) &&
+        !product.extraCategoryIds.some((id) => selectedCategoryDescendants.has(id))
       ) {
         return false
       }
@@ -687,7 +724,7 @@ export default function ProductList({
       const searchable = [
         product.name,
         product.description ?? '',
-        product.category.name,
+        product.category?.name ?? '',
         ...product.variants.flatMap((variant) => [
           variant.name,
           variant.sku ?? '',
@@ -945,6 +982,23 @@ export default function ProductList({
                 Категории
               </div>
             </div>
+
+            <button
+              type="button"
+              onClick={() =>
+                handleCategorySelect(
+                  selectedCategoryId === NO_CATEGORY ? null : NO_CATEGORY
+                )
+              }
+              className={`mb-2 flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm transition ${
+                selectedCategoryId === NO_CATEGORY
+                  ? 'bg-[#eef1f4] font-semibold text-[#28313d]'
+                  : 'text-[#5f6976] hover:bg-[#f4f5f7]'
+              }`}
+            >
+              <span>Без категории</span>
+              <span className="text-xs text-[#8b949f]">{uncategorizedCount}</span>
+            </button>
 
             <CategoryTree
               categories={categories}

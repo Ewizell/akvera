@@ -14,9 +14,15 @@ function parseStringList(formData: FormData, name: string): string[] {
   }
 }
 
+function parseExtraCategoryIds(formData: FormData, primaryId: string | null): string[] {
+  if (!primaryId) return [] // без основной категории дополнительных не бывает
+  const ids = formData.getAll('extraCategoryIds').map(String).filter(Boolean)
+  return [...new Set(ids)].filter((id) => id !== primaryId)
+}
+
 export async function createProduct(formData: FormData) {
   const name = formData.get('name') as string
-  const categoryId = formData.get('categoryId') as string
+  const categoryId = (formData.get('categoryId') as string) || null
   const description = formData.get('description') as string
   const brandId = formData.get('brandId') as string
 
@@ -26,6 +32,7 @@ export async function createProduct(formData: FormData) {
   const shortDescription = formData.get('shortDescription') as string
   const applicationAreas = parseStringList(formData, 'applicationAreas')
   const advantages = parseStringList(formData, 'advantages')
+  const extraCategoryIds = parseExtraCategoryIds(formData, categoryId)
 
   try {
     const isHidden = formData.get('isHidden') === 'on'
@@ -40,6 +47,7 @@ export async function createProduct(formData: FormData) {
         advantages,
         brandId: brandId || null,
         isHidden,
+        categories: { connect: extraCategoryIds.map((id) => ({ id })) },
         variants: {
           create: {
             name,
@@ -63,10 +71,14 @@ export async function createProduct(formData: FormData) {
   }
 }
 
-export async function getRelatedVariants(categoryId: string, excludeVariantId: string, limit = 8) {
+export async function getRelatedVariants(categoryId: string | null, excludeVariantId: string, limit = 8) {
+  if (!categoryId) return []
+
   const variants = await prisma.productVariant.findMany({
     where: {
-      product: { categoryId },
+      product: {
+        OR: [{ categoryId }, { categories: { some: { id: categoryId } } }],
+      },
       id: { not: excludeVariantId },
     },
     include: {
@@ -86,13 +98,14 @@ export async function getRelatedVariants(categoryId: string, excludeVariantId: s
 
 export async function updateProduct(id: string, formData: FormData) {
   const name = formData.get('name') as string
-  const categoryId = formData.get('categoryId') as string
+  const categoryId = (formData.get('categoryId') as string) || null
   const description = formData.get('description') as string
   const brandId = formData.get('brandId') as string
   const shortDescription = formData.get('shortDescription') as string
   const tagIds = formData.getAll('tagIds') as string[]
   const applicationAreas = parseStringList(formData, 'applicationAreas')
   const advantages = parseStringList(formData, 'advantages')
+  const extraCategoryIds = parseExtraCategoryIds(formData, categoryId)
 
   const isHidden = formData.get('isHidden') === 'on'
 
@@ -109,6 +122,7 @@ export async function updateProduct(id: string, formData: FormData) {
         brandId: brandId || null,
         isHidden,
         tags: { set: tagIds.map((id) => ({ id })) },
+        categories: { set: extraCategoryIds.map((id) => ({ id })) },
       },
     })
   } catch (error) {
@@ -277,12 +291,52 @@ export async function bulkRemoveTags(productIds: string[], tagIds: string[]) {
   revalidatePath("/admin/products");
 }
 
+export async function bulkAddCategories(productIds: string[], categoryIds: string[]) {
+  const products = await prisma.product.findMany({
+    where: { id: { in: productIds } },
+    select: { id: true, categoryId: true },
+  })
+
+  await prisma.$transaction(
+    products.map((p) =>
+      prisma.product.update({
+        where: { id: p.id },
+        data: {
+          categories: {
+            connect: categoryIds
+              .filter((cid) => cid !== p.categoryId)
+              .map((cid) => ({ id: cid })),
+          },
+        },
+      })
+    )
+  )
+  revalidatePath('/admin/products')
+  revalidatePath('/catalog')
+  revalidatePath('/category', 'layout')
+}
+
+export async function bulkRemoveCategories(productIds: string[], categoryIds: string[]) {
+  await prisma.$transaction(
+    productIds.map((id) =>
+      prisma.product.update({
+        where: { id },
+        data: { categories: { disconnect: categoryIds.map((cid) => ({ id: cid })) } },
+      })
+    )
+  )
+  revalidatePath('/admin/products')
+  revalidatePath('/catalog')
+  revalidatePath('/category', 'layout')
+}
+
 export async function duplicateProduct(productId: string) {
   try {
     const source = await prisma.product.findUnique({
       where: { id: productId },
       include: {
         tags: true,
+        categories: true,
         documents: true,
         variants: {
           include: {
@@ -310,6 +364,7 @@ export async function duplicateProduct(productId: string) {
         applicationAreas: source.applicationAreas,
         advantages: source.advantages,
         tags: { connect: source.tags.map((t) => ({ id: t.id })) },
+        categories: { connect: source.categories.map((c) => ({ id: c.id })) },
         documents: {
           create: source.documents.map((doc) => ({
             documentId: doc.documentId,
@@ -358,12 +413,14 @@ export async function duplicateProduct(productId: string) {
 }
 import { computeAttributeMigration, type CategoryAttributeSchema } from '@/lib/attribute-migration'
 
-export async function previewBulkCategoryChange(productIds: string[], newCategoryId: string) {
+export async function previewBulkCategoryChange(productIds: string[], newCategoryId: string | null) {
   const [newCategory, products] = await Promise.all([
-    prisma.category.findUnique({
-      where: { id: newCategoryId },
-      include: { attributes: true },
-    }),
+    newCategoryId
+      ? prisma.category.findUnique({
+          where: { id: newCategoryId },
+          include: { attributes: true },
+        })
+      : Promise.resolve(null),
     prisma.product.findMany({
       where: { id: { in: productIds } },
       include: {
@@ -373,11 +430,11 @@ export async function previewBulkCategoryChange(productIds: string[], newCategor
     }),
   ])
 
-  if (!newCategory) {
+  if (newCategoryId && !newCategory) {
     return { success: false as const, error: 'Категория не найдена.' }
   }
 
-  const newSchema: CategoryAttributeSchema[] = newCategory.attributes.map((a) => ({
+  const newSchema: CategoryAttributeSchema[] = (newCategory?.attributes ?? []).map((a) => ({
     key: a.key,
     label: a.label,
     fieldType: a.fieldType,
@@ -385,7 +442,7 @@ export async function previewBulkCategoryChange(productIds: string[], newCategor
   }))
 
   const items = products.map((product) => {
-    const oldSchema: CategoryAttributeSchema[] = product.category.attributes.map((a) => ({
+    const oldSchema: CategoryAttributeSchema[] = (product.category?.attributes ?? []).map((a) => ({
       key: a.key,
       label: a.label,
       fieldType: a.fieldType,
@@ -404,7 +461,7 @@ export async function previewBulkCategoryChange(productIds: string[], newCategor
     return {
       productId: product.id,
       productName: product.name,
-      oldCategoryName: product.category.name,
+      oldCategoryName: product.category?.name ?? 'Без категории',
       variants,
       hasUnmatched: variants.some((v) => v.unmatchedAttributes.length > 0),
       hasMissing: variants.some((v) => v.missingAttributes.length > 0),
@@ -413,14 +470,14 @@ export async function previewBulkCategoryChange(productIds: string[], newCategor
 
   return {
     success: true as const,
-    newCategoryName: newCategory.name,
+    newCategoryName: newCategory?.name ?? 'Без категории',
     items,
   }
 }
 
 export async function applyBulkCategoryChange(
   productIds: string[],
-  newCategoryId: string,
+  newCategoryId: string | null,
   transfers: { variantId: string; keys: { key: string; label: string; value: unknown }[] }[]
 ) {
   try {
@@ -429,6 +486,17 @@ export async function applyBulkCategoryChange(
         where: { id: { in: productIds } },
         data: { categoryId: newCategoryId },
       })
+      // если новая основная уже была среди дополнительных — убираем дубль
+      for (const pid of productIds) {
+        await tx.product.update({
+          where: { id: pid },
+          data: {
+            categories: newCategoryId
+              ? { disconnect: { id: newCategoryId } }
+              : { set: [] }, // без основной категории дополнительных не бывает
+          },
+        })
+      }
 
       for (const transfer of transfers) {
         if (transfer.keys.length === 0) continue

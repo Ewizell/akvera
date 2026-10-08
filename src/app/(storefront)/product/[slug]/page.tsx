@@ -90,7 +90,10 @@ if (variant.product.isHidden) {
 }
 
 const visibleCategoryIds = await getVisibleCategoryIds();
-if (!visibleCategoryIds.includes(variant.product.categoryId)) {
+if (
+  variant.product.categoryId &&
+  !visibleCategoryIds.includes(variant.product.categoryId)
+) {
   notFound();
 }
 
@@ -283,10 +286,10 @@ const crumbs = [
               image={variant.images[0]?.url || null}
             />
             <Link
-              href="/contacts"
+              href="mailto:sales@akvera.ru"
               className="w-full h-[44px] flex items-center justify-center bg-[#f0f0f0] hover:bg-[#e5e5e5] rounded-[12px] font-montserrat font-semibold text-[16px] text-[#1c2116] transition-colors"
             >
-              Контакты менеджеров
+              Написать нам
             </Link>
           </div>
 

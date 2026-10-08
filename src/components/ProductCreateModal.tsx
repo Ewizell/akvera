@@ -5,10 +5,12 @@ import { useRouter } from 'next/navigation'
 import { createProduct } from '@/lib/actions/product'
 import { slugify } from '@/lib/slugify'
 import StringListEditor from './StringListEditor'
+import CategoryPicker from './CategoryPicker'
 
 type Category = {
   id: string
   name: string
+  parentId: string | null
 }
 
 type Brand = {
@@ -90,6 +92,8 @@ export default function ProductCreateModal({
   const [name, setName] = useState('')
   const [slug, setSlug] = useState('')
   const [slugEdited, setSlugEdited] = useState(false)
+  const [categoryId, setCategoryId] = useState('')
+  const [extraCategoryIds, setExtraCategoryIds] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -241,28 +245,18 @@ export default function ProductCreateModal({
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <label className={labelCls}>
-                      Категория
+                      Категории
                     </label>
 
-                    <select
-                      name="categoryId"
-                      required
-                      defaultValue=""
-                      className={inputCls}
-                    >
-                      <option value="">
-                        — выберите категорию —
-                      </option>
-
-                      {categories.map((category) => (
-                        <option
-                          key={category.id}
-                          value={category.id}
-                        >
-                          {category.name}
-                        </option>
-                      ))}
-                    </select>
+                    <CategoryPicker
+                      categories={categories}
+                      primaryId={categoryId}
+                      extraIds={extraCategoryIds}
+                      onChange={(primary, extras) => {
+                        setCategoryId(primary)
+                        setExtraCategoryIds(extras)
+                      }}
+                    />
                   </div>
 
                   <div>

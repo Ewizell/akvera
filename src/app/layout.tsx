@@ -39,8 +39,7 @@ export const metadata: Metadata = {
   description:
     "Akvera — поставщик сантехнического и инженерного оборудования.",
   icons: {
-    icon: "/icons/favicon-akvera.svg",
-    apple: "/icons/favicon-akvera.svg",
+    icon: { url: "/favicon.svg", type: "image/svg+xml" },
   },
 };
 

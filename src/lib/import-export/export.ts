@@ -82,7 +82,7 @@ export async function generateCsvExport(): Promise<string> {
   const rows = [header.map(escCsv).join(';')];
 
   for (const v of variants) {
-    const categoryPath = await categoryPathOf(v.product.categoryId);
+    const categoryPath = v.product.categoryId ? await categoryPathOf(v.product.categoryId) : '';
     rows.push(
       [v.sku, v.product.brand?.name ?? '', categoryPath, v.name, v.product.shortDescription ?? '', v.description ?? '', v.price?.toString() ?? '', v.stock.toString(), v.metaTitle ?? '', v.metaDescription ?? '', v.metaKeywords ?? '']
         .map((s) => escCsv(String(s)))

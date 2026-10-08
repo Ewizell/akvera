@@ -20,7 +20,8 @@ model Category {
   iconUrl    String?
   isHidden   Boolean             @default(false)
   attributes CategoryAttribute[]
-  products   Product[]
+  products      Product[] @relation("PrimaryCategory")
+  extraProducts Product[] @relation("ProductExtraCategories")
 
   parentId   String?
   parent     Category?           @relation("CategoryToSubcategories", fields: [parentId], references: [id], onDelete: Restrict)
@@ -51,8 +52,9 @@ model CategoryAttribute {
 model Product {
   id                String   @id @default(cuid())
   name              String
-  categoryId        String
-  category          Category @relation(fields: [categoryId], references: [id])
+  categoryId        String?
+  category          Category? @relation("PrimaryCategory", fields: [categoryId], references: [id], onDelete: Restrict)
+  categories        Category[] @relation("ProductExtraCategories") // дополнительные категории
   brandId           String?
   brand             Brand?   @relation(fields: [brandId], references: [id])
   description       String?

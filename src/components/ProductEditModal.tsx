@@ -22,6 +22,7 @@ import {
 } from '@/lib/actions/document'
 import { slugify } from '@/lib/slugify'
 import TagPicker from './TagPicker'
+import CategoryPicker from './CategoryPicker'
 
 type CategoryAttribute = {
   id: string
@@ -67,6 +68,7 @@ type Product = {
   id: string
   name: string
   categoryId: string | null
+  extraCategoryIds: string[]
   brandId: string | null
   description: string | null
   shortDescription: string | null
@@ -91,6 +93,7 @@ function toAttached(docs: DocJoin[] | undefined) {
 type Category = {
   id: string
   name: string
+  parentId: string | null
   attributes: CategoryAttribute[]
 }
 
@@ -1435,6 +1438,9 @@ export default function ProductEditModal({
   const [categoryId, setCategoryId] =
     useState(product.categoryId ?? '')
 
+  const [extraCategoryIds, setExtraCategoryIds] =
+    useState<string[]>(product.extraCategoryIds)
+
   const [addError, setAddError] =
     useState<string | null>(null)
 
@@ -1750,29 +1756,18 @@ export default function ProductEditModal({
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <div>
                         <label className={labelCls}>
-                          Категория
+                          Категории
                         </label>
 
-                        <select
-                          name="categoryId"
-                          value={categoryId}
-                          onChange={(e) =>
-                            setCategoryId(
-                              e.target.value
-                            )
-                          }
-                          required
-                          className={inputCls}
-                        >
-                          {categories.map((c) => (
-                            <option
-                              key={c.id}
-                              value={c.id}
-                            >
-                              {c.name}
-                            </option>
-                          ))}
-                        </select>
+                        <CategoryPicker
+                          categories={categories}
+                          primaryId={categoryId}
+                          extraIds={extraCategoryIds}
+                          onChange={(primary, extras) => {
+                            setCategoryId(primary)
+                            setExtraCategoryIds(extras)
+                          }}
+                        />
 
                         {categoryChanged && migrationPreview && (
                           <div className="mt-2 space-y-2">

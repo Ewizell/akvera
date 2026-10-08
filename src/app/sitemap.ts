@@ -80,6 +80,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const brandCategoryRoutes: MetadataRoute.Sitemap = []
   for (const pair of brandCategoryPairs) {
+    if (!pair.categoryId) continue
     const brandSlug = pair.brandId ? brandSlugById.get(pair.brandId) : undefined
     const category = categoryById.get(pair.categoryId)
     if (brandSlug && category) {
