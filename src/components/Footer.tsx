@@ -7,7 +7,8 @@ const NAV = [
   { label: "Каталог", href: "/catalog" },
   { label: "Бренды", href: "/brands" },
   { label: "О компании", href: "/about" },
-  { label: "Доставка и оплата", href: "/#delivery" },
+  { label: "Решения", href: "/solutions" },
+  { label: "Доставка и оплата", href: "/delivery" },
   { label: "Вопросы и ответы", href: "/#faq" },
   { label: "Реквизиты", href: "/#requisites" },
 ];

@@ -99,6 +99,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: absoluteUrl('/catalog/all'), changeFrequency: 'daily', priority: 0.8 },
     { url: absoluteUrl('/brands'), changeFrequency: 'weekly', priority: 0.6 },
     { url: absoluteUrl('/about'), changeFrequency: 'monthly', priority: 0.5 },
+    { url: absoluteUrl('/solutions'), changeFrequency: 'weekly', priority: 0.7 },
+    { url: absoluteUrl('/solutions/ventilation'), changeFrequency: 'monthly', priority: 0.6 },
+    { url: absoluteUrl('/solutions/heating'), changeFrequency: 'monthly', priority: 0.6 },
+    { url: absoluteUrl('/solutions/water-supply'), changeFrequency: 'monthly', priority: 0.6 },
+    { url: absoluteUrl('/delivery'), changeFrequency: 'monthly', priority: 0.5 },
   ]
 
   const productRoutes: MetadataRoute.Sitemap = variants.map((v) => ({
