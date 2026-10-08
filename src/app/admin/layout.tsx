@@ -7,6 +7,25 @@ import { signOut } from 'next-auth/react'
 
 const NAV_ITEMS = [
   {
+    href: '/admin',
+    label: 'Обзор',
+    exact: true,
+    icon: (
+      <svg
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M4 19V9m5 10V5m6 14v-7m5 7V3" />
+      </svg>
+    ),
+  },
+  {
     href: '/admin/categories',
     label: 'Категории',
     icon: (
@@ -59,8 +78,8 @@ const NAV_ITEMS = [
         strokeLinecap="round"
         strokeLinejoin="round"
       >
-        <path d="M6 2h9l3 3v17a1 1 0 01-1 1H6a1 1 0 01-1-1V3a1 1 0 011-1z" />
-        <path d="M9 8h6M9 12h6M9 16h4" />
+        <path d="M4 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2h-5l-4 4v-4H6a2 2 0 01-2-2V5z" />
+        <path d="M8 8h8M8 12h5" />
       </svg>
     ),
   },
@@ -285,7 +304,9 @@ export default function AdminLayout({
 
           <nav className="space-y-1">
             {NAV_ITEMS.map((item) => {
-              const active = pathname?.startsWith(item.href)
+              const active = item.exact
+                ? pathname === item.href
+                : pathname === item.href || pathname?.startsWith(`${item.href}/`)
 
               return (
                 <Link
