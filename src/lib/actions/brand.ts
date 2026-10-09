@@ -1,8 +1,5 @@
 'use server'
 import { assertAdmin } from '@/lib/auth/assert-admin'
-
-import { revalidateSite } from '@/lib/revalidate'
-
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { uploadImageServer } from './upload'
@@ -13,6 +10,7 @@ export async function uploadBrandLogo(
   formData: FormData
 ): Promise<{ success: boolean; url?: string; error?: string }> {
   await assertAdmin()
+
   const file = formData.get('file') as File | null
 
   if (!file || file.size === 0) {
@@ -28,10 +26,15 @@ export async function uploadBrandLogo(
 
 export async function createBrand(formData: FormData) {
   await assertAdmin()
-  const name = formData.get('name') as string
-  const slug = formData.get('slug') as string
+
+  const name = (formData.get('name') as string)?.trim()
+  const slug = (formData.get('slug') as string)?.trim()
   const logoUrl = formData.get('logoUrl') as string
   const description = formData.get('description') as string
+
+  if (!name || !slug) {
+    return { success: false, error: 'Укажите название и slug' }
+  }
 
   try {
     await prisma.brand.create({
@@ -39,17 +42,22 @@ export async function createBrand(formData: FormData) {
     })
     revalidatePath('/admin/brands')
     return { success: true }
-  } catch (error) {
+  } catch {
     return { success: false, error: 'Не удалось создать бренд. Проверьте, что slug уникален.' }
   }
 }
 
 export async function updateBrand(id: string, formData: FormData) {
   await assertAdmin()
-  const name = formData.get('name') as string
-  const slug = formData.get('slug') as string
+
+  const name = (formData.get('name') as string)?.trim()
+  const slug = (formData.get('slug') as string)?.trim()
   const logoUrl = formData.get('logoUrl') as string
   const description = formData.get('description') as string
+
+  if (!name || !slug) {
+    return { success: false, error: 'Укажите название и slug' }
+  }
 
   try {
     await prisma.brand.update({
@@ -58,18 +66,19 @@ export async function updateBrand(id: string, formData: FormData) {
     })
     revalidatePath('/admin/brands')
     return { success: true }
-  } catch (error) {
+  } catch {
     return { success: false, error: 'Не удалось сохранить. Проверьте, что slug уникален.' }
   }
 }
 
 export async function deleteBrand(id: string) {
   await assertAdmin()
+
   try {
     await prisma.brand.delete({ where: { id } })
     revalidatePath('/admin/brands')
     return { success: true }
-  } catch (error) {
+  } catch {
     return { success: false, error: 'Не удалось удалить бренд (возможно, есть привязанные товары).' }
   }
 }
