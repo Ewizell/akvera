@@ -143,6 +143,7 @@ revalidateSite()
 }
 
 export async function getCategoryTree(): Promise<CategoryNode[]> {
+// стало
   const categories = await prisma.category.findMany({
     where: {
       isHidden: false,
@@ -156,23 +157,27 @@ export async function getCategoryTree(): Promise<CategoryNode[]> {
       slug: true,
       parentId: true,
       iconUrl: true,
-      _count: { select: { products: true } },
+      products: {
+        where: { isHidden: false },
+        select: { id: true },
+      },
     },
   })
 
-  const byId = new Map<string, CategoryNode>(
-    categories.map((c) => [
-      c.id,
-      {
-        id: c.id,
-        name: c.name,
-        slug: c.slug,
-        iconUrl: c.iconUrl,
-        productCount: c._count.products,
-        children: [],
-      },
-    ])
-  )
+  const byId = new Map<string, CategoryNode>()
+  const ownIds = new Map<string, Set<string>>()
+
+  for (const c of categories) {
+    byId.set(c.id, {
+      id: c.id,
+      name: c.name,
+      slug: c.slug,
+      iconUrl: c.iconUrl,
+      productCount: 0,
+      children: [],
+    })
+    ownIds.set(c.id, new Set(c.products.map((p) => p.id)))
+  }
 
   const roots: CategoryNode[] = []
 
@@ -187,6 +192,17 @@ export async function getCategoryTree(): Promise<CategoryNode[]> {
       roots.push(node)
     }
   }
+
+  // уникальные товары по всему поддереву
+  function collect(node: CategoryNode): Set<string> {
+    const ids = new Set<string>(ownIds.get(node.id))
+    for (const child of node.children) {
+      for (const id of collect(child)) ids.add(id)
+    }
+    node.productCount = ids.size
+    return ids
+  }
+  roots.forEach(collect)
 
   return roots
 }

@@ -278,15 +278,14 @@ export default function CatalogMenu({
       ===================================================== */}
 
       <div
-        className="
+                className="
           absolute
-          left-1/2
+          left-0
           top-[calc(100%+8px)]
           z-50
           hidden
           h-[80vh]
-          w-[940px]
-          max-w-[calc(100vw-32px)]
+          w-full
           origin-top
           overflow-hidden
           rounded-2xl
@@ -295,14 +294,13 @@ export default function CatalogMenu({
           bg-white
           shadow-[0_20px_60px_rgba(15,23,42,0.12)]
           md:flex
-          lg:w-[1100px]
         "
         style={{
           opacity: open ? 1 : 0,
 
           transform: open
-            ? "translate(-50%, 0) scale(1)"
-            : "translate(-50%, -6px) scale(0.98)",
+            ? "translateY(0) scale(1)"
+            : "translateY(-6px) scale(0.98)",
 
           pointerEvents: open ? "auto" : "none",
 
