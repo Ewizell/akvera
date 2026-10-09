@@ -270,8 +270,16 @@ function LeadForm({ mode }: { mode: Mode }) {
   );
 }
 
-export default function LeadRequestBlock() {
-  const [mode, setMode] = useState<Mode>("callback");
+type LeadRequestBlockProps = {
+  defaultMode?: Mode;
+  className?: string;
+};
+
+export default function LeadRequestBlock({
+  defaultMode = "callback",
+  className = "mt-10 sm:mt-16 lg:mt-20",
+}: LeadRequestBlockProps) {
+  const [mode, setMode] = useState<Mode>(defaultMode);
 
   const tabCls = (active: boolean) =>
     `flex-1 rounded-xl px-2 py-2.5 text-[13px] font-semibold transition-all duration-300 sm:px-4 sm:py-3 sm:text-sm ${
@@ -283,7 +291,7 @@ export default function LeadRequestBlock() {
   return (
     <section
       id="request"
-      className="mt-10 scroll-mt-[76px] sm:mt-16 lg:mt-20 lg:scroll-mt-[132px]"
+      className={`${className} scroll-mt-[76px] lg:scroll-mt-[132px]`}
     >
       <div className="grid overflow-hidden rounded-3xl bg-[#28313d] lg:grid-cols-[0.9fr_1.1fr]">
 

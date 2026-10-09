@@ -199,7 +199,23 @@ export function HomeAdvantages() {
   );
 }
 
-export function HomeCta() {
+type CtaLink = { label: string; href: string };
+
+type HomeCtaProps = {
+  eyebrow?: string;
+  title?: string;
+  text?: string;
+  primary?: CtaLink;
+  secondary?: CtaLink;
+};
+
+export function HomeCta({
+  eyebrow = "Поможем с выбором",
+  title = "Не нашли нужное оборудование?",
+  text = "Расскажите, какое оборудование вам требуется. Поможем подобрать решение и подготовим предложение.",
+  primary = { label: "В каталог", href: "/catalog" },
+  secondary = { label: "Контакты", href: "/#requisites" },
+}: HomeCtaProps) {
   return (
     <section className="relative mt-10 overflow-hidden rounded-2xl bg-gradient-to-br from-accent to-accent-end sm:mt-16 sm:rounded-3xl lg:mt-20">
       {/* Декоративный фон */}
@@ -211,25 +227,22 @@ export function HomeCta() {
         {/* Текст */}
         <div className="max-w-[680px]">
           <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-white/50 sm:text-xs">
-            Поможем с выбором
+            {eyebrow}
           </p>
 
           <h2 className="mt-2.5 text-[25px] font-medium leading-[1.15] tracking-[-0.025em] text-white sm:mt-3 sm:text-3xl">
-            Не нашли нужное оборудование?
+            {title}
           </h2>
 
           <p className="mt-3 max-w-[600px] text-[13px] leading-5 text-white/65 sm:mt-4 sm:text-base sm:leading-6">
-            Расскажите, какое оборудование вам требуется.
-            <br className="hidden sm:block" />
-            <span className="sm:hidden"> </span>
-            Поможем подобрать решение и подготовим предложение.
+            {text}
           </p>
         </div>
 
 {/* Кнопки */}
 <div className="flex w-full shrink-0 flex-col gap-2.5 sm:w-auto sm:flex-row sm:flex-wrap sm:gap-3">
   <Link
-    href="/catalog"
+    href={primary.href}
     className="
       group
       inline-flex
@@ -249,8 +262,8 @@ export function HomeCta() {
       sm:w-auto
     "
   >
-    <span className="flex flex-1 items-center justify-center pl-3 sm:pl-3">
-      В каталог
+    <span className="flex flex-1 items-center justify-center px-3 sm:px-4">
+      {primary.label}
     </span>
 
     <span
@@ -280,8 +293,9 @@ export function HomeCta() {
   </Link>
 
   <Link
-    href="/#requisites"
+    href={secondary.href}
     className="
+      group
       inline-flex
       h-11
       w-full
@@ -295,7 +309,7 @@ export function HomeCta() {
       font-medium
       text-white
       backdrop-blur-sm
-      transition-all
+      transition-colors
       duration-300
       hover:border-white/30
       hover:bg-white/12
@@ -303,12 +317,33 @@ export function HomeCta() {
       sm:w-auto
     "
   >
-    <span className="flex flex-1 items-center justify-center pl-3 sm:pl-3">
-      Контакты
+    <span className="flex flex-1 items-center justify-center px-3 sm:px-4">
+      {secondary.label}
     </span>
 
-    {/* Пустая область той же ширины, что и стрелка */}
-    <span className="h-8 w-8 shrink-0 sm:h-9 sm:w-9" />
+    <span
+      className="
+        flex
+        h-8
+        w-8
+        shrink-0
+        items-center
+        justify-center
+        rounded-lg
+        bg-white/[0.08]
+        transition-colors
+        duration-300
+        group-hover:bg-white/20
+        sm:h-9
+        sm:w-9
+      "
+    >
+      <ArrowRight
+        size={16}
+        strokeWidth={1.8}
+        className="transition-transform duration-200 group-hover:translate-x-0.5"
+      />
+    </span>
   </Link>
 </div>
       </div>

@@ -43,7 +43,7 @@ export default function Footer() {
               </p>
 
               <Link
-                href="/#request"
+                href="/request"
                 className="
                   group
                   mt-5

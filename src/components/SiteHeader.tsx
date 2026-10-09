@@ -14,9 +14,10 @@ import { CONTACTS } from "@/lib/site-content";
 
 const TOP_LINKS = [
   { label: "О компании", href: "/about" },
-  { label: "Доставка и оплата", href: "/#delivery" },
+  { label: "Решения", href: "/solutions" },
+  { label: "Доставка и оплата", href: "/delivery" },
   { label: "FAQ", href: "/#faq" },
-  { label: "Контакты и реквизиты", href: "/#requisites" },
+  { label: "Контакты", href: "/#requisites" },
 ];
 
 // Кольцо фокуса для навигации с клавиатуры
