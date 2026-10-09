@@ -1,7 +1,7 @@
 'use server'
 import { assertAdmin } from '@/lib/auth/assert-admin'
 import { prisma } from '@/lib/prisma'
-import { revalidatePath } from 'next/cache'
+import { revalidateSite } from '@/lib/revalidate'
 import { uploadImageServer } from './upload'
 
 const MAX_LOGO_SIZE = 5 * 1024 * 1024 // 5 МБ
@@ -40,7 +40,7 @@ export async function createBrand(formData: FormData) {
     await prisma.brand.create({
       data: { name, slug, logoUrl: logoUrl || null, description: description || null },
     })
-    revalidatePath('/admin/brands')
+    revalidateSite()
     return { success: true }
   } catch {
     return { success: false, error: 'Не удалось создать бренд. Проверьте, что slug уникален.' }
@@ -64,7 +64,7 @@ export async function updateBrand(id: string, formData: FormData) {
       where: { id },
       data: { name, slug, logoUrl: logoUrl || null, description: description || null },
     })
-    revalidatePath('/admin/brands')
+    revalidateSite()
     return { success: true }
   } catch {
     return { success: false, error: 'Не удалось сохранить. Проверьте, что slug уникален.' }
@@ -76,7 +76,7 @@ export async function deleteBrand(id: string) {
 
   try {
     await prisma.brand.delete({ where: { id } })
-    revalidatePath('/admin/brands')
+    revalidateSite()
     return { success: true }
   } catch {
     return { success: false, error: 'Не удалось удалить бренд (возможно, есть привязанные товары).' }

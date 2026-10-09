@@ -1,8 +1,8 @@
 'use server'
 import { assertAdmin } from '@/lib/auth/assert-admin';
 import { prisma } from '@/lib/prisma'
-import { revalidatePath } from 'next/cache'
 import { uploadImageServer } from '@/lib/actions/upload'
+import { revalidateSite } from '@/lib/revalidate'
 
 type CategoryNode = {
   id: string
@@ -54,9 +54,7 @@ export async function updateCategory(id: string, formData: FormData) {
       },
     })
 
-    revalidatePath('/admin/categories')
-    revalidatePath('/catalog')
-    revalidatePath('/category', 'layout')
+revalidateSite()
 
     return { success: true }
   } catch (error) {
@@ -109,9 +107,7 @@ export async function createCategory(formData: FormData) {
       },
     })
 
-    revalidatePath('/admin/categories')
-    revalidatePath('/catalog')
-    revalidatePath('/category', 'layout')
+revalidateSite()
 
     return { success: true }
   } catch (error) {
@@ -132,9 +128,7 @@ export async function deleteCategory(id: string) {
       where: { id },
     })
 
-    revalidatePath('/admin', 'layout')
-    revalidatePath('/catalog')
-    revalidatePath('/category', 'layout')
+revalidateSite()
 
     return { success: true }
   } catch (error) {
@@ -199,8 +193,6 @@ export async function getCategoryTree(): Promise<CategoryNode[]> {
 export async function toggleCategoryHidden(id: string, isHidden: boolean) {
   await assertAdmin()
   await prisma.category.update({ where: { id }, data: { isHidden } })
-  revalidatePath('/admin', 'layout')
-  revalidatePath('/catalog')
-  revalidatePath('/category', 'layout')
+  revalidateSite()
   return { success: true }
 }
