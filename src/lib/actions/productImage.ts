@@ -1,10 +1,12 @@
 'use server'
+import { assertAdmin } from '@/lib/auth/assert-admin'
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { uploadImageServer, deleteFromS3 } from './upload'
 
 export async function addImage(variantId: string, formData: FormData) {
+  await assertAdmin()
   const file = formData.get('file') as File | null
   if (!file || file.size === 0) {
     return { success: false, error: 'Файл не выбран' }
@@ -46,6 +48,7 @@ export async function addImage(variantId: string, formData: FormData) {
 }
 
 export async function deleteImage(id: string) {
+  await assertAdmin()
   const image = await prisma.productImage.findUnique({
     where: { id },
     include: { variant: { select: { slug: true } } },

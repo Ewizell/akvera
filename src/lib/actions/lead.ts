@@ -8,7 +8,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { randomUUID } from "crypto";
 import path from "path";
-import { uploadDocumentServer } from "@/lib/actions/uploadDocument";
+import { storeDocument } from "@/lib/s3-server";
 import { deleteFromS3 } from "@/lib/actions/upload";
 import { LEAD_ALLOWED_EXTENSIONS, LEAD_MAX_FILES, LEAD_MAX_FILE_SIZE } from "@/lib/lead-config";
 import { sendMail } from "@/lib/mailer";
@@ -110,7 +110,7 @@ async function createLead(type: LeadType, formData: FormData, allowFiles: boolea
 
       const uploadFd = new FormData();
       uploadFd.set("file", file);
-      const uploaded = await uploadDocumentServer(uploadFd);
+      const uploaded = await storeDocument(uploadFd);
       if (!uploaded.success || !uploaded.url) {
         return { success: false as const, error: uploaded.error ?? "Не удалось загрузить файл" };
       }

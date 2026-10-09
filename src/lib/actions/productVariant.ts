@@ -1,4 +1,5 @@
 'use server'
+import { assertAdmin } from '@/lib/auth/assert-admin'
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
@@ -52,6 +53,7 @@ function parseAttributes(formData: FormData): Record<string, unknown> {
 }
 
 export async function createVariant(productId: string, formData: FormData) {
+  await assertAdmin()
   const name = formData.get('name') as string
   const sku = formData.get('sku') as string
   const slug = formData.get('slug') as string
@@ -97,6 +99,7 @@ export async function createVariant(productId: string, formData: FormData) {
 }
 
 export async function updateVariant(id: string, formData: FormData) {
+  await assertAdmin()
   const name = formData.get('name') as string
   const sku = formData.get('sku') as string
   const slug = formData.get('slug') as string
@@ -142,6 +145,7 @@ export async function updateVariant(id: string, formData: FormData) {
 }
 
 export async function deleteVariant(id: string) {
+  await assertAdmin()
   try {
     await prisma.productVariant.delete({ where: { id } })
     revalidatePath('/admin/products')
@@ -157,6 +161,7 @@ export async function deleteVariant(id: string) {
 }
 
 export async function duplicateVariant(id: string) {
+  await assertAdmin()
   try {
     const source = await prisma.productVariant.findUnique({
       where: { id },

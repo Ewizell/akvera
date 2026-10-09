@@ -1,5 +1,5 @@
 'use server'
-
+import { assertAdmin } from '@/lib/auth/assert-admin';
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 
@@ -21,6 +21,7 @@ function parseExtraCategoryIds(formData: FormData, primaryId: string | null): st
 }
 
 export async function createProduct(formData: FormData) {
+  await assertAdmin()
   const name = formData.get('name') as string
   const categoryId = (formData.get('categoryId') as string) || null
   const description = formData.get('description') as string
@@ -97,6 +98,7 @@ export async function getRelatedVariants(categoryId: string | null, excludeVaria
 }
 
 export async function updateProduct(id: string, formData: FormData) {
+  await assertAdmin()
   const name = formData.get('name') as string
   const categoryId = (formData.get('categoryId') as string) || null
   const description = formData.get('description') as string
@@ -141,6 +143,7 @@ export async function updateProduct(id: string, formData: FormData) {
 }
 
 export async function deleteProduct(id: string) {
+  await assertAdmin()
   try {
     await prisma.product.delete({ where: { id } })
     revalidatePath('/admin/products')
@@ -199,6 +202,7 @@ export async function getPopularVariants(excludeVariantId?: string, take = 5) {
 }
 
 export async function bulkDeleteProducts(productIds: string[]) {
+  await assertAdmin()
   let deleted = 0;
   const blocked: string[] = [];
 
@@ -223,6 +227,7 @@ export async function bulkUpdateCategory(
   productIds: string[],
   categoryId: string
 ) {
+  await assertAdmin()
   try {
     await prisma.product.updateMany({
       where: {
@@ -251,6 +256,7 @@ export async function bulkUpdateCategory(
 }
 
 export async function bulkUpdateBrand(productIds: string[], brandId: string | null) {
+  await assertAdmin()
   try {
     await prisma.product.updateMany({
       where: { id: { in: productIds } },
@@ -268,6 +274,7 @@ export async function bulkUpdateBrand(productIds: string[], brandId: string | nu
 }
 
 export async function bulkAddTags(productIds: string[], tagIds: string[]) {
+  await assertAdmin()
   await prisma.$transaction(
     productIds.map((id) =>
       prisma.product.update({
@@ -280,6 +287,7 @@ export async function bulkAddTags(productIds: string[], tagIds: string[]) {
 }
 
 export async function bulkRemoveTags(productIds: string[], tagIds: string[]) {
+  await assertAdmin()
   await prisma.$transaction(
     productIds.map((id) =>
       prisma.product.update({
@@ -292,6 +300,7 @@ export async function bulkRemoveTags(productIds: string[], tagIds: string[]) {
 }
 
 export async function bulkAddCategories(productIds: string[], categoryIds: string[]) {
+  await assertAdmin()
   const products = await prisma.product.findMany({
     where: { id: { in: productIds } },
     select: { id: true, categoryId: true },
@@ -317,6 +326,7 @@ export async function bulkAddCategories(productIds: string[], categoryIds: strin
 }
 
 export async function bulkRemoveCategories(productIds: string[], categoryIds: string[]) {
+  await assertAdmin()
   await prisma.$transaction(
     productIds.map((id) =>
       prisma.product.update({
@@ -331,6 +341,7 @@ export async function bulkRemoveCategories(productIds: string[], categoryIds: st
 }
 
 export async function duplicateProduct(productId: string) {
+  await assertAdmin()
   try {
     const source = await prisma.product.findUnique({
       where: { id: productId },
@@ -414,6 +425,7 @@ export async function duplicateProduct(productId: string) {
 import { computeAttributeMigration, type CategoryAttributeSchema } from '@/lib/attribute-migration'
 
 export async function previewBulkCategoryChange(productIds: string[], newCategoryId: string | null) {
+  await assertAdmin()
   const [newCategory, products] = await Promise.all([
     newCategoryId
       ? prisma.category.findUnique({
@@ -480,6 +492,7 @@ export async function applyBulkCategoryChange(
   newCategoryId: string | null,
   transfers: { variantId: string; keys: { key: string; label: string; value: unknown }[] }[]
 ) {
+  await assertAdmin()
   try {
     await prisma.$transaction(async (tx) => {
       await tx.product.updateMany({
@@ -546,6 +559,7 @@ export async function applyBulkCategoryChange(
 export async function applyAttributeTransfers(
   transfers: { variantId: string; keys: { key: string; label: string; value: unknown }[] }[]
 ) {
+  await assertAdmin()
   try {
     await prisma.$transaction(async (tx) => {
       for (const transfer of transfers) {
@@ -590,6 +604,7 @@ export async function applyAttributeTransfers(
   }
 }
 export async function toggleProductHidden(id: string, isHidden: boolean) {
+  await assertAdmin()
   await prisma.product.update({ where: { id }, data: { isHidden } })
   revalidatePath('/admin/products')
   revalidatePath('/catalog/all')

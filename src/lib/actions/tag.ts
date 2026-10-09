@@ -1,4 +1,5 @@
 'use server'
+import { assertAdmin } from '@/lib/auth/assert-admin'
 
 import { prisma } from '@/lib/prisma'
 import { revalidateSite } from '@/lib/revalidate'
@@ -8,6 +9,7 @@ export async function getTags() {
 }
 
 export async function createTag(formData: FormData) {
+  await assertAdmin()
   const name = formData.get('name') as string
   const slug = formData.get('slug') as string
 
@@ -21,6 +23,7 @@ export async function createTag(formData: FormData) {
 }
 
 export async function updateTag(id: string, formData: FormData) {
+  await assertAdmin()
   const name = formData.get('name') as string
   const slug = formData.get('slug') as string
 
@@ -34,6 +37,7 @@ export async function updateTag(id: string, formData: FormData) {
 }
 
 export async function deleteTag(id: string) {
+  await assertAdmin()
   try {
     await prisma.tag.delete({ where: { id } })
     revalidateSite()

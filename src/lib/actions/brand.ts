@@ -1,4 +1,5 @@
 'use server'
+import { assertAdmin } from '@/lib/auth/assert-admin'
 
 import { revalidateSite } from '@/lib/revalidate'
 
@@ -11,6 +12,7 @@ const MAX_LOGO_SIZE = 5 * 1024 * 1024 // 5 МБ
 export async function uploadBrandLogo(
   formData: FormData
 ): Promise<{ success: boolean; url?: string; error?: string }> {
+  await assertAdmin()
   const file = formData.get('file') as File | null
 
   if (!file || file.size === 0) {
@@ -25,6 +27,7 @@ export async function uploadBrandLogo(
 }
 
 export async function createBrand(formData: FormData) {
+  await assertAdmin()
   const name = formData.get('name') as string
   const slug = formData.get('slug') as string
   const logoUrl = formData.get('logoUrl') as string
@@ -42,6 +45,7 @@ export async function createBrand(formData: FormData) {
 }
 
 export async function updateBrand(id: string, formData: FormData) {
+  await assertAdmin()
   const name = formData.get('name') as string
   const slug = formData.get('slug') as string
   const logoUrl = formData.get('logoUrl') as string
@@ -60,6 +64,7 @@ export async function updateBrand(id: string, formData: FormData) {
 }
 
 export async function deleteBrand(id: string) {
+  await assertAdmin()
   try {
     await prisma.brand.delete({ where: { id } })
     revalidatePath('/admin/brands')

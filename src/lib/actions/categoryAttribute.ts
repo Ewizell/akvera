@@ -1,9 +1,11 @@
 'use server'
+import { assertAdmin } from '@/lib/auth/assert-admin'
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 
 export async function createAttribute(categoryId: string, formData: FormData) {
+  await assertAdmin()
   const key = formData.get('key') as string
   const label = formData.get('label') as string
   const fieldType = formData.get('fieldType') as string
@@ -32,6 +34,7 @@ export async function createAttribute(categoryId: string, formData: FormData) {
 }
 
 export async function updateAttribute(id: string, formData: FormData) {
+  await assertAdmin()
   const key = formData.get('key') as string
   const label = formData.get('label') as string
   const fieldType = formData.get('fieldType') as string
@@ -60,6 +63,7 @@ export async function updateAttribute(id: string, formData: FormData) {
 }
 
 export async function deleteAttribute(id: string) {
+  await assertAdmin()
   try {
     await prisma.categoryAttribute.delete({ where: { id } })
     revalidatePath('/admin/categories')

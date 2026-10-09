@@ -1,5 +1,5 @@
 'use server'
-
+import { assertAdmin } from '@/lib/auth/assert-admin';
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { uploadDocumentServer } from './uploadDocument'
@@ -8,6 +8,7 @@ import { deleteFromS3 } from './upload'
 // --- Медиатека: сама сущность Document ---
 
 export async function createDocument(formData: FormData) {
+  await assertAdmin()
   const uploadResult = await uploadDocumentServer(formData)
   if (!uploadResult.success || !uploadResult.url) {
     return { success: false, error: uploadResult.error ?? 'Ошибка загрузки' }
@@ -27,6 +28,7 @@ export async function createDocument(formData: FormData) {
 }
 
 export async function updateDocument(id: string, formData: FormData) {
+  await assertAdmin()
   const title = formData.get('title') as string
   const type = formData.get('type') as string
   const tagsRaw = formData.get('tags') as string
@@ -38,6 +40,7 @@ export async function updateDocument(id: string, formData: FormData) {
 }
 
 export async function deleteDocument(id: string) {
+  await assertAdmin()
   const doc = await prisma.document.findUnique({
     where: { id },
     include: { _count: { select: { products: true, variants: true } } },
@@ -60,6 +63,7 @@ export async function deleteDocument(id: string) {
 }
 
 export async function listDocuments(query?: string) {
+  await assertAdmin()
   return prisma.document.findMany({
     where: query
       ? { OR: [{ title: { contains: query, mode: 'insensitive' } }, { tags: { has: query } }] }
@@ -72,6 +76,7 @@ export async function listDocuments(query?: string) {
 // --- Привязка к товару (Product) ---
 
 export async function attachDocumentToProduct(productId: string, documentId: string) {
+  await assertAdmin()
   const join = await prisma.productDocument.upsert({
     where: { productId_documentId: { productId, documentId } },
     create: { productId, documentId },
@@ -86,12 +91,14 @@ export async function attachDocumentToProduct(productId: string, documentId: str
 }
 
 export async function uploadAndAttachToProduct(productId: string, formData: FormData) {
+  await assertAdmin()
   const result = await createDocument(formData)
   if (!result.success || !result.document) return { success: false, error: result.error }
   return attachDocumentToProduct(productId, result.document.id)
 }
 
 export async function detachDocumentFromProduct(productDocumentId: string) {
+  await assertAdmin()
   await prisma.productDocument.delete({ where: { id: productDocumentId } })
   revalidatePath('/admin/products')
   return { success: true }
@@ -100,6 +107,7 @@ export async function detachDocumentFromProduct(productDocumentId: string) {
 // --- Привязка к исполнению (ProductVariant) ---
 
 export async function attachDocumentToVariant(variantId: string, documentId: string) {
+  await assertAdmin()
   const join = await prisma.productVariantDocument.upsert({
     where: { variantId_documentId: { variantId, documentId } },
     create: { variantId, documentId },
@@ -114,12 +122,14 @@ export async function attachDocumentToVariant(variantId: string, documentId: str
 }
 
 export async function uploadAndAttachToVariant(variantId: string, formData: FormData) {
+  await assertAdmin()
   const result = await createDocument(formData)
   if (!result.success || !result.document) return { success: false, error: result.error }
   return attachDocumentToVariant(variantId, result.document.id)
 }
 
 export async function detachDocumentFromVariant(variantDocumentId: string) {
+  await assertAdmin()
   await prisma.productVariantDocument.delete({ where: { id: variantDocumentId } })
   revalidatePath('/admin/products')
   return { success: true }

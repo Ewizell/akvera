@@ -1,5 +1,5 @@
 'use server'
-
+import { assertAdmin } from '@/lib/auth/assert-admin';
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { uploadImageServer } from '@/lib/actions/upload'
@@ -14,6 +14,7 @@ type CategoryNode = {
 }
 
 export async function updateCategory(id: string, formData: FormData) {
+  await assertAdmin()
   const name = formData.get('name') as string
   const slug = formData.get('slug') as string
   const parentId = formData.get('parentId') as string
@@ -69,6 +70,7 @@ export async function updateCategory(id: string, formData: FormData) {
 }
 
 export async function createCategory(formData: FormData) {
+  await assertAdmin()
   const name = formData.get('name') as string
   const slug = formData.get('slug') as string
   const parentId = formData.get('parentId') as string
@@ -124,6 +126,7 @@ export async function createCategory(formData: FormData) {
 }
 
 export async function deleteCategory(id: string) {
+  await assertAdmin()
   try {
     await prisma.category.delete({
       where: { id },
@@ -194,6 +197,7 @@ export async function getCategoryTree(): Promise<CategoryNode[]> {
   return roots
 }
 export async function toggleCategoryHidden(id: string, isHidden: boolean) {
+  await assertAdmin()
   await prisma.category.update({ where: { id }, data: { isHidden } })
   revalidatePath('/admin', 'layout')
   revalidatePath('/catalog')

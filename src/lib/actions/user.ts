@@ -1,11 +1,13 @@
 'use server'
-
+import { getAdminSession } from '@/lib/auth/assert-admin'
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import bcrypt from 'bcryptjs'
-import { auth } from '@/auth'
 
 export async function createUser(formData: FormData) {
+  const admin = await getAdminSession()
+  if (!admin) return { success: false, error: 'Нет доступа' }
+
   const email = (formData.get('email') as string)?.trim()
   const password = formData.get('password') as string
   const name = (formData.get('name') as string)?.trim() || null
@@ -35,6 +37,9 @@ export async function createUser(formData: FormData) {
 }
 
 export async function updateUser(id: string, formData: FormData) {
+  const admin = await getAdminSession()
+  if (!admin) return { success: false, error: 'Нет доступа' }
+
   const email = (formData.get('email') as string)?.trim()
   const password = formData.get('password') as string
   const name = (formData.get('name') as string)?.trim() || null
@@ -48,8 +53,7 @@ export async function updateUser(id: string, formData: FormData) {
     return { success: false, error: 'Некорректная роль' }
   }
 
-  const session = await auth()
-  if (session?.user?.id === id && role !== 'ADMIN') {
+  if (admin.user.id === id && role !== 'ADMIN') {
     return { success: false, error: 'Нельзя снять роль администратора с самого себя' }
   }
 
@@ -71,8 +75,10 @@ export async function updateUser(id: string, formData: FormData) {
 }
 
 export async function deleteUser(id: string) {
-  const session = await auth()
-  if (session?.user?.id === id) {
+  const admin = await getAdminSession()
+  if (!admin) return { success: false, error: 'Нет доступа' }
+
+  if (admin.user.id === id) {
     return { success: false, error: 'Нельзя удалить самого себя' }
   }
 

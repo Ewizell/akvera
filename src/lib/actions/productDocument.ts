@@ -1,4 +1,5 @@
 'use server'
+import { assertAdmin } from '@/lib/auth/assert-admin'
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
@@ -6,6 +7,7 @@ import { uploadDocumentServer } from './uploadDocument'
 import { deleteFromS3 } from './upload'
 
 export async function addDocument(variantId: string, formData: FormData) {
+  await assertAdmin()
   const uploadResult = await uploadDocumentServer(formData)
   if (!uploadResult.success || !uploadResult.url) {
     return { success: false, error: uploadResult.error ?? 'Ошибка загрузки' }
@@ -26,6 +28,7 @@ export async function addDocument(variantId: string, formData: FormData) {
 }
 
 export async function deleteDocument(id: string) {
+  await assertAdmin()
   const join = await prisma.productVariantDocument.findUnique({
     where: { id },
     include: {
