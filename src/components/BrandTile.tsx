@@ -58,7 +58,7 @@ export default function BrandTile({
   </div>
 
   {/* Затемнение */}
-  <div className="absolute inset-0 bg-[#0f172a]/30" />
+  <div className="absolute inset-0 bg-[#0f172a]/15" />
 
   {/* Название и стрелка */}
   <div className="relative flex items-start justify-between gap-2">
