@@ -102,36 +102,34 @@ export default function BrandSlider({
               "group relative flex h-[170px] shrink-0 snap-start sm:h-[210px]",
               "w-[calc((100%-20px)/2.2)]",
               "overflow-hidden rounded-2xl",
-              "bg-accent",
+              item.logoUrl ? "bg-white" : "bg-accent",
               "sm:w-[calc((100%-24px)/3)]",
               "lg:w-[calc((100%-36px)/4)]",
               "xl:w-[calc((100%-60px)/6)]",
             ].join(" ")}
           >
-            {/* Фотография */}
             {item.logoUrl ? (
               <div
                 className="
-                  absolute inset-0
-                  bg-cover bg-center
+                  absolute inset-x-5 bottom-[72px] top-5
+                  bg-contain bg-center bg-no-repeat
                   transition-transform
-                  duration-700
+                  duration-500
                   ease-out
                   group-hover:scale-105
+                  sm:bottom-20
                 "
                 style={{
                   backgroundImage: `url(${item.logoUrl})`,
                 }}
               />
             ) : (
-              <div className="absolute inset-0 bg-gradient-to-br from-accent to-accent-end" />
+              <>
+                <div className="absolute inset-0 bg-gradient-to-br from-accent to-accent-end" />
+                <div className="absolute inset-0 bg-[#0f172a]/30" />
+                <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#0f172a]/80 to-transparent" />
+              </>
             )}
-
-            {/* Затемнение */}
-            <div className="absolute inset-0 bg-[#0f172a]/30" />
-
-            {/* Нижний градиент */}
-            <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#0f172a]/80 to-transparent" />
 
             {/* Контент */}
             <div className="relative flex h-full w-full flex-col justify-between p-4 sm:p-5">
@@ -140,14 +138,14 @@ export default function BrandSlider({
                   flex h-8 w-8 shrink-0
                   items-center justify-center
                   rounded-2xl
-                  bg-white/[0.13]
+                  bg-[#28313d]/70
                   text-white
                   backdrop-blur-sm
                   transition-all
                   duration-300
                   group-hover:-translate-y-0.5
                   group-hover:translate-x-0.5
-                  group-hover:bg-white/25
+                  group-hover:bg-accent
                 ">
                   <ArrowUpRight
                     size={16}
@@ -157,11 +155,19 @@ export default function BrandSlider({
               </div>
 
               <div className="mt-auto">
-                <h3 className="max-w-[180px] break-words text-base font-medium leading-tight text-white sm:text-lg">
+                <h3
+                  className={`max-w-[180px] break-words text-base font-medium leading-tight sm:text-lg ${
+                    item.logoUrl ? "text-[#28313d]" : "text-white"
+                  }`}
+                >
                   {item.name}
                 </h3>
 
-                <p className="mt-1 text-xs text-white/65 sm:mt-1.5">
+                <p
+                  className={`mt-1 text-xs sm:mt-1.5 ${
+                    item.logoUrl ? "text-[#767d83]" : "text-white/65"
+                  }`}
+                >
                   {item.productCount.toLocaleString("ru-RU")}{" "}
                   {pluralizeModels(item.productCount)}
                 </p>
