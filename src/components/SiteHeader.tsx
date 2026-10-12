@@ -8,6 +8,7 @@ import HeaderAuthLink from "./HeaderAuthLink";
 import CatalogMenu from "./CatalogMenu";
 import { Phone } from "lucide-react";
 import BottomNav from "./BottomNav";
+import CollapsibleTopBar from "./CollapsibleTopBar";
 import type { MobileMenuCategory } from "./MobileMenu";
 import { getCategoryTree } from "@/lib/actions/category";
 import { CONTACTS } from "@/lib/site-content";
@@ -53,16 +54,22 @@ export default async function SiteHeader() {
           Шапка
           ========================================================= */}
       <header className="sticky top-0 z-50 w-full bg-white/85 shadow-[0_2px_12px_rgba(40,49,61,0.05)] backdrop-blur-md lg:fixed">
-        <div className="mx-auto flex max-w-[1440px] flex-col gap-3 px-4 py-2.5 pb-3 sm:px-6 lg:px-8 lg:py-3 xl:px-20">
+        <div className="mx-auto flex max-w-[1440px] flex-col px-4 py-2.5 pb-3 sm:px-6 lg:px-8 lg:py-3 xl:px-20">
 
           {/* =====================================================
               Верхняя информационная строка — только lg+
               ===================================================== */}
-          <div className="hidden w-full items-center justify-between gap-6 lg:flex">
+          <CollapsibleTopBar>
+          <div className="flex w-full items-center justify-between gap-6">
             <div className="flex min-w-0 items-center gap-6">
 
               {/* Адрес — только на очень широких экранах */}
-              <div className="hidden items-center gap-1.5 min-[1400px]:flex">
+              <a
+                href={CONTACTS.mapUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`group hidden items-center gap-1.5 min-[1400px]:flex ${focusRing}`}
+              >
                 <Image
                   src="/icons/fi-br-marker.svg"
                   alt=""
@@ -71,10 +78,10 @@ export default async function SiteHeader() {
                   className="opacity-70"
                 />
 
-                <span className="whitespace-nowrap text-[14px] font-medium leading-none text-[#475569]">
+                <span className="whitespace-nowrap text-[14px] font-medium leading-none text-[#475569] transition-colors duration-200 group-hover:text-accent">
                   {CONTACTS.address}
                 </span>
-              </div>
+              </a>
 
               {/* Информационные ссылки */}
               <nav
@@ -126,6 +133,7 @@ export default async function SiteHeader() {
               </a>
             </div>
           </div>
+          </CollapsibleTopBar>
 
           {/* =====================================================
               Основная строка
@@ -226,6 +234,7 @@ export default async function SiteHeader() {
         links={TOP_LINKS}
         contacts={{
           address: CONTACTS.address,
+          mapUrl: CONTACTS.mapUrl,
           email: CONTACTS.email,
           phone: CONTACTS.phone,
         }}

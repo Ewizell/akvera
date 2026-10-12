@@ -249,7 +249,7 @@ export default async function BrandPage({ params }: Params) {
                 Ассортимент
               </p>
 
-              <h2 className="mt-2 text-xl font-medium tracking-tight text-[#28313d] sm:text-2xl">
+              <h2 className="mt-2 text-xl font-semibold tracking-tight text-[#28313d] sm:text-2xl">
                 Категории оборудования
               </h2>
 

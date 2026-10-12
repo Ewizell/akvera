@@ -82,7 +82,11 @@ export const CONTACTS = {
   phone: "+7 (999) 999-99-99",
   email: "sales@akvera.ru",
   address: "г. Одинцово, ул. Внуковская, 11с19",
+  mapUrl:
+    "https://yandex.ru/maps/10743/odincovo/house/vnukovskaya_ulitsa_11s19/Z04YdABpQEYFQFtvfXp0dHRhbA==/?ll=37.274714%2C55.655137&z=14.08",
   hours: "Пн–Пт, 9:00–18:00",
+  // Ссылка на Telegram (https://t.me/...). Пусто — пункт в меню связи скрывается.
+  telegram: "",
   // Ссылка из «Поделиться → Встроить карту» (Яндекс.Карты / Google Maps).
   // Пусто — карта не показывается, блок контактов растягивается на всю ширину.
   mapEmbedUrl:

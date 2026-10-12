@@ -20,7 +20,15 @@ export const metadata: Metadata = {
   },
 }
 
-export default function RequestPage() {
+export default async function RequestPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ mode?: string }>
+}) {
+  const { mode: modeParam } = await searchParams
+  const mode = modeParam === 'callback' ? 'callback' : 'quote'
+  const isCallback = mode === 'callback'
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'ContactPage',
@@ -44,15 +52,24 @@ export default function RequestPage() {
 
         <header className="mt-5 sm:mt-6">
           <h1 className="max-w-4xl text-[27px] font-semibold leading-[1.15] tracking-[-0.025em] text-[#28313d] sm:text-4xl lg:text-[42px]">
-            {TITLE}
+            {isCallback ? 'Заказать обратный звонок' : TITLE}
           </h1>
           <p className="mt-3 max-w-2xl text-[13px] leading-5 text-[#66717d] sm:mt-4 sm:text-base sm:leading-7">
-            Опишите задачу или приложите спецификацию. <br/>Менеджер уточнит детали,
-            проверит наличие и пришлёт предложение.
+            {isCallback ? (
+              <>
+                Оставьте имя и телефон. <br />
+                Менеджер перезвонит и ответит на вопросы по подбору и наличию.
+              </>
+            ) : (
+              <>
+                Опишите задачу или приложите спецификацию. <br />
+                Менеджер уточнит детали, проверит наличие и пришлёт предложение.
+              </>
+            )}
           </p>
         </header>
 
-        <LeadRequestBlock defaultMode="quote" className="mt-6 sm:mt-8" />
+        <LeadRequestBlock key={mode} defaultMode={mode} className="mt-6 sm:mt-8" />
 
         <section className="mt-8 sm:mt-10">
           <h2 className="mb-4 text-xl font-medium tracking-tight text-[#28313d] sm:mb-5 sm:text-2xl">

@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useCart } from "@/lib/cart-context";
+import { useToast } from "@/lib/toast-context";
 import FavoriteButton from "./FavoriteButton";
 import CompareButton from "./CompareButton";
 
@@ -23,8 +23,8 @@ export default function HomeProductCard({
 }: {
   variant: HomeCarouselVariant;
 }) {
-  const [copied, setCopied] = useState(false);
   const { addItem } = useCart();
+  const { showToast } = useToast();
   const image = variant.images[0];
 
   function copySku(e: React.MouseEvent) {
@@ -32,9 +32,7 @@ export default function HomeProductCard({
     e.stopPropagation();
 
     navigator.clipboard.writeText(variant.sku);
-    setCopied(true);
-
-    setTimeout(() => setCopied(false), 1500);
+    showToast("Артикул скопирован");
   }
 
   function handleAddToCart(e: React.MouseEvent) {
@@ -81,7 +79,7 @@ export default function HomeProductCard({
           w-full
           overflow-hidden
           rounded-2xl
-          bg-[#f3f4f6]
+          bg-white
         "
       >
         {image ? (
@@ -90,9 +88,7 @@ export default function HomeProductCard({
             alt={image.alt ?? variant.name}
             fill
             className="
-              object-contain
-              p-3
-              sm:p-5
+              object-cover
               transition-transform
               duration-500
               ease-out
@@ -190,31 +186,6 @@ export default function HomeProductCard({
                   className="shrink-0 opacity-60 transition-opacity group-hover/sku:opacity-100"
                 />
               </button>
-
-              {copied && (
-                <div
-                  className="
-                    absolute
-                    bottom-full
-                    left-0
-                    sm:left-auto
-                    sm:right-0
-                    z-20
-                    mb-2
-                    whitespace-nowrap
-                    rounded-lg
-                    bg-[#28313d]
-                    px-2.5
-                    py-1.5
-                    text-xs
-                    font-medium
-                    text-white
-                    shadow-lg
-                  "
-                >
-                  Скопировано
-                </div>
-              )}
             </div>
           </div>
 

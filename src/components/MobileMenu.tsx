@@ -16,7 +16,7 @@ type Props = {
   onClose: () => void;
   categories: MobileMenuCategory[];
   links: { label: string; href: string }[];
-  contacts: { address: string; email: string; phone: string };
+  contacts: { address: string; mapUrl: string; email: string; phone: string };
   /** Слот под блок авторизации (HeaderAuthLink) */
   children?: ReactNode;
 };
@@ -243,10 +243,15 @@ export default function MobileMenu({
               <span className="truncate">{contacts.email}</span>
             </a>
 
-            <p className="flex items-start gap-2 text-sm leading-5 text-[#475569]">
+            <a
+              href={contacts.mapUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`flex items-start gap-2 text-sm leading-5 text-[#475569] ${focusRing}`}
+            >
               <MapPin size={16} className="mt-0.5 shrink-0 text-slate-400" />
               {contacts.address}
-            </p>
+            </a>
           </div>
         </aside>
       </div>

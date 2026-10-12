@@ -33,7 +33,7 @@ export default function Footer() {
                 className="inline-flex text-xl font-semibold tracking-[0.04em] text-white transition-opacity hover:opacity-80 sm:text-2xl"
               >
                 AKVERA
-                <span className="text-accent">.</span>
+                {/* <span className="text-accent">.</span> */}
               </Link>
 
               <p className="mt-3 max-w-md text-[13px] leading-5 text-white/55 sm:mt-4 sm:text-sm sm:leading-6">
@@ -179,9 +179,14 @@ export default function Footer() {
                 {CONTACTS.email}
               </a>
 
-              <div className="text-[13px] leading-5 text-white/55 sm:text-sm sm:leading-6">
+              <a
+                href={CONTACTS.mapUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block text-[13px] leading-5 text-white/55 transition-colors duration-200 hover:text-white sm:text-sm sm:leading-6"
+              >
                 {CONTACTS.address}
-              </div>
+              </a>
 
               <div className="text-[11px] leading-5 text-white/35 sm:text-xs">
                 {CONTACTS.hours}

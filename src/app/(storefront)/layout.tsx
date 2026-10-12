@@ -5,6 +5,9 @@ import { FavoritesProvider } from "@/lib/favorites-context";
 import YandexMetrika from "@/components/YandexMetrika";
 import CookieConsent from "@/components/CookieConsent";
 import Footer from "@/components/Footer";
+import FloatingActions from "@/components/FloatingActions";
+import ScrollRail from "@/components/ScrollRail";
+import { ToastProvider } from "@/lib/toast-context";
 import type { Metadata } from "next";
 
 export default function StorefrontLayout({ children }: { children: React.ReactNode }) {
@@ -12,16 +15,20 @@ export default function StorefrontLayout({ children }: { children: React.ReactNo
     <CartProvider>
       <CompareProvider>
         <FavoritesProvider>
-          <SiteHeader />
-          <div className="flex-1 lg:pt-[116px]">{children}</div>
-          <Footer />
-          {/* Место под нижнюю панель навигации, чтобы она не закрывала футер */}
-          <div
-            aria-hidden="true"
-            className="h-[calc(4rem+env(safe-area-inset-bottom))] bg-slate-900 lg:hidden"
-          />
-          <CookieConsent />
-          <YandexMetrika />
+          <ToastProvider>
+            <ScrollRail />
+            <SiteHeader />
+            <div className="flex-1 lg:pt-[116px]">{children}</div>
+            <Footer />
+            {/* Место под нижнюю панель навигации, чтобы она не закрывала футер */}
+            <div
+              aria-hidden="true"
+              className="h-[calc(4rem+env(safe-area-inset-bottom))] bg-slate-900 lg:hidden"
+            />
+            <FloatingActions />
+            <CookieConsent />
+            <YandexMetrika />
+          </ToastProvider>
         </FavoritesProvider>
       </CompareProvider>
     </CartProvider>

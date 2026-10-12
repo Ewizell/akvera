@@ -30,6 +30,7 @@ type Props = {
   links: { label: string; href: string }[];
   contacts: {
     address: string;
+    mapUrl: string;
     email: string;
     phone: string;
   };
