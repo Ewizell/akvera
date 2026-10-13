@@ -331,7 +331,7 @@ function ProductRow({
 
                 {product.description && (
                   <p className="mt-2 line-clamp-2 max-w-3xl text-sm leading-5 text-[#687382]">
-                    {product.description}
+                    {product.description.replace(/<[^>]*>/g, ' ')}
                   </p>
                 )}
               </div>

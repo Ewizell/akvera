@@ -23,6 +23,7 @@ import {
 import { slugify } from '@/lib/slugify'
 import TagPicker from './TagPicker'
 import CategoryPicker from './CategoryPicker'
+import RichTextEditor from './RichTextEditor'
 import UnsavedChangesDialog from './UnsavedChangesDialog'
 import { useUnsavedGuard } from '@/lib/use-unsaved-guard'
 
@@ -1928,13 +1929,9 @@ export default function ProductEditModal({
                         Описание
                       </label>
 
-                      <textarea
+                      <RichTextEditor
                         name="description"
-                        defaultValue={
-                          product.description ?? ''
-                        }
-                        rows={5}
-                        className={textareaCls}
+                        initial={product.description ?? ''}
                       />
                     </div>
 

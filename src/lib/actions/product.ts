@@ -2,6 +2,7 @@
 import { assertAdmin } from '@/lib/auth/assert-admin';
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { cleanRichText } from '@/lib/sanitize-html'
 
 function parseStringList(formData: FormData, name: string): string[] {
   const raw = formData.get(name) as string | null
@@ -24,7 +25,7 @@ export async function createProduct(formData: FormData) {
   await assertAdmin()
   const name = formData.get('name') as string
   const categoryId = (formData.get('categoryId') as string) || null
-  const description = formData.get('description') as string
+  const description = cleanRichText((formData.get('description') as string) ?? '')
   const brandId = formData.get('brandId') as string
 
   const sku = formData.get('sku') as string
@@ -101,7 +102,7 @@ export async function updateProduct(id: string, formData: FormData) {
   await assertAdmin()
   const name = formData.get('name') as string
   const categoryId = (formData.get('categoryId') as string) || null
-  const description = formData.get('description') as string
+  const description = cleanRichText((formData.get('description') as string) ?? '')
   const brandId = formData.get('brandId') as string
   const shortDescription = formData.get('shortDescription') as string
   const tagIds = formData.getAll('tagIds') as string[]

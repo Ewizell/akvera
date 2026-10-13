@@ -6,6 +6,7 @@ import { createProduct } from '@/lib/actions/product'
 import { slugify } from '@/lib/slugify'
 import StringListEditor from './StringListEditor'
 import CategoryPicker from './CategoryPicker'
+import RichTextEditor from './RichTextEditor'
 import UnsavedChangesDialog from './UnsavedChangesDialog'
 import { useUnsavedGuard } from '@/lib/use-unsaved-guard'
 
@@ -307,12 +308,7 @@ export default function ProductCreateModal({
                     Описание
                   </label>
 
-                  <textarea
-                    name="description"
-                    rows={4}
-                    placeholder="Краткое описание товара"
-                    className={textareaCls}
-                  />
+                  <RichTextEditor name="description" />
                 </div>
 
                 <div>
