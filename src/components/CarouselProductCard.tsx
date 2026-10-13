@@ -61,7 +61,7 @@ export default function CarouselProductCard({
         {image ? (
           <Image
             src={image.url}
-            alt={image.alt ?? variant.name}
+            alt={image.alt || variant.name || variant.product.name}
             fill
             className="object-contain"
             sizes="(max-width: 640px) 42vw, 302px"

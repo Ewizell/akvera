@@ -72,7 +72,9 @@ export async function generateMetadata({
 
   const title =
     variant.metaTitle ||
-    `${variant.product.name}${variant.name ? ` — ${variant.name}` : ""}`;
+    (variant.name && variant.name !== variant.product.name
+      ? `${variant.product.name} — ${variant.name}`
+      : variant.product.name);
 
   const description =
     variant.metaDescription ||
@@ -436,15 +438,15 @@ export default async function ProductPage({
           <div className="order-1 min-w-0 lg:contents">
             <ProductGallery
               images={variant.images}
-              productName={variant.product.name}
+              productName={variant.name || variant.product.name}
             />
           </div>
 
           {specs.length > 0 && (
             <div className="order-3 flex flex-col gap-[14px] border-t border-[#f0f0f0] pt-4 pb-[12px] lg:order-none lg:border-t-0 lg:border-l lg:py-[12px] lg:pl-[24px] w-full lg:w-[312px]">
-              <p className="font-manrope font-semibold text-[18px] text-[#1c2126]">
+              <h2 className="font-manrope font-semibold text-[18px] text-[#1c2126]">
                 Характеристики товара:
-              </p>
+              </h2>
 
               <div className="flex flex-col gap-[12px]">
                 {specs.map((spec, i) => (
@@ -573,9 +575,9 @@ export default async function ProductPage({
           <div className="flex flex-col gap-[16px] w-full">
             {description && (
               <div className="flex flex-col gap-[14px] pb-[12px] sm:px-[12px] text-[#1c2126]">
-                <p className="font-montserrat font-semibold text-[18px]">
+                <h2 className="font-montserrat font-semibold text-[18px]">
                   Описание:
-                </p>
+                </h2>
 
                 <div
                   className="prose prose-sm max-w-none break-words font-manrope text-[14px] [&_img]:h-auto [&_img]:max-w-full [&_table]:block [&_table]:overflow-x-auto"
@@ -591,9 +593,9 @@ export default async function ProductPage({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-[12px] gap-y-[12px]">
                 {applicationAreas.length > 0 && (
                   <div className="flex flex-col gap-[12px] pb-[12px] pl-[12px]">
-                    <p className="font-montserrat font-semibold text-[18px] text-[#1c2126]">
+                    <h2 className="font-montserrat font-semibold text-[18px] text-[#1c2126]">
                       Область применения:
-                    </p>
+                    </h2>
 
                     <div className="flex flex-col gap-[10px]">
                       {applicationAreas.map((item, i) => (
@@ -614,9 +616,9 @@ export default async function ProductPage({
 
                 {advantages.length > 0 && (
                   <div className="flex flex-col gap-[12px] pb-[12px] pl-[12px]">
-                    <p className="font-montserrat font-semibold text-[18px] text-[#1c2126]">
+                    <h2 className="font-montserrat font-semibold text-[18px] text-[#1c2126]">
                       Преимущества:
-                    </p>
+                    </h2>
 
                     <div className="flex flex-col gap-[10px]">
                       {advantages.map((item, i) => (
@@ -684,9 +686,9 @@ export default async function ProductPage({
                 <div className="bg-[#d9d9d9] h-px w-full" />
 
                 <div className="flex flex-col gap-[8px] px-[8px]">
-                  <p className="font-montserrat font-semibold text-[16px] text-[#1c2126] px-[8px]">
+                  <h2 className="font-montserrat font-semibold text-[16px] text-[#1c2126] px-[8px]">
                     Документация:
-                  </p>
+                  </h2>
 
                   <div className="flex flex-col gap-[8px] px-[8px]">
                     {documents.map((doc) => (

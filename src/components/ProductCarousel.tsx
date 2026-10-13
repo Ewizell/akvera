@@ -59,7 +59,7 @@ export function ProductCarousel({
   return (
     <section className="mt-8 sm:mt-12">
       <div className="mb-[16px] flex items-center justify-between gap-4">
-        <p className="font-manrope font-bold text-[20px] sm:text-[24px] text-[#1c2126]">{title}</p>
+        <h2 className="font-manrope font-bold text-[20px] sm:text-[24px] text-[#1c2126]">{title}</h2>
 
         {href && (
           <Link
