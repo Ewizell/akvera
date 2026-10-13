@@ -22,6 +22,14 @@ import FavoriteButtonWithLabel from "@/components/FavoriteButtonWithLabel";
 import { CopyField } from "@/components/CopyField";
 import { getVisibleCategoryIds } from "@/lib/visibility";
 import { HomeCta } from "@/components/HomeInfoBlocks";
+import { JsonLd } from "@/components/JsonLd";
+import {
+  SITE_NAME,
+  absoluteUrl,
+  buildMetadata,
+  stripHtml,
+  truncate,
+} from "@/lib/seo";
 
 export const revalidate = 3600;
 
@@ -39,18 +47,16 @@ export async function generateMetadata({
       metaDescription: true,
       metaKeywords: true,
       name: true,
+      slug: true,
+      description: true,
       product: {
         select: {
           name: true,
+          description: true,
         },
       },
       images: {
-        where: {
-          isMain: true,
-        },
-        orderBy: {
-          sortOrder: "asc",
-        },
+        orderBy: [{ isMain: "desc" }, { sortOrder: "asc" }],
         take: 1,
         select: {
           url: true,
@@ -68,13 +74,20 @@ export async function generateMetadata({
     variant.metaTitle ||
     `${variant.product.name}${variant.name ? ` — ${variant.name}` : ""}`;
 
-  const description = variant.metaDescription || undefined;
+  const description =
+    variant.metaDescription ||
+    truncate(variant.description || variant.product.description || "") ||
+    title;
 
   const image = variant.images[0];
 
   return {
-    title,
-    description,
+    ...buildMetadata({
+      title,
+      description,
+      path: `/product/${variant.slug}`,
+      image: image?.url,
+    }),
 
     keywords: variant.metaKeywords
       ? variant.metaKeywords
@@ -82,33 +95,6 @@ export async function generateMetadata({
           .map((k) => k.trim())
           .filter(Boolean)
       : undefined,
-
-    openGraph: {
-      title,
-      description,
-      type: "website",
-      ...(image
-        ? {
-            images: [
-              {
-                url: image.url,
-                alt:
-                  image.alt ||
-                  `${variant.product.name}${
-                    variant.name ? ` — ${variant.name}` : ""
-                  }`,
-              },
-            ],
-          }
-        : {}),
-    },
-
-    twitter: {
-      card: image ? "summary_large_image" : "summary",
-      title,
-      description,
-      ...(image ? { images: [image.url] } : {}),
-    },
   };
 }
 
@@ -300,8 +286,6 @@ export default async function ProductPage({
     },
   ];
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
-
   const description =
     variant.description || variant.product.description;
 
@@ -324,28 +308,30 @@ export default async function ProductPage({
       name: crumb.label,
       ...(crumb.href
         ? {
-            item: `${siteUrl}${crumb.href}`,
+            item: absoluteUrl(crumb.href),
           }
         : {}),
     })),
   };
 
+  const productUrl = absoluteUrl(`/product/${variant.slug}`);
+
+  const productPrice = variant.price ? Number(variant.price) : null;
+
+  const priceValidUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
+
   const productJsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
-    name: variant.product.name,
+    "@id": `${productUrl}#product`,
+    url: productUrl,
+    name: variant.name || variant.product.name,
 
-    ...(variant.name
-      ? {
-          model: variant.name,
-        }
-      : {}),
+    ...(variant.sku ? { sku: variant.sku } : {}),
 
-    ...(variant.sku
-      ? {
-          sku: variant.sku,
-        }
-      : {}),
+    ...(category ? { category: category.name } : {}),
 
     ...(variant.product.brand
       ? {
@@ -356,57 +342,46 @@ export default async function ProductPage({
         }
       : {}),
 
-    ...(variant.images[0]
-      ? {
-          image: variant.images.map((img) =>
-            img.url.startsWith("http")
-              ? img.url
-              : `${siteUrl}${img.url}`
-          ),
-        }
+    ...(variant.images.length > 0
+      ? { image: variant.images.map((img) => absoluteUrl(img.url)) }
       : {}),
 
     ...(description
+      ? { description: stripHtml(description).slice(0, 5000) }
+      : {}),
+
+    ...(specs.length > 0
       ? {
-          description: description
-            .replace(/<[^>]*>/g, "")
-            .slice(0, 5000),
+          additionalProperty: specs.map((s) => ({
+            "@type": "PropertyValue",
+            name: s.label,
+            value: String(s.value),
+          })),
         }
       : {}),
 
-    offers: {
-      "@type": "Offer",
-      url: `${siteUrl}/product/${variant.slug}`,
-      priceCurrency: "RUB",
-
-      ...(variant.price
-        ? {
-            price: variant.price,
-          }
-        : {}),
-
-      availability:
-        variant.stock > 0
-          ? "https://schema.org/InStock"
-          : "https://schema.org/PreOrder",
-    },
+    ...(productPrice !== null
+      ? {
+          offers: {
+            "@type": "Offer",
+            url: productUrl,
+            priceCurrency: "RUB",
+            price: productPrice,
+            priceValidUntil,
+            itemCondition: "https://schema.org/NewCondition",
+            availability:
+              variant.stock > 0
+                ? "https://schema.org/InStock"
+                : "https://schema.org/PreOrder",
+            seller: { "@type": "Organization", name: SITE_NAME },
+          },
+        }
+      : {}),
   };
 
   return (
     <main className="max-w-[1440px] mx-auto px-5 py-5 sm:px-8 sm:py-10 lg:px-[80px]">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(breadcrumbJsonLd),
-        }}
-      />
-
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(productJsonLd),
-        }}
-      />
+      <JsonLd data={[breadcrumbJsonLd, productJsonLd]} />
 
       <Breadcrumbs items={crumbs} />
 

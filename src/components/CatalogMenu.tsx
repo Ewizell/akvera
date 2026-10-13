@@ -278,7 +278,7 @@ export default function CatalogMenu({
       ===================================================== */}
 
       <div
-                className="
+        className="
           absolute
           left-0
           top-[calc(100%+8px)]
@@ -326,6 +326,140 @@ export default function CatalogMenu({
             lg:w-[300px]
           "
         >
+          {/* =================================================
+              ВСЕ ТОВАРЫ
+          ================================================= */}
+
+          <Link
+            href="/catalog"
+            onClick={close}
+            className="
+              group
+              mx-2
+              mb-1
+              flex
+              items-center
+              gap-3
+              rounded-xl
+              bg-white
+              px-3
+              py-2.5
+              transition-all
+              duration-200
+              hover:bg-[#e2f0ef]
+            "
+          >
+            {/* ИКОНКА */}
+
+            <span
+              className="
+                flex
+                h-8
+                w-8
+                shrink-0
+                items-center
+                justify-center
+                rounded-lg
+                bg-[#e2f0ef]
+                text-[#179146]
+                transition-colors
+                duration-200
+                group-hover:bg-white
+              "
+            >
+              <svg
+                width="17"
+                height="17"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <rect
+                  x="3"
+                  y="3"
+                  width="7"
+                  height="7"
+                  rx="1"
+                />
+                <rect
+                  x="14"
+                  y="3"
+                  width="7"
+                  height="7"
+                  rx="1"
+                />
+                <rect
+                  x="3"
+                  y="14"
+                  width="7"
+                  height="7"
+                  rx="1"
+                />
+                <rect
+                  x="14"
+                  y="14"
+                  width="7"
+                  height="7"
+                  rx="1"
+                />
+              </svg>
+            </span>
+
+            {/* НАЗВАНИЕ */}
+
+            <span
+              className="
+                min-w-0
+                flex-1
+                text-[14px]
+                font-semibold
+                leading-5
+                text-[#28313d]
+                transition-colors
+                duration-200
+                group-hover:text-[#179146]
+              "
+            >
+              Все товары
+            </span>
+
+            {/* СТРЕЛКА */}
+
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="
+                shrink-0
+                text-[#929aa6]
+                transition-all
+                duration-200
+                group-hover:translate-x-0.5
+                group-hover:text-[#179146]
+              "
+              aria-hidden="true"
+            >
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+          </Link>
+
+          {/* РАЗДЕЛИТЕЛЬ */}
+
+          <div className="mx-2 mb-2 border-t border-[#e9ecef]" />
+
+          {/* =================================================
+              КАТЕГОРИИ
+          ================================================= */}
+
           {categories.map((category) => {
             const isActive =
               category.id === activeRootId;
@@ -362,11 +496,18 @@ export default function CatalogMenu({
 
                   {category.iconUrl ? (
                     <span
-                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors duration-200 ${
-                        isActive
-                          ? "bg-white"
-                          : "bg-white"
-                      }`}
+                      className="
+                        flex
+                        h-8
+                        w-8
+                        shrink-0
+                        items-center
+                        justify-center
+                        rounded-lg
+                        bg-white
+                        transition-colors
+                        duration-200
+                      "
                     >
                       <img
                         src={category.iconUrl}
@@ -398,12 +539,7 @@ export default function CatalogMenu({
                   )}
 
                   {/* =================================================
-                      ПОЛНОЕ НАЗВАНИЕ
-
-                      ВАЖНО:
-                      здесь НЕТ hover:text-[#179146].
-                      Поэтому при наведении обычная категория
-                      остаётся серой.
+                      НАЗВАНИЕ
                   ================================================= */}
 
                   <span
@@ -593,6 +729,116 @@ export default function CatalogMenu({
         }}
       >
         <div className="flex flex-col gap-1 p-4">
+          {/* =================================================
+              ВСЕ ТОВАРЫ
+          ================================================= */}
+
+          <Link
+            href="/catalog"
+            onClick={close}
+            className="
+              group
+              flex
+              items-center
+              gap-3
+              rounded-xl
+              bg-[#f3f4f6]
+              px-3
+              py-3
+              transition-colors
+              duration-200
+              hover:bg-[#e2f0ef]
+            "
+          >
+            {/* ИКОНКА */}
+
+            <span
+              className="
+                flex
+                h-9
+                w-9
+                shrink-0
+                items-center
+                justify-center
+                rounded-lg
+                bg-white
+                text-[#179146]
+              "
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <rect
+                  x="3"
+                  y="3"
+                  width="7"
+                  height="7"
+                  rx="1"
+                />
+                <rect
+                  x="14"
+                  y="3"
+                  width="7"
+                  height="7"
+                  rx="1"
+                />
+                <rect
+                  x="3"
+                  y="14"
+                  width="7"
+                  height="7"
+                  rx="1"
+                />
+                <rect
+                  x="14"
+                  y="14"
+                  width="7"
+                  height="7"
+                  rx="1"
+                />
+              </svg>
+            </span>
+
+            {/* НАЗВАНИЕ */}
+
+            <span className="min-w-0 flex-1 text-sm font-semibold text-[#28313d]">
+              Все товары
+            </span>
+
+            {/* СТРЕЛКА */}
+
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="shrink-0 text-[#929aa6]"
+              aria-hidden="true"
+            >
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+          </Link>
+
+          {/* РАЗДЕЛИТЕЛЬ */}
+
+          <div className="my-2 border-t border-[#e9ecef]" />
+
+          {/* =================================================
+              КАТЕГОРИИ
+          ================================================= */}
+
           {categories.map((category) => (
             <CategoryColumnEntry
               key={category.id}
