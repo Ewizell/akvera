@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 import { createCategory } from "@/lib/actions/category";
+import UnsavedChangesDialog from "@/components/UnsavedChangesDialog";
+import { useUnsavedGuard } from "@/lib/use-unsaved-guard";
 import { slugify } from "@/lib/slugify";
 
 type Category = {
@@ -32,6 +34,17 @@ export default function CategoryCreateModal({
   const [slug, setSlug] = useState("");
   const [slugEdited, setSlugEdited] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmClose, setConfirmClose] = useState(false);
+  const { isDirty, captureProps } = useUnsavedGuard();
+
+  const requestClose = useCallback(() => {
+    if (isDirty()) {
+      setConfirmClose(true);
+      return;
+    }
+
+    onClose();
+  }, [isDirty, onClose]);
 
   function handleNameChange(value: string) {
     setName(value);
@@ -57,7 +70,11 @@ export default function CategoryCreateModal({
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape" && !isPending) {
-        onClose();
+        if (confirmClose) {
+          setConfirmClose(false);
+        } else {
+          requestClose();
+        }
       }
     }
 
@@ -66,12 +83,12 @@ export default function CategoryCreateModal({
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [onClose, isPending]);
+  }, [requestClose, isPending, confirmClose]);
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-[#18212b]/45 p-4 backdrop-blur-[3px]"
-      onClick={onClose}
+      onClick={requestClose}
     >
       <div
         className="w-full max-w-[520px] overflow-hidden rounded-2xl bg-white shadow-[0_24px_70px_rgba(25,35,48,0.18)]"
@@ -106,7 +123,7 @@ export default function CategoryCreateModal({
 
           <button
             type="button"
-            onClick={onClose}
+            onClick={requestClose}
             disabled={isPending}
             className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9aa2ad] transition hover:bg-[#f4f5f6] hover:text-[#28313d] disabled:pointer-events-none disabled:opacity-50"
             aria-label="Закрыть"
@@ -124,7 +141,7 @@ export default function CategoryCreateModal({
           </button>
         </div>
 
-        <form action={handleSubmit}>
+        <form action={handleSubmit} {...captureProps}>
           {/* FORM */}
           <div className="space-y-5 px-6 py-6">
             <div>
@@ -267,7 +284,7 @@ export default function CategoryCreateModal({
           <div className="flex items-center justify-end gap-2.5 rounded-b-2xl bg-[#fafbfc] px-6 py-4">
             <button
               type="button"
-              onClick={onClose}
+              onClick={requestClose}
               disabled={isPending}
               className="h-10 rounded-xl px-4 text-sm font-medium text-[#687382] transition hover:bg-[#f0f2f4] hover:text-[#28313d] disabled:opacity-50"
             >
@@ -324,6 +341,12 @@ export default function CategoryCreateModal({
             </button>
           </div>
         </form>
+
+        <UnsavedChangesDialog
+          open={confirmClose}
+          onStay={() => setConfirmClose(false)}
+          onDiscard={onClose}
+        />
       </div>
     </div>
   );

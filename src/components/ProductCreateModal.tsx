@@ -1,11 +1,13 @@
 'use client'
 
-import { useEffect, useState, useTransition } from 'react'
+import { useCallback, useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { createProduct } from '@/lib/actions/product'
 import { slugify } from '@/lib/slugify'
 import StringListEditor from './StringListEditor'
 import CategoryPicker from './CategoryPicker'
+import UnsavedChangesDialog from './UnsavedChangesDialog'
+import { useUnsavedGuard } from '@/lib/use-unsaved-guard'
 
 type Category = {
   id: string
@@ -96,10 +98,22 @@ export default function ProductCreateModal({
   const [extraCategoryIds, setExtraCategoryIds] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
 
+  const { isDirty, captureProps } = useUnsavedGuard()
+  const [confirmClose, setConfirmClose] = useState(false)
+
+  const requestClose = useCallback(() => {
+    if (isDirty()) {
+      setConfirmClose(true)
+      return
+    }
+
+    onClose()
+  }, [isDirty, onClose])
+
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape' && !isPending) {
-        onClose()
+        requestClose()
       }
     }
 
@@ -114,7 +128,7 @@ export default function ProductCreateModal({
         handleKeyDown
       )
     }
-  }, [isPending, onClose])
+  }, [isPending, requestClose])
 
   function handleNameChange(value: string) {
     setName(value)
@@ -146,7 +160,7 @@ export default function ProductCreateModal({
       event.target === event.currentTarget &&
       !isPending
     ) {
-      onClose()
+      requestClose()
     }
   }
 
@@ -201,7 +215,10 @@ export default function ProductCreateModal({
         </div>
 
         {/* Content */}
-        <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">
+        <div
+          {...captureProps}
+          className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6"
+        >
           <form
             id="product-create-form"
             action={handleSubmit}
@@ -423,6 +440,12 @@ export default function ProductCreateModal({
             )}
           </form>
         </div>
+
+        <UnsavedChangesDialog
+          open={confirmClose}
+          onStay={() => setConfirmClose(false)}
+          onDiscard={onClose}
+        />
 
         {/* Footer */}
         <div className="shrink-0 border-t border-black/[0.05] bg-white px-5 py-4 sm:px-6">

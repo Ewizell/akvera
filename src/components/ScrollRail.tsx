@@ -70,14 +70,14 @@ export default function ScrollRail() {
         onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
         aria-label="Наверх"
         tabIndex={visible ? 0 : -1}
-        className="cursor-pointer rotate-180 rounded-xl bg-[#f4f5f7] px-2.5 py-3 text-xs font-medium tracking-wide text-[#28313d] transition-all duration-300 [writing-mode:vertical-rl] hover:bg-gradient-to-br hover:from-accent hover:to-accent-end hover:text-white"
+        className="cursor-pointer rotate-180 rounded-xl bg-[#f4f5f7] px-2.5 py-3 text-x font-medium tracking-wide text-[#28313d] transition-all duration-300 [writing-mode:vertical-rl] hover:bg-gradient-to-br hover:from-accent hover:to-accent-end hover:text-white"
       >
         Наверх
       </button>
 
       <div
         aria-hidden="true"
-        className="h-24 w-[2px] overflow-hidden rounded-full bg-[#d5d8dc]"
+        className="h-40 w-[6px] overflow-hidden rounded-full bg-[#d5d8dc]"
       >
         <div
           ref={fillRef}

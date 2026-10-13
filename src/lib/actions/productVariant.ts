@@ -109,6 +109,7 @@ export async function updateVariant(id: string, formData: FormData) {
   const metaDescription = formData.get('metaDescription') as string
   const metaKeywords = formData.get('metaKeywords') as string
   const attributes = parseAttributes(formData)
+  console.log('updateVariant attributes:', JSON.stringify(attributes))
   const variantTagIds = formData.getAll('variantTagIds') as string[]
   const applicationAreas = parseStringList(formData, 'applicationAreas')
   const advantages = parseStringList(formData, 'advantages')

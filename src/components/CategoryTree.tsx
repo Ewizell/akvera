@@ -64,21 +64,7 @@ function findNode(
   return null
 }
 
-function totalCount(
-  node: CategoryNode,
-  productCounts: Record<string, number>,
-): number {
-  const own = productCounts[node.id] ?? 0
 
-  return (
-    own +
-    node.children.reduce(
-      (sum, child) =>
-        sum + totalCount(child, productCounts),
-      0,
-    )
-  )
-}
 
 function TreeNode({
   node,
@@ -101,7 +87,7 @@ function TreeNode({
   const isExpanded = expanded.has(node.id)
   const isSelected = selectedId === node.id
 
-  const count = totalCount(node, productCounts)
+  const count = productCounts[node.id] ?? 0
 
   return (
     <div>
@@ -176,6 +162,7 @@ export default function CategoryTree({
   selectedId,
   onSelect,
   productCounts = {},
+  totalProducts,
 }: {
   categories: {
     id: string
@@ -188,6 +175,7 @@ export default function CategoryTree({
     descendantIds: string[] | null,
   ) => void
   productCounts?: Record<string, number>
+  totalProducts?: number
 }) {
   const tree = useMemo(
     () => buildTree(categories),
@@ -198,14 +186,7 @@ export default function CategoryTree({
     new Set(),
   )
 
-  const allCount = useMemo(
-    () =>
-      Object.values(productCounts).reduce(
-        (sum, count) => sum + count,
-        0,
-      ),
-    [productCounts],
-  )
+  const allCount = totalProducts ?? 0
 
   function toggleExpand(id: string) {
     setExpanded((previous) => {

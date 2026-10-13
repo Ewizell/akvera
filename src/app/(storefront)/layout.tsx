@@ -19,7 +19,7 @@ export default function StorefrontLayout({ children }: { children: React.ReactNo
           <ToastProvider>
             <ScrollRail />
             <SiteHeader />
-            <div className="flex-1 lg:pt-[116px]">{children}</div>
+            <div className="flex-1 lg:pt-[108px]">{children}</div>
             <Footer />
             {/* Место под нижнюю панель навигации, чтобы она не закрывала футер */}
             <div

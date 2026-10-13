@@ -172,7 +172,7 @@ export default async function ProductPage({
 
   const attrValues = variant.attributes as Record<string, unknown> | null;
 
-  const specs = (category?.attributes ?? [])
+  const categorySpecs = (category?.attributes ?? [])
     .map((attr) => ({
       label: attr.label,
       value: attrValues?.[attr.key],
@@ -183,6 +183,28 @@ export default async function ProductPage({
         s.value !== null &&
         s.value !== ""
     );
+
+  const rawCustom = attrValues?.customAttributes;
+
+  const customSpecs = (
+    Array.isArray(rawCustom)
+      ? (rawCustom as { label?: unknown; value?: unknown }[])
+      : []
+  )
+    .filter(
+      (a) =>
+        a &&
+        a.label &&
+        a.value !== undefined &&
+        a.value !== null &&
+        a.value !== ""
+    )
+    .map((a) => ({
+      label: String(a.label),
+      value: a.value,
+    }));
+
+  const specs = [...categorySpecs, ...customSpecs];
 
   const relatedVariants = await getRelatedVariants(
     variant.product.categoryId,

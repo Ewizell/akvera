@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useTransition } from 'react'
+import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { updateProduct, applyAttributeTransfers } from '@/lib/actions/product'
 import { computeAttributeMigration } from '@/lib/attribute-migration'
@@ -23,6 +23,8 @@ import {
 import { slugify } from '@/lib/slugify'
 import TagPicker from './TagPicker'
 import CategoryPicker from './CategoryPicker'
+import UnsavedChangesDialog from './UnsavedChangesDialog'
+import { useUnsavedGuard } from '@/lib/use-unsaved-guard'
 
 type CategoryAttribute = {
   id: string
@@ -105,6 +107,16 @@ type Brand = {
 type Tag = {
   id: string
   name: string
+}
+
+type SaveResult = {
+  success: boolean
+  error?: string
+}
+
+type Saver = {
+  validate: () => boolean
+  save: () => Promise<SaveResult>
 }
 
 const inputCls =
@@ -382,9 +394,13 @@ function AttributeFields({
 }) {
   if (schema.length === 0) {
     return (
-      <div className="rounded-xl bg-[#f4f5f7] px-4 py-3 text-sm text-[#8b949f]">
-        У категории нет атрибутов.
-      </div>
+      <>
+        <input type="hidden" name="attrsSchema" value="[]" />
+
+        <div className="rounded-xl bg-[#f4f5f7] px-4 py-3 text-sm text-[#8b949f]">
+          У категории нет атрибутов.
+        </div>
+      </>
     )
   }
 
@@ -960,6 +976,7 @@ function VariantRow({
   allTags,
   startEditing,
   layout,
+  savers,
 }: {
   variant: Variant
   isOnlyVariant: boolean
@@ -967,6 +984,7 @@ function VariantRow({
   allTags: Tag[]
   startEditing?: boolean
   layout: ViewMode
+  savers: React.RefObject<Map<string, Saver>>
 }) {
   const router = useRouter()
   const [editing, setEditing] = useState(
@@ -979,27 +997,38 @@ function VariantRow({
   const [error, setError] =
     useState<string | null>(null)
 
-  function handleSave(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    const formData = new FormData(event.currentTarget)
+  const formRef = useRef<HTMLFormElement>(null)
 
-    startTransition(async () => {
-      const result = await updateVariant(
-        variant.id,
-        formData
-      )
+  useEffect(() => {
+    if (!editing) return
 
-      if (result.success) {
-        setEditing(false)
-        setError(null)
-        router.refresh()
-      } else {
-        setError(
-          result.error ?? 'Ошибка сохранения'
+    savers.current.set(variant.id, {
+      validate: () => formRef.current?.reportValidity() ?? true,
+      save: async () => {
+        const form = formRef.current
+        if (!form) return { success: true }
+
+        const result = await updateVariant(
+          variant.id,
+          new FormData(form)
         )
-      }
+
+        if (result.success) {
+          setError(null)
+        } else {
+          setError(
+            result.error ?? 'Ошибка сохранения'
+          )
+        }
+
+        return result
+      },
     })
-  }
+
+    return () => {
+      savers.current.delete(variant.id)
+    }
+  }, [editing, variant.id, savers])
 
   function handleDelete() {
     if (
@@ -1046,7 +1075,10 @@ function VariantRow({
           </div>
         </div>
 
-        <form onSubmit={handleSave}>
+        <form
+          ref={formRef}
+          onSubmit={(event) => event.preventDefault()}
+        >
           <VariantFormFields
             variant={variant}
             attrSchema={attrSchema}
@@ -1088,21 +1120,7 @@ function VariantRow({
               Отмена
             </button>
 
-            <button
-              type="submit"
-              disabled={isPending}
-              className={primaryButtonCls}
-            >
-              {isPending && (
-                <span className="mr-2">
-                  <Spinner />
-                </span>
-              )}
 
-              {isPending
-                ? 'Сохранение...'
-                : 'Сохранить'}
-            </button>
           </div>
         </form>
 
@@ -1501,6 +1519,18 @@ export default function ProductEditModal({
     })
   }
 
+  const { isDirty, captureProps } = useUnsavedGuard()
+  const [confirmClose, setConfirmClose] = useState(false)
+
+  const requestClose = useCallback(() => {
+    if (isDirty()) {
+      setConfirmClose(true)
+      return
+    }
+
+    onClose()
+  }, [isDirty, onClose])
+
   useEffect(() => {
     function handleKeyDown(
       event: KeyboardEvent
@@ -1509,7 +1539,7 @@ export default function ProductEditModal({
         event.key === 'Escape' &&
         !isPending
       ) {
-        onClose()
+        requestClose()
       }
     }
 
@@ -1524,11 +1554,31 @@ export default function ProductEditModal({
         handleKeyDown
       )
     }
-  }, [isPending, onClose])
+  }, [isPending, requestClose])
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    const formData = new FormData(event.currentTarget)
+  const savers = useRef(new Map<string, Saver>())
+  const productFormRef = useRef<HTMLFormElement>(null)
+
+  function handleSaveAll() {
+    const productForm = productFormRef.current
+    if (!productForm) return
+
+    if (!productForm.checkValidity()) {
+      setTopTab('Основное')
+      requestAnimationFrame(() => productForm.reportValidity())
+      return
+    }
+
+    const pending = Array.from(savers.current.values())
+
+    if (pending.some((s) => !s.validate())) {
+      setTopTab('Исполнения')
+      requestAnimationFrame(() => pending.some((s) => !s.validate()))
+      return
+    }
+
+    const formData = new FormData(productForm)
+    setError(null)
 
     startTransition(async () => {
       const result = await updateProduct(
@@ -1540,7 +1590,17 @@ export default function ProductEditModal({
         setError(
           'Не удалось сохранить изменения'
         )
+        setTopTab('Основное')
         return
+      }
+
+      for (const saver of pending) {
+        const saved = await saver.save()
+
+        if (!saved.success) {
+          setTopTab('Исполнения')
+          return
+        }
       }
 
       if (categoryChanged && migrationPreview) {
@@ -1559,30 +1619,40 @@ export default function ProductEditModal({
     })
   }
 
-  function handleAddVariant(
-    event: React.FormEvent<HTMLFormElement>
-  ) {
-    event.preventDefault()
-    const formData = new FormData(event.currentTarget)
+  const addFormRef = useRef<HTMLFormElement>(null)
 
-    startTransition(async () => {
-      const result = await createVariant(
-        product.id,
-        formData
-      )
+  useEffect(() => {
+    if (!addingVariant) return
 
-      if (result.success) {
-        setAddError(null)
-        setAddFormKey((k) => k + 1)
-        setAddingVariant(false)
-        router.refresh()
-      } else {
-        setAddError(
-          result.error ?? 'Ошибка добавления'
+    savers.current.set('new', {
+      validate: () => addFormRef.current?.reportValidity() ?? true,
+      save: async () => {
+        const form = addFormRef.current
+        if (!form) return { success: true }
+
+        const result = await createVariant(
+          product.id,
+          new FormData(form)
         )
-      }
+
+        if (result.success) {
+          setAddError(null)
+          setAddFormKey((k) => k + 1)
+          setAddingVariant(false)
+        } else {
+          setAddError(
+            result.error ?? 'Ошибка добавления'
+          )
+        }
+
+        return result
+      },
     })
-  }
+
+    return () => {
+      savers.current.delete('new')
+    }
+  }, [addingVariant, product.id])
 
   function handleBackdropClick(
     event: React.MouseEvent<HTMLDivElement>
@@ -1591,7 +1661,7 @@ export default function ProductEditModal({
       event.target === event.currentTarget &&
       !isPending
     ) {
-      onClose()
+      requestClose()
     }
   }
 
@@ -1636,7 +1706,7 @@ export default function ProductEditModal({
 
                 <button
                   type="button"
-                  onClick={onClose}
+                  onClick={requestClose}
                   disabled={isPending}
                   className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-xl text-[#8b949f] transition-[background-color,color,transform] duration-150 hover:bg-[#f4f5f7] hover:text-[#28313d] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#28394c]/15 disabled:cursor-not-allowed disabled:opacity-40"
                   aria-label="Закрыть"
@@ -1690,7 +1760,10 @@ export default function ProductEditModal({
           </div>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <div
+          {...captureProps}
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
+        >
           <div
             className={`mx-auto w-full p-4 sm:p-6 ${
               dashboard ? 'max-w-none' : 'max-w-[900px]'
@@ -1703,10 +1776,13 @@ export default function ProductEditModal({
                   : ''
               }
             >
-            {(dashboard || topTab === 'Основное') && (
+            {(
               <form
-                onSubmit={handleSubmit}
-                className="space-y-4"
+                ref={productFormRef}
+                onSubmit={(event) => event.preventDefault()}
+                className={`space-y-4 ${
+                  dashboard || topTab === 'Основное' ? '' : 'hidden'
+                }`}
               >
                 <div className={cardCls}>
                   <div className="mb-5 flex items-center gap-3 border-b border-[#edf0f2] pb-4">
@@ -2028,37 +2104,16 @@ export default function ProductEditModal({
                   </div>
                 )}
 
-                <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                  <button
-                    type="button"
-                    onClick={onClose}
-                    disabled={isPending}
-                    className={secondaryButtonCls}
-                  >
-                    Отмена
-                  </button>
 
-                  <button
-                    type="submit"
-                    disabled={isPending}
-                    className={primaryButtonCls}
-                  >
-                    {isPending && (
-                      <span className="mr-2">
-                        <Spinner />
-                      </span>
-                    )}
-
-                    {isPending
-                      ? 'Сохранение...'
-                      : 'Сохранить изменения'}
-                  </button>
-                </div>
               </form>
             )}
 
-            {(dashboard || topTab === 'Исполнения') && (
-              <div>
+            {(
+              <div
+                className={
+                  dashboard || topTab === 'Исполнения' ? '' : 'hidden'
+                }
+              >
                 <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                   <div>
                     <h2 className="text-sm font-semibold text-[#28313d]">
@@ -2100,6 +2155,7 @@ export default function ProductEditModal({
                           initialVariantId
                         }
                         layout={viewMode}
+                        savers={savers}
                       />
                     )
                   )}
@@ -2164,7 +2220,8 @@ export default function ProductEditModal({
 
                     <form
                       key={addFormKey}
-                      onSubmit={handleAddVariant}
+                      ref={addFormRef}
+                      onSubmit={(event) => event.preventDefault()}
                     >
                       <VariantFormFields
                         attrSchema={
@@ -2214,21 +2271,7 @@ export default function ProductEditModal({
                           Отмена
                         </button>
 
-                        <button
-                          type="submit"
-                          disabled={isPending}
-                          className={primaryButtonCls}
-                        >
-                          {isPending && (
-                            <span className="mr-2">
-                              <Spinner />
-                            </span>
-                          )}
 
-                          {isPending
-                            ? 'Добавление...'
-                            : 'Добавить исполнение'}
-                        </button>
                       </div>
                     </form>
                   </div>
@@ -2253,12 +2296,47 @@ export default function ProductEditModal({
           </div>
         </div>
 
-        {isPending && (
-          <div className="sticky bottom-0 z-20 flex shrink-0 items-center gap-2 border-t border-[#e7eaed] bg-white/95 px-4 py-2.5 text-xs font-medium text-[#687382] shadow-[0_-1px_3px_rgba(16,24,40,0.03)] backdrop-blur-sm sm:px-6">
-            <Spinner />
-            Сохранение изменений...
+        <div className="shrink-0 border-t border-[#e7eaed] bg-white/95 px-4 py-3 shadow-[0_-1px_3px_rgba(16,24,40,0.03)] backdrop-blur-sm sm:px-6">
+          <div className="flex items-center justify-between gap-3">
+            <p className="hidden text-xs text-[#969faa] sm:block">
+              Сохраняются товар и все открытые на редактирование исполнения
+            </p>
+
+            <div className="ml-auto flex items-center gap-2">
+              <button
+                type="button"
+                onClick={requestClose}
+                disabled={isPending}
+                className={secondaryButtonCls}
+              >
+                Отмена
+              </button>
+
+              <button
+                type="button"
+                onClick={handleSaveAll}
+                disabled={isPending}
+                className={primaryButtonCls}
+              >
+                {isPending && (
+                  <span className="mr-2">
+                    <Spinner />
+                  </span>
+                )}
+
+                {isPending
+                  ? 'Сохранение...'
+                  : 'Сохранить'}
+              </button>
+            </div>
           </div>
-        )}
+        </div>
+
+        <UnsavedChangesDialog
+          open={confirmClose}
+          onStay={() => setConfirmClose(false)}
+          onDiscard={onClose}
+        />
       </div>
     </div>
   )

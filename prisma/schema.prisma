@@ -58,7 +58,7 @@ model Product {
   brandId           String?
   brand             Brand?   @relation(fields: [brandId], references: [id])
   description       String?
-  shortDescription  String?  @db.VarChar(200)
+  shortDescription  String?
   isHidden          Boolean  @default(false)
   applicationAreas  String[] @default([])
   advantages        String[] @default([])

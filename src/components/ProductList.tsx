@@ -1005,6 +1005,7 @@ export default function ProductList({
               selectedId={selectedCategoryId}
               onSelect={handleCategorySelect}
               productCounts={categoryCounts}
+              totalProducts={products.length}
             />
           </aside>
 
