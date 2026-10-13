@@ -36,9 +36,18 @@ export default function StorefrontLayout({ children }: { children: React.ReactNo
   );
 }
 export const viewport = { viewportFit: "cover" as const };
+const SITE_TITLE = "Akvera — промышленное оборудование";
+const SITE_DESCRIPTION =
+  "Промышленное оборудование для инженерных систем: характеристики, документация, цены и наличие. Подберём оборудование под задачу и подготовим предложение.";
+
 export const metadata: Metadata = {
   // ...ваши текущие поля
   metadataBase: new URL(absoluteUrl("/")),
+  title: {
+    default: SITE_TITLE,
+    template: "%s | Akvera",
+  },
+  description: SITE_DESCRIPTION,
   icons: { icon: "/icons/favicon-akvera.svg" },
   verification: {
     yandex: "b3cf24ac24b387b5",
@@ -48,5 +57,8 @@ export const metadata: Metadata = {
     siteName: "Akvera",
     locale: "ru_RU",
     type: "website",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    url: absoluteUrl("/"),
   },
 };
