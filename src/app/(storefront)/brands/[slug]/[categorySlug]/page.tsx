@@ -4,7 +4,7 @@ import CategoryProductListing from "@/components/CategoryProductListing";
 import BrandInfoBar from "@/components/BrandInfoBar";
 import { parseCatalogSearchParams, getBrandCategories } from "@/lib/catalog-query";
 import { getVisibleCategoryIds } from "@/lib/visibility";
-import { absoluteUrl } from "@/lib/seo";
+import { SITE_NAME, absoluteUrl, buildMetadata } from "@/lib/seo";
 import type { CategoryNavData } from "@/components/CategoryFilterSidebar";
 import type { Metadata } from "next";
 
@@ -18,21 +18,20 @@ export async function generateMetadata({
   const { slug, categorySlug } = await params;
 
   const [brand, category] = await Promise.all([
-    prisma.brand.findUnique({ where: { slug }, select: { name: true } }),
+    prisma.brand.findUnique({ where: { slug }, select: { name: true, logoUrl: true } }),
     prisma.category.findUnique({ where: { slug: categorySlug }, select: { name: true } }),
   ]);
   if (!brand || !category) return {};
 
-  const title = `${category.name} ${brand.name} — купить | Akvera`;
+  const title = `${category.name} ${brand.name} — купить, цены, наличие | Akvera`;
   const description = `${category.name} бренда ${brand.name}: цены, наличие и характеристики в каталоге Akvera.`;
-  const url = absoluteUrl(`/brands/${slug}/${categorySlug}`);
 
-  return {
+  return buildMetadata({
     title,
     description,
-    alternates: { canonical: url },
-    openGraph: { title, description, url, type: "website" },
-  };
+    path: `/brands/${slug}/${categorySlug}`,
+    image: brand.logoUrl,
+  });
 }
 
 export default async function BrandCategoryPage({
@@ -102,39 +101,55 @@ export default async function BrandCategoryPage({
       inStock={inStock}
       attrValues={attrValues}
       attrRanges={attrRanges}
-      jsonLd={({ cards }) => ({
-        "@context": "https://schema.org",
-        "@graph": [
-          {
-            "@type": "Brand",
-            name: brand.name,
-            url: absoluteUrl(`/brands/${slug}`),
-            ...(brand.logoUrl ? { logo: brand.logoUrl } : {}),
-          },
-          {
-            "@type": "BreadcrumbList",
-            itemListElement: crumbs.map((c, i) => ({
-              "@type": "ListItem",
-              position: i + 1,
-              name: c.label,
-              ...(c.href ? { item: absoluteUrl(c.href) } : {}),
-            })),
-          },
-          {
-            "@type": "CollectionPage",
-            name: `${activeCategory.name} — ${brand.name}`,
-            url: absoluteUrl(`/brands/${slug}/${categorySlug}`),
-            mainEntity: {
-              "@type": "ItemList",
-              itemListElement: cards.map((card, i) => ({
+      jsonLd={({ cards }) => {
+        const brandUrl = absoluteUrl(`/brands/${slug}`);
+        const pageUrl = absoluteUrl(`/brands/${slug}/${categorySlug}`);
+
+        return {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "CollectionPage",
+              "@id": `${pageUrl}#webpage`,
+              url: pageUrl,
+              name: `${activeCategory.name} — ${brand.name}`,
+              inLanguage: "ru-RU",
+              isPartOf: {
+                "@type": "WebSite",
+                name: SITE_NAME,
+                url: absoluteUrl("/"),
+              },
+              about: { "@id": `${brandUrl}#brand` },
+              breadcrumb: { "@id": `${pageUrl}#breadcrumb` },
+              mainEntity: {
+                "@type": "ItemList",
+                itemListElement: cards.map((card, i) => ({
+                  "@type": "ListItem",
+                  position: i + 1,
+                  url: absoluteUrl(`/product/${card.slug}`),
+                })),
+              },
+            },
+            {
+              "@type": "Brand",
+              "@id": `${brandUrl}#brand`,
+              name: brand.name,
+              url: brandUrl,
+              ...(brand.logoUrl ? { logo: absoluteUrl(brand.logoUrl) } : {}),
+            },
+            {
+              "@type": "BreadcrumbList",
+              "@id": `${pageUrl}#breadcrumb`,
+              itemListElement: crumbs.map((c, i) => ({
                 "@type": "ListItem",
                 position: i + 1,
-                url: absoluteUrl(`/product/${card.slug}`),
+                name: c.label,
+                ...(c.href ? { item: absoluteUrl(c.href) } : {}),
               })),
             },
-          },
-        ],
-      })}
+          ],
+        };
+      }}
     />
   );
 }

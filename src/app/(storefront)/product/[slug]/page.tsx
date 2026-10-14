@@ -301,9 +301,12 @@ export default async function ProductPage({
       ? variant.advantages
       : variant.product.advantages;
 
+  const productUrl = absoluteUrl(`/product/${variant.slug}`);
+
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
+    "@id": `${productUrl}#breadcrumb`,
     itemListElement: crumbs.map((crumb, index) => ({
       "@type": "ListItem",
       position: index + 1,
@@ -315,8 +318,6 @@ export default async function ProductPage({
         : {}),
     })),
   };
-
-  const productUrl = absoluteUrl(`/product/${variant.slug}`);
 
   const productPrice = variant.price ? Number(variant.price) : null;
 
@@ -340,6 +341,10 @@ export default async function ProductPage({
           brand: {
             "@type": "Brand",
             name: variant.product.brand.name,
+            url: absoluteUrl(`/brands/${variant.product.brand.slug}`),
+            ...(variant.product.brand.logoUrl
+              ? { logo: absoluteUrl(variant.product.brand.logoUrl) }
+              : {}),
           },
         }
       : {}),
@@ -352,12 +357,33 @@ export default async function ProductPage({
       ? { description: stripHtml(description).slice(0, 5000) }
       : {}),
 
-    ...(specs.length > 0
+    ...(specs.length > 0 || applicationAreas.length > 0
       ? {
-          additionalProperty: specs.map((s) => ({
-            "@type": "PropertyValue",
-            name: s.label,
-            value: String(s.value),
+          additionalProperty: [
+            ...specs.map((s) => ({
+              "@type": "PropertyValue",
+              name: s.label,
+              value: String(s.value),
+            })),
+            ...(applicationAreas.length > 0
+              ? [
+                  {
+                    "@type": "PropertyValue",
+                    name: "Область применения",
+                    value: applicationAreas.join("; "),
+                  },
+                ]
+              : []),
+          ],
+        }
+      : {}),
+
+    ...(documents.length > 0
+      ? {
+          subjectOf: documents.map((d) => ({
+            "@type": "DigitalDocument",
+            name: d.title,
+            url: absoluteUrl(d.url),
           })),
         }
       : {}),
@@ -381,9 +407,26 @@ export default async function ProductPage({
       : {}),
   };
 
+  const webPageJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemPage",
+    "@id": `${productUrl}#webpage`,
+    url: productUrl,
+    name: variant.name || variant.product.name,
+    inLanguage: "ru-RU",
+    dateModified: variant.updatedAt.toISOString(),
+    isPartOf: {
+      "@type": "WebSite",
+      name: SITE_NAME,
+      url: absoluteUrl("/"),
+    },
+    breadcrumb: { "@id": `${productUrl}#breadcrumb` },
+    mainEntity: { "@id": `${productUrl}#product` },
+  };
+
   return (
     <main className="max-w-[1440px] mx-auto px-5 py-5 sm:px-8 sm:py-10 lg:px-[80px]">
-      <JsonLd data={[breadcrumbJsonLd, productJsonLd]} />
+      <JsonLd data={[webPageJsonLd, breadcrumbJsonLd, productJsonLd]} />
 
       <Breadcrumbs items={crumbs} />
 
@@ -448,24 +491,26 @@ export default async function ProductPage({
                 Характеристики товара:
               </h2>
 
-              <div className="flex flex-col gap-[12px]">
+              <dl className="flex flex-col gap-[12px]">
                 {specs.map((spec, i) => (
                   <div
                     key={i}
                     className="flex gap-[6px] items-start"
                   >
-                    <span className="bg-accent rounded-[12px] w-[3px] h-[17px] shrink-0" />
+                    <dt className="flex gap-[6px] items-start">
+                      <span className="bg-accent rounded-[12px] w-[3px] h-[17px] shrink-0" />
 
-                    <span className="font-manrope font-medium text-[14px] text-[#484f55]">
-                      {spec.label}:
-                    </span>
+                      <span className="font-manrope font-medium text-[14px] text-[#484f55]">
+                        {spec.label}:
+                      </span>
+                    </dt>
 
-                    <span className="font-manrope font-medium text-[14px] text-[#1c2126]">
+                    <dd className="font-manrope font-medium text-[14px] text-[#1c2126]">
                       {String(spec.value)}
-                    </span>
+                    </dd>
                   </div>
                 ))}
-              </div>
+              </dl>
             </div>
           )}
         </div>
@@ -597,9 +642,9 @@ export default async function ProductPage({
                       Область применения:
                     </h2>
 
-                    <div className="flex flex-col gap-[10px]">
+                    <ul className="flex flex-col gap-[10px]">
                       {applicationAreas.map((item, i) => (
-                        <div
+                        <li
                           key={i}
                           className="flex gap-[6px] items-center"
                         >
@@ -608,9 +653,9 @@ export default async function ProductPage({
                           <span className="font-manrope font-medium text-[14px] text-[#1c2126]">
                             {item}
                           </span>
-                        </div>
+                        </li>
                       ))}
-                    </div>
+                    </ul>
                   </div>
                 )}
 
@@ -620,9 +665,9 @@ export default async function ProductPage({
                       Преимущества:
                     </h2>
 
-                    <div className="flex flex-col gap-[10px]">
+                    <ul className="flex flex-col gap-[10px]">
                       {advantages.map((item, i) => (
-                        <div
+                        <li
                           key={i}
                           className="flex gap-[6px] items-start"
                         >
@@ -631,9 +676,9 @@ export default async function ProductPage({
                           <span className="font-manrope font-medium text-[14px] text-[#1c2126]">
                             {item}
                           </span>
-                        </div>
+                        </li>
                       ))}
-                    </div>
+                    </ul>
                   </div>
                 )}
               </div>
@@ -690,43 +735,44 @@ export default async function ProductPage({
                     Документация:
                   </h2>
 
-                  <div className="flex flex-col gap-[8px] px-[8px]">
+                  <ul className="flex flex-col gap-[8px] px-[8px]">
                     {documents.map((doc) => (
-                      <a
-                        key={doc.id}
-                        href={doc.url}
-                        download
-                        className="flex gap-[6px] items-center"
-                      >
-                        <span className="bg-accent rounded-[12px] w-[3px] h-[17px] shrink-0" />
+                      <li key={doc.id}>
+                        <a
+                          href={doc.url}
+                          download
+                          className="flex gap-[6px] items-center"
+                        >
+                          <span className="bg-accent rounded-[12px] w-[3px] h-[17px] shrink-0" />
 
-                        <span className="flex gap-[4px] items-center font-manrope font-medium text-[14px] text-[#1c2126]">
-                          {doc.title}
+                          <span className="flex gap-[4px] items-center font-manrope font-medium text-[14px] text-[#1c2126]">
+                            {doc.title}
 
-                          <svg
-                            width="12"
-                            height="12"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                          >
-                            <circle
-                              cx="11"
-                              cy="11"
-                              r="8"
-                            />
-                            <line
-                              x1="21"
-                              y1="21"
-                              x2="16.65"
-                              y2="16.65"
-                            />
-                          </svg>
-                        </span>
-                      </a>
+                            <svg
+                              width="12"
+                              height="12"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                            >
+                              <circle
+                                cx="11"
+                                cy="11"
+                                r="8"
+                              />
+                              <line
+                                x1="21"
+                                y1="21"
+                                x2="16.65"
+                                y2="16.65"
+                              />
+                            </svg>
+                          </span>
+                        </a>
+                      </li>
                     ))}
-                  </div>
+                  </ul>
                 </div>
               </>
             )}

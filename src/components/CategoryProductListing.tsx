@@ -3,6 +3,7 @@ import CatalogGrid from "@/components/CatalogGrid";
 import CatalogFilterBar from "@/components/CatalogFilterBar";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import MobileFilters from "@/components/MobileFilters";
+import { JsonLd } from "@/components/JsonLd";
 import {
   getCatalogProducts,
   getPriceRange,
@@ -134,14 +135,7 @@ export default async function CategoryProductListing({
 
   return (
     <>
-      {ldJson && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(ldJson),
-          }}
-        />
-      )}
+      {ldJson && <JsonLd data={ldJson} />}
 
       <main className="w-full bg-[#f4f5f7]">
         <div

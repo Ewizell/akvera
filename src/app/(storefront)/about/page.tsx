@@ -19,7 +19,8 @@ import {
   ABOUT_STATS,
 } from "@/lib/site-content";
 
-import { SITE_URL, absoluteUrl } from "@/lib/seo";
+import { JsonLd } from "@/components/JsonLd";
+import { absoluteUrl, buildMetadata } from "@/lib/seo";
 
 export const revalidate = 3600;
 
@@ -29,21 +30,11 @@ const TITLE =
 const DESCRIPTION =
   "Akvera — поставщик промышленного оборудования для предприятий: подбор, поставка, техническая документация и поддержка. Работаем с юридическими лицами.";
 
-export const metadata: Metadata = {
-  title: {
-    absolute: TITLE,
-  },
+export const metadata: Metadata = buildMetadata({
+  title: "О компании — поставщик промышленного оборудования | Akvera",
   description: DESCRIPTION,
-  alternates: {
-    canonical: absoluteUrl("/about"),
-  },
-  openGraph: {
-    title: TITLE,
-    description: DESCRIPTION,
-    url: absoluteUrl("/about"),
-    type: "website",
-  },
-};
+  path: "/about",
+});
 
 export default async function AboutPage() {
   const brands = await prisma.brand.findMany({
@@ -87,22 +78,39 @@ export default async function AboutPage() {
     },
   ];
 
+  const aboutUrl = absoluteUrl("/about");
+  const homeUrl = absoluteUrl("/");
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
       {
         "@type": "AboutPage",
+        "@id": `${aboutUrl}#webpage`,
+        url: aboutUrl,
         name: TITLE,
-        url: absoluteUrl("/about"),
         description: DESCRIPTION,
-        about: {
-          "@type": "Organization",
+        inLanguage: "ru-RU",
+        isPartOf: {
+          "@type": "WebSite",
+          "@id": `${homeUrl}#website`,
           name: "Akvera",
-          url: SITE_URL,
+          url: homeUrl,
         },
+        about: { "@id": `${homeUrl}#organization` },
+        breadcrumb: { "@id": `${aboutUrl}#breadcrumb` },
+      },
+      {
+        "@type": "Organization",
+        "@id": `${homeUrl}#organization`,
+        name: "Akvera",
+        alternateName: "AKVERA",
+        url: homeUrl,
+        email: "info@akvera.ru",
       },
       {
         "@type": "BreadcrumbList",
+        "@id": `${aboutUrl}#breadcrumb`,
         itemListElement: crumbs.map((crumb, index) => ({
           "@type": "ListItem",
           position: index + 1,
@@ -119,13 +127,7 @@ export default async function AboutPage() {
 
   return (
     <main className="w-full bg-[#f4f5f7]">
-      {/* SEO */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(jsonLd),
-        }}
-      />
+      <JsonLd data={jsonLd} />
 
       <div className="mx-auto w-full max-w-[1440px] px-5 pb-16 sm:px-8 lg:px-12">
         {/* =====================================================
@@ -158,7 +160,7 @@ export default async function AboutPage() {
                 </p>
 
                 <h1 className="mt-5 max-w-[720px] text-4xl font-medium leading-[1.05] tracking-[-0.04em] text-white sm:text-5xl lg:text-[52px]">
-                  Промышленное оборудование
+                  Промышленное оборудование{" "}
                   <br />
                   для реальных задач
                 </h1>
@@ -182,7 +184,7 @@ export default async function AboutPage() {
 
             {/* Правая часть — статистика */}
             <div className="relative border-t border-white/10 bg-white/[0.03] p-5 sm:p-7 lg:border-l lg:border-t-0 lg:p-8">
-              <div className="grid h-full grid-cols-2 gap-3">
+              <dl className="grid h-full grid-cols-2 gap-3">
                 {ABOUT_STATS.map((stat, index) => (
                   <div
                     key={stat.label}
@@ -223,7 +225,7 @@ export default async function AboutPage() {
                     </div>
                   </div>
                 ))}
-              </div>
+              </dl>
             </div>
           </div>
         </section>

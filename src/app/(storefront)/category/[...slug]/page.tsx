@@ -10,17 +10,22 @@ import {
   getCategoryAncestors,
   getDescendantCategoryIds,
   getCategoryChildren,
+  PAGE_SIZE,
 } from "@/lib/catalog-query";
 import { getVisibleCategoryIds } from "@/lib/visibility";
 import type { CategoryNavData } from "@/components/CategoryFilterSidebar";
 import type { Metadata } from "next";
+import { JsonLd } from "@/components/JsonLd";
+import { buildCollectionJsonLd, buildMetadata } from "@/lib/seo";
 
 export const revalidate = 3600;
 
 export async function generateMetadata({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string[] }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }): Promise<Metadata> {
   const { slug } = await params;
   const last = slug[slug.length - 1];
@@ -29,13 +34,27 @@ export async function generateMetadata({
   const categorySlug = isAll || isOwn ? slug[slug.length - 2] : last;
   if (!categorySlug) return {};
 
-  const category = await prisma.category.findUnique({ where: { slug: categorySlug }, select: { name: true } });
+  const category = await prisma.category.findUnique({
+    where: { slug: categorySlug },
+    select: { name: true, imageUrl: true },
+  });
   if (!category) return {};
 
-  return {
-    title: isAll ? `Все товары: ${category.name}` : category.name,
-    description: `${category.name} — каталог оборудования Akvera.`,
-  };
+  const sp = await searchParams;
+  const page = Math.max(1, parseInt(String(sp.page ?? "1"), 10) || 1);
+  const isFiltered = Object.keys(sp).some((key) => key !== "page");
+
+  const basePath = `/category/${slug.join("/")}`;
+  const baseTitle = isAll ? `Все товары: ${category.name}` : category.name;
+
+  const meta = buildMetadata({
+    title: `${baseTitle}${page > 1 ? ` — страница ${page}` : ""} — каталог, цены, наличие | Akvera`,
+    description: `${category.name}: каталог оборудования Akvera — цены, наличие и характеристики.`,
+    path: page > 1 && !isFiltered ? `${basePath}?page=${page}` : basePath,
+    image: category.imageUrl,
+  });
+
+  return isFiltered ? { ...meta, robots: { index: false, follow: true } } : meta;
 }
 
 export default async function CategoryPage({
@@ -129,6 +148,16 @@ export default async function CategoryPage({
         inStock={inStock}
         attrValues={attrValues}
         attrRanges={attrRanges}
+        jsonLd={({ cards, totalCount }) =>
+          buildCollectionJsonLd({
+            path: `${tilePath}/all`,
+            name: `Все товары: ${category.name}`,
+            crumbs,
+            itemPaths: cards.map((card) => `/product/${card.slug}`),
+            totalCount,
+            offset: (page - 1) * PAGE_SIZE,
+          })
+        }
       />
     );
   }
@@ -154,6 +183,15 @@ export default async function CategoryPage({
 
     return (
       <main className="w-full bg-[#f4f5f7]">
+        <JsonLd
+          data={buildCollectionJsonLd({
+            path: tilePath,
+            name: category.name,
+            crumbs,
+            itemPaths: tileItems.map((item) => item.href),
+            totalCount: tileItems.length,
+          })}
+        />
         <div className="mx-auto w-full max-w-[1440px] px-5 py-5 sm:px-8 sm:py-10 lg:px-12">
           <Breadcrumbs items={crumbs} />
 
@@ -225,6 +263,16 @@ export default async function CategoryPage({
       inStock={inStock}
       attrValues={attrValues}
       attrRanges={attrRanges}
+      jsonLd={({ cards, totalCount }) =>
+        buildCollectionJsonLd({
+          path: tilePath,
+          name: category.name,
+          crumbs,
+          itemPaths: cards.map((card) => `/product/${card.slug}`),
+          totalCount,
+          offset: (page - 1) * PAGE_SIZE,
+        })
+      }
     />
   );
 }

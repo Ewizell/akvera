@@ -4,8 +4,40 @@ import CatalogGrid from "@/components/CatalogGrid";
 import CatalogPagination from "@/components/CatalogPagination";
 import CatalogFilterBar from "@/components/CatalogFilterBar";
 import { getCatalogProducts, PAGE_SIZE } from "@/lib/catalog-query";
+import type { Metadata } from "next";
+import { JsonLd } from "@/components/JsonLd";
+import { SITE_NAME, absoluteUrl, buildMetadata } from "@/lib/seo";
 
 export const revalidate = 3600; // ISR: обновлять раз в час
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    category?: string;
+    brand?: string;
+    q?: string;
+    page?: string;
+    tags?: string;
+    sort?: string;
+  }>;
+}): Promise<Metadata> {
+  const sp = await searchParams;
+  const page = Math.max(1, parseInt(sp.page ?? "1", 10) || 1);
+  const isFiltered = Boolean(sp.category || sp.brand || sp.q || sp.tags || sp.sort);
+
+  const meta = buildMetadata({
+    title:
+      page > 1
+        ? `Каталог оборудования — страница ${page} | Akvera`
+        : "Каталог оборудования — цены, наличие, характеристики | Akvera",
+    description:
+      "Каталог оборудования Akvera: категории, бренды, цены, наличие и характеристики.",
+    path: page > 1 && !isFiltered ? `/catalog?page=${page}` : "/catalog",
+  });
+
+  return isFiltered ? { ...meta, robots: { index: false, follow: true } } : meta;
+}
 
 export default async function CatalogPage({
   searchParams,
@@ -44,6 +76,54 @@ export default async function CatalogPage({
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
+  const catalogUrl = absoluteUrl("/catalog");
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "CollectionPage",
+        "@id": `${catalogUrl}#webpage`,
+        url: catalogUrl,
+        name: "Каталог оборудования",
+        inLanguage: "ru-RU",
+        isPartOf: {
+          "@type": "WebSite",
+          name: SITE_NAME,
+          url: absoluteUrl("/"),
+        },
+        breadcrumb: { "@id": `${catalogUrl}#breadcrumb` },
+        mainEntity: {
+          "@type": "ItemList",
+          numberOfItems: totalCount,
+          itemListElement: cards.map((card, i) => ({
+            "@type": "ListItem",
+            position: (page - 1) * PAGE_SIZE + i + 1,
+            url: absoluteUrl(`/product/${card.slug}`),
+          })),
+        },
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": `${catalogUrl}#breadcrumb`,
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: "Главная",
+            item: absoluteUrl("/"),
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: "Каталог",
+            item: catalogUrl,
+          },
+        ],
+      },
+    ],
+  };
+
   function withParam(key: "category" | "brand", value: string | null) {
     const params = new URLSearchParams();
     if (key !== "category" && category) params.set("category", category);
@@ -80,6 +160,8 @@ export default async function CatalogPage({
 
   return (
     <main className="max-w-7xl mx-auto px-4 py-10">
+      <JsonLd data={jsonLd} />
+
       <div className="grid md:grid-cols-[220px_1fr] gap-8">
         <aside className="space-y-6">
           <div>

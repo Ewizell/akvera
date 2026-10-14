@@ -6,49 +6,60 @@ import ShowAllProductsButton from "@/components/ShowAllProductsButton";
 import CategoryTileGrid from "@/components/CategoryTileGrid";
 import LeadRequestBlock from "@/components/LeadRequestBlock";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { JsonLd } from "@/components/JsonLd";
+import { getVisibleCategoryIds } from "@/lib/visibility";
+import { buildCollectionJsonLd, buildMetadata } from "@/lib/seo";
 
 export const revalidate = 3600;
 
-export const metadata: Metadata = {
-  title: "Каталог",
+export const metadata: Metadata = buildMetadata({
+  title: "Каталог оборудования — категории, цены, наличие | Akvera",
   description:
-    "Каталог оборудования Akvera: все категории и подкатегории товаров.",
-};
+    "Каталог оборудования Akvera: все категории и подкатегории товаров, цены, наличие и характеристики.",
+  path: "/catalog",
+});
 
 export default async function CatalogPage() {
-  const categories = await prisma.category.findMany({
-    where: {
-      parentId: null,
-    },
-    orderBy: {
-      name: "asc",
-    },
-    include: {
-      _count: {
-        select: {
-          products: true,
+  const [rawCategories, visibleCategoryIds] = await Promise.all([
+    prisma.category.findMany({
+      where: {
+        parentId: null,
+      },
+      orderBy: {
+        name: "asc",
+      },
+      include: {
+        _count: {
+          select: {
+            products: true,
+          },
         },
       },
+    }),
+    getVisibleCategoryIds(),
+  ]);
+
+  const categories = rawCategories.filter((cat) =>
+    visibleCategoryIds.includes(cat.id)
+  );
+
+  const crumbs = [
+    {
+      label: "Главная",
+      href: "/",
     },
+    {
+      label: "Каталог",
+    },
+  ];
+
+  const catalogJsonLd = buildCollectionJsonLd({
+    path: "/catalog",
+    name: "Каталог оборудования",
+    crumbs,
+    itemPaths: categories.map((cat) => `/category/${cat.slug}`),
+    totalCount: categories.length,
   });
-
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
-
-  const catalogJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "CollectionPage",
-    name: "Каталог",
-    url: `${siteUrl}/catalog`,
-    mainEntity: {
-      "@type": "ItemList",
-      itemListElement: categories.map((cat, index) => ({
-        "@type": "ListItem",
-        position: index + 1,
-        url: `${siteUrl}/category/${cat.slug}`,
-        name: cat.name,
-      })),
-    },
-  };
 
   const tileItems = categories.map((cat) => ({
     slug: cat.slug,
@@ -60,13 +71,7 @@ export default async function CatalogPage() {
 
   return (
     <>
-      {/* SEO */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(catalogJsonLd),
-        }}
-      />
+      <JsonLd data={catalogJsonLd} />
 
       <main className="w-full bg-[#f4f5f7]">
         <div className="mx-auto w-full max-w-[1440px] px-5 pb-8 pt-4 sm:px-8 sm:pb-16 sm:pt-9 lg:px-12 lg:pb-20">
@@ -74,17 +79,7 @@ export default async function CatalogPage() {
               ХЛЕБНЫЕ КРОШКИ
           ===================================================== */}
 
-          <Breadcrumbs
-            items={[
-              {
-                label: "Главная",
-                href: "/",
-              },
-              {
-                label: "Каталог",
-              },
-            ]}
-          />
+          <Breadcrumbs items={crumbs} />
 
           {/* =====================================================
               ЗАГОЛОВОК
@@ -97,6 +92,14 @@ export default async function CatalogPage() {
               <h1 className="text-[26px] font-semibold leading-[1.15] tracking-[-0.03em] text-[#28313d] sm:text-[36px]">
                 Каталог оборудования
               </h1>
+
+              {categories.length > 0 && (
+                <p className="mt-3 max-w-3xl text-[13px] leading-5 text-[#66717d] sm:text-sm sm:leading-6">
+                  В каталоге Akvera представлены разделы:{" "}
+                  {categories.map((cat) => cat.name).join(", ")}. Выберите
+                  категорию, чтобы перейти к моделям, ценам и характеристикам.
+                </p>
+              )}
             </div>
 
             <div className="w-full sm:w-auto sm:shrink-0 [&>*]:w-full sm:[&>*]:w-auto">

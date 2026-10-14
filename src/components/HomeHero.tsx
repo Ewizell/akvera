@@ -208,7 +208,7 @@ export default function HomeHero({
               lg:text-[60px]
             "
           >
-            Оборудование для
+            Оборудование для{" "}
             <br />
             инженерных систем
           </h1>

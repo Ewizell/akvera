@@ -1,4 +1,18 @@
 import CategoryProductListing from "@/components/CategoryProductListing";
+import type { Metadata } from "next";
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}): Promise<Metadata> {
+  const { q } = await searchParams;
+
+  return {
+    title: q ? `Поиск: ${q} | Akvera` : "Поиск | Akvera",
+    robots: { index: false, follow: true },
+  };
+}
 
 export default async function CatalogSearchPage({
   searchParams,

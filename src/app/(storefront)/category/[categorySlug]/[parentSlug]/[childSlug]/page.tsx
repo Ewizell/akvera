@@ -3,7 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import CategoryTileGrid from "@/components/CategoryTileGrid";
 import CategoryProductListing from "@/components/CategoryProductListing";
-import { parseCatalogSearchParams } from "@/lib/catalog-query";
+import { parseCatalogSearchParams, PAGE_SIZE } from "@/lib/catalog-query";
+import { JsonLd } from "@/components/JsonLd";
+import { buildCollectionJsonLd, buildMetadata } from "@/lib/seo";
 import { getVisibleCategoryIds } from "@/lib/visibility";
 import type { CategoryNavData } from "@/components/CategoryFilterSidebar";
 import type { Metadata } from "next";
@@ -13,22 +15,34 @@ export const revalidate = 3600;
 
 export async function generateMetadata({
   params,
+  searchParams,
 }: {
   params: Promise<{ categorySlug: string; childSlug: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }): Promise<Metadata> {
   const { categorySlug, childSlug } = await params;
 
   const [parent, category] = await Promise.all([
     prisma.category.findUnique({ where: { slug: categorySlug }, select: { name: true } }),
-    prisma.category.findUnique({ where: { slug: childSlug }, select: { name: true } }),
+    prisma.category.findUnique({ where: { slug: childSlug }, select: { name: true, imageUrl: true } }),
   ]);
 
   if (!parent || !category) return {};
 
-  return {
-    title: `${category.name} — ${parent.name}`,
-    description: `${category.name} в разделе «${parent.name}» — каталог оборудования Akvera.`,
-  };
+  const sp = await searchParams;
+  const page = Math.max(1, parseInt(String(sp.page ?? "1"), 10) || 1);
+  const isFiltered = Object.keys(sp).some((key) => key !== "page");
+
+  const basePath = `/category/${categorySlug}/${childSlug}`;
+
+  const meta = buildMetadata({
+    title: `${category.name} — ${parent.name}${page > 1 ? ` — страница ${page}` : ""} — каталог, цены, наличие | Akvera`,
+    description: `${category.name} в разделе «${parent.name}»: каталог оборудования Akvera — цены, наличие и характеристики.`,
+    path: page > 1 && !isFiltered ? `${basePath}?page=${page}` : basePath,
+    image: category.imageUrl,
+  });
+
+  return isFiltered ? { ...meta, robots: { index: false, follow: true } } : meta;
 }
 
 export default async function ChildCategoryPage({
@@ -98,6 +112,15 @@ export default async function ChildCategoryPage({
 
     return (
       <main className="max-w-7xl mx-auto px-4 py-10">
+        <JsonLd
+          data={buildCollectionJsonLd({
+            path: `/category/${parent.slug}/${category.slug}`,
+            name: category.name,
+            crumbs,
+            itemPaths: tileItems.map((item) => item.href),
+            totalCount: tileItems.length,
+          })}
+        />
         <nav className="mb-5 flex flex-wrap items-center gap-3 text-[14px] font-semibold uppercase tracking-[2px] text-accent">
           {crumbs.map((c, i) => (
             <span key={i} className="flex items-center gap-3">
@@ -153,6 +176,16 @@ export default async function ChildCategoryPage({
       inStock={inStock}
       attrValues={attrValues}
       attrRanges={attrRanges}
+      jsonLd={({ cards, totalCount }) =>
+        buildCollectionJsonLd({
+          path: `/category/${parent.slug}/${category.slug}`,
+          name: category.name,
+          crumbs,
+          itemPaths: cards.map((card) => `/product/${card.slug}`),
+          totalCount,
+          offset: (page - 1) * PAGE_SIZE,
+        })
+      }
     />
   );
 }

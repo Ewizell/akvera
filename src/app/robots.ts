@@ -20,7 +20,7 @@ export default function robots(): MetadataRoute.Robots {
           // дубли листингов с фильтрами и сортировкой
           '/*sort=',
           '/*tags=',
-          '/*stock=',
+          '/*inStock=',
           '/*priceMin=',
           '/*priceMax=',
           '/*attr_',

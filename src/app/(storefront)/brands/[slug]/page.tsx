@@ -11,7 +11,8 @@ import CategoryTileGrid from '@/components/CategoryTileGrid'
 import ShowAllProductsButton from '@/components/ShowAllProductsButton'
 import { getBrandCategories } from '@/lib/catalog-query'
 import { getVisibleCategoryIds } from '@/lib/visibility'
-import { stripHtml, absoluteUrl } from '@/lib/seo'
+import { JsonLd } from '@/components/JsonLd'
+import { SITE_NAME, absoluteUrl, buildMetadata, stripHtml } from '@/lib/seo'
 
 export const revalidate = 3600
 
@@ -41,24 +42,17 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const brand = await getBrand(slug)
   if (!brand) return {}
 
-  const title = `${brand.name} — купить оборудование ${brand.name} | Akvera`
+  const title = `Оборудование ${brand.name} — каталог, цены, характеристики | Akvera`
   const description = brand.description
-    ? truncate(stripHtml(brand.description).replace(/\s+/g, ' ').trim(), 160)
+    ? truncate(stripHtml(brand.description), 160)
     : `Каталог оборудования бренда ${brand.name}: категории, цены, наличие, характеристики. Каталог Akvera.`
-  const url = absoluteUrl(`/brands/${slug}`)
 
-  return {
+  return buildMetadata({
     title,
     description,
-    alternates: { canonical: url },
-    openGraph: {
-      title,
-      description,
-      url,
-      type: 'website',
-      ...(brand.logoUrl ? { images: [{ url: absoluteUrl(brand.logoUrl) }] } : {}),
-    },
-  }
+    path: `/brands/${slug}`,
+    image: brand.logoUrl,
+  })
 }
 
 export default async function BrandPage({ params }: Params) {
@@ -95,31 +89,27 @@ export default async function BrandPage({ params }: Params) {
     imageUrl: category.imageUrl,
   }))
 
+  const brandUrl = absoluteUrl(`/brands/${slug}`)
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@graph': [
       {
-        '@type': 'Brand',
-        name: brand.name,
-        url: absoluteUrl(`/brands/${slug}`),
-        ...(brand.logoUrl ? { logo: absoluteUrl(brand.logoUrl) } : {}),
-        ...(plainDescription ? { description: plainDescription } : {}),
-      },
-      {
-        '@type': 'BreadcrumbList',
-        itemListElement: crumbs.map((crumb, index) => ({
-          '@type': 'ListItem',
-          position: index + 1,
-          name: crumb.label,
-          ...(crumb.href ? { item: absoluteUrl(crumb.href) } : {}),
-        })),
-      },
-      {
         '@type': 'CollectionPage',
-        name: `Категории бренда ${brand.name}`,
-        url: absoluteUrl(`/brands/${slug}`),
+        '@id': `${brandUrl}#webpage`,
+        url: brandUrl,
+        name: `Оборудование ${brand.name}`,
+        inLanguage: 'ru-RU',
+        isPartOf: {
+          '@type': 'WebSite',
+          name: SITE_NAME,
+          url: absoluteUrl('/'),
+        },
+        about: { '@id': `${brandUrl}#brand` },
+        breadcrumb: { '@id': `${brandUrl}#breadcrumb` },
         mainEntity: {
           '@type': 'ItemList',
+          numberOfItems: categories.length,
           itemListElement: categories.map((category, index) => ({
             '@type': 'ListItem',
             position: index + 1,
@@ -128,17 +118,32 @@ export default async function BrandPage({ params }: Params) {
           })),
         },
       },
+      {
+        '@type': 'Brand',
+        '@id': `${brandUrl}#brand`,
+        name: brand.name,
+        url: brandUrl,
+        ...(brand.logoUrl ? { logo: absoluteUrl(brand.logoUrl) } : {}),
+        ...(plainDescription
+          ? { description: plainDescription.slice(0, 5000) }
+          : {}),
+      },
+      {
+        '@type': 'BreadcrumbList',
+        '@id': `${brandUrl}#breadcrumb`,
+        itemListElement: crumbs.map((crumb, index) => ({
+          '@type': 'ListItem',
+          position: index + 1,
+          name: crumb.label,
+          ...(crumb.href ? { item: absoluteUrl(crumb.href) } : {}),
+        })),
+      },
     ],
   }
 
   return (
     <main className="min-h-screen bg-[#f4f5f7]">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c'),
-        }}
-      />
+      <JsonLd data={jsonLd} />
 
       <div className="mx-auto max-w-[1440px] px-4 pb-14 pt-4 sm:px-6 sm:pb-20 sm:pt-5 lg:px-12 lg:pt-6 xl:px-20">
         <Breadcrumbs items={crumbs} />

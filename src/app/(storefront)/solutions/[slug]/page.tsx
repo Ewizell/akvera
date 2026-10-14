@@ -4,7 +4,8 @@ import { ArrowRight } from 'lucide-react'
 import { notFound } from 'next/navigation'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { getSolution, SOLUTIONS } from '@/lib/solutions'
-import { absoluteUrl } from '@/lib/seo'
+import { JsonLd } from '@/components/JsonLd'
+import { absoluteUrl, buildMetadata } from '@/lib/seo'
 import { prisma } from '@/lib/prisma'
 
 export const revalidate = 3600
@@ -19,19 +20,11 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const solution = getSolution((await params).slug)
   if (!solution) return {}
 
-  const url = absoluteUrl(`/solutions/${solution.slug}`)
-
-  return {
-    title: solution.title,
+  return buildMetadata({
+    title: `${solution.title} — подбор и поставка оборудования | Akvera`,
     description: solution.description,
-    alternates: { canonical: url },
-    openGraph: {
-      title: `${solution.title} | Akvera`,
-      description: solution.description,
-      url,
-      type: 'website',
-    },
-  }
+    path: `/solutions/${solution.slug}`,
+  })
 }
 
 function CheckIcon() {
@@ -71,38 +64,86 @@ export default async function SolutionPage({ params }: Params) {
     ? `/category/${categories[0].slug}`
     : '/catalog'
 
+  const solutionUrl = absoluteUrl(`/solutions/${solution.slug}`)
+  const homeUrl = absoluteUrl('/')
+
+  const crumbs = [
+    { label: 'Главная', href: '/' },
+    { label: 'Решения', href: '/solutions' },
+    { label: solution.title },
+  ]
+
   const jsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'Service',
-    name: solution.title,
-    description: solution.description,
-    url: absoluteUrl(`/solutions/${solution.slug}`),
-    audience: {
-      '@type': 'BusinessAudience',
-      audienceType: solution.audience,
-    },
-    provider: {
-      '@type': 'Organization',
-      name: 'Akvera',
-      url: absoluteUrl('/'),
-    },
+    '@graph': [
+      {
+        '@type': 'WebPage',
+        '@id': `${solutionUrl}#webpage`,
+        url: solutionUrl,
+        name: solution.title,
+        description: solution.description,
+        inLanguage: 'ru-RU',
+        isPartOf: {
+          '@type': 'WebSite',
+          '@id': `${homeUrl}#website`,
+          name: 'Akvera',
+          url: homeUrl,
+        },
+        breadcrumb: { '@id': `${solutionUrl}#breadcrumb` },
+        mainEntity: { '@id': `${solutionUrl}#service` },
+      },
+      {
+        '@type': 'Service',
+        '@id': `${solutionUrl}#service`,
+        name: solution.title,
+        description: solution.description,
+        url: solutionUrl,
+        audience: {
+          '@type': 'BusinessAudience',
+          audienceType: solution.audience,
+        },
+        provider: { '@id': `${homeUrl}#organization` },
+        ...(categories.length > 0
+          ? {
+              hasOfferCatalog: {
+                '@type': 'OfferCatalog',
+                name: 'Оборудование в каталоге',
+                itemListElement: categories.map((category) => ({
+                  '@type': 'OfferCatalog',
+                  name: category.name,
+                  url: absoluteUrl(`/category/${category.slug}`),
+                })),
+              },
+            }
+          : {}),
+      },
+      {
+        '@type': 'Organization',
+        '@id': `${homeUrl}#organization`,
+        name: 'Akvera',
+        alternateName: 'AKVERA',
+        url: homeUrl,
+        email: 'info@akvera.ru',
+      },
+      {
+        '@type': 'BreadcrumbList',
+        '@id': `${solutionUrl}#breadcrumb`,
+        itemListElement: crumbs.map((crumb, index) => ({
+          '@type': 'ListItem',
+          position: index + 1,
+          name: crumb.label,
+          ...(crumb.href ? { item: absoluteUrl(crumb.href) } : {}),
+        })),
+      },
+    ],
   }
 
   return (
     <main className="min-h-screen bg-[#f4f5f7]">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <JsonLd data={jsonLd} />
 
       <div className="mx-auto max-w-[1440px] px-4 pb-16 pt-4 sm:px-6 sm:pb-20 sm:pt-5 lg:px-12 lg:pt-6 xl:px-20">
-        <Breadcrumbs
-          items={[
-            { label: 'Главная', href: '/' },
-            { label: 'Решения', href: '/solutions' },
-            { label: solution.title },
-          ]}
-        />
+        <Breadcrumbs items={crumbs} />
 
         {/* Основной блок решения */}
         <section className="mt-5 overflow-hidden rounded-2xl bg-gradient-to-br from-[#28313d] to-[#3d5570] text-white sm:mt-6 lg:rounded-3xl">

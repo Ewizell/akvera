@@ -235,7 +235,7 @@ export function HomeFaq() {
                 sm:px-7
               "
             >
-              <span>{item.question}</span>
+              <h3>{item.question}</h3>
 
               <span
                 className="

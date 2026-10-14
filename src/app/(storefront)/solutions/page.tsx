@@ -3,24 +3,18 @@ import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { SOLUTIONS } from '@/lib/solutions'
-import { absoluteUrl } from '@/lib/seo'
+import { JsonLd } from '@/components/JsonLd'
+import { absoluteUrl, buildMetadata } from '@/lib/seo'
 import { prisma } from '@/lib/prisma'
 
 export const revalidate = 3600
 
-export const metadata: Metadata = {
-  title: 'Инженерные решения',
+export const metadata: Metadata = buildMetadata({
+  title: 'Инженерные решения — подбор оборудования для объекта | Akvera',
   description:
-    'Подбор инженерного оборудования Akvera для вентиляции, отопления и водоснабжения.',
-  alternates: { canonical: absoluteUrl('/solutions') },
-  openGraph: {
-    title: 'Инженерные решения | Akvera',
-    description:
-      'Подбор инженерного оборудования Akvera для вентиляции, отопления и водоснабжения.',
-    url: absoluteUrl('/solutions'),
-    type: 'website',
-  },
-}
+    'Подбор инженерного оборудования Akvera для отопления и водоснабжения.',
+  path: '/solutions',
+})
 
 export default async function SolutionsPage() {
   // Берём из БД только категории, привязанные к решениям
@@ -35,36 +29,59 @@ export default async function SolutionsPage() {
     categories.map((category) => [category.slug, category]),
   )
 
+  const solutionsUrl = absoluteUrl('/solutions')
+
+  const crumbs = [
+    { label: 'Главная', href: '/' },
+    { label: 'Решения' },
+  ]
+
   const jsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'CollectionPage',
-    name: 'Инженерные решения',
-    url: absoluteUrl('/solutions'),
-    mainEntity: {
-      '@type': 'ItemList',
-      itemListElement: SOLUTIONS.map((solution, index) => ({
-        '@type': 'ListItem',
-        position: index + 1,
-        name: solution.title,
-        url: absoluteUrl(`/solutions/${solution.slug}`),
-      })),
-    },
+    '@graph': [
+      {
+        '@type': 'CollectionPage',
+        '@id': `${solutionsUrl}#webpage`,
+        url: solutionsUrl,
+        name: 'Инженерные решения',
+        inLanguage: 'ru-RU',
+        isPartOf: {
+          '@type': 'WebSite',
+          '@id': `${absoluteUrl('/')}#website`,
+          name: 'Akvera',
+          url: absoluteUrl('/'),
+        },
+        breadcrumb: { '@id': `${solutionsUrl}#breadcrumb` },
+        mainEntity: {
+          '@type': 'ItemList',
+          numberOfItems: SOLUTIONS.length,
+          itemListElement: SOLUTIONS.map((solution, index) => ({
+            '@type': 'ListItem',
+            position: index + 1,
+            name: solution.title,
+            url: absoluteUrl(`/solutions/${solution.slug}`),
+          })),
+        },
+      },
+      {
+        '@type': 'BreadcrumbList',
+        '@id': `${solutionsUrl}#breadcrumb`,
+        itemListElement: crumbs.map((crumb, index) => ({
+          '@type': 'ListItem',
+          position: index + 1,
+          name: crumb.label,
+          ...(crumb.href ? { item: absoluteUrl(crumb.href) } : {}),
+        })),
+      },
+    ],
   }
 
   return (
     <main className="min-h-screen bg-[#f4f5f7]">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <JsonLd data={jsonLd} />
 
       <div className="mx-auto max-w-[1440px] px-4 pb-16 pt-4 sm:px-6 sm:pb-20 sm:pt-5 lg:px-12 lg:pt-6 xl:px-20">
-        <Breadcrumbs
-          items={[
-            { label: 'Главная', href: '/' },
-            { label: 'Решения' },
-          ]}
-        />
+        <Breadcrumbs items={crumbs} />
 
         {/* Вводный блок */}
         <section className="mt-5 overflow-hidden rounded-2xl bg-gradient-to-br from-[#28313d] to-[#3d5570] p-5 text-white sm:mt-6 sm:p-8 lg:rounded-3xl lg:p-12">

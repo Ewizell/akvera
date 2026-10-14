@@ -27,7 +27,8 @@ import LeadRequestBlock from "@/components/LeadRequestBlock";
 import { FAQ_ITEMS } from "@/lib/site-content";
 import { getCatalogProducts } from "@/lib/catalog-query";
 import { getVisibleCategoryIds } from "@/lib/visibility";
-import { SITE_URL, absoluteUrl } from "@/lib/seo";
+import { JsonLd } from "@/components/JsonLd";
+import { SITE_NAME, absoluteUrl, stripHtml } from "@/lib/seo";
 
 export const revalidate = 3600;
 
@@ -53,6 +54,8 @@ export const metadata: Metadata = {
     description: DESCRIPTION,
     url: absoluteUrl("/"),
     type: "website",
+    siteName: SITE_NAME,
+    locale: "ru_RU",
   },
 };
 
@@ -307,13 +310,38 @@ export default async function HomePage() {
     },
   ];
 
+  const homeUrl = absoluteUrl("/");
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
       {
         "@type": "Organization",
-        name: "AKVERA",
-        url: SITE_URL,
+        "@id": `${homeUrl}#organization`,
+        name: SITE_NAME,
+        alternateName: "AKVERA",
+        url: homeUrl,
+        email: "info@akvera.ru",
+      },
+
+      {
+        "@type": "WebSite",
+        "@id": `${homeUrl}#website`,
+        name: SITE_NAME,
+        url: homeUrl,
+        inLanguage: "ru-RU",
+        publisher: { "@id": `${homeUrl}#organization` },
+      },
+
+      {
+        "@type": "WebPage",
+        "@id": `${homeUrl}#webpage`,
+        url: homeUrl,
+        name: TITLE,
+        description: DESCRIPTION,
+        inLanguage: "ru-RU",
+        isPartOf: { "@id": `${homeUrl}#website` },
+        about: { "@id": `${homeUrl}#organization` },
       },
 
       {
@@ -323,25 +351,9 @@ export default async function HomePage() {
           name: item.question,
           acceptedAnswer: {
             "@type": "Answer",
-            text: item.answer,
+            text: stripHtml(item.answer),
           },
         })),
-      },
-
-      {
-        "@type": "WebSite",
-        name: "AKVERA",
-        url: SITE_URL,
-        potentialAction: {
-          "@type": "SearchAction",
-          target: {
-            "@type": "EntryPoint",
-            urlTemplate:
-              `${SITE_URL}/catalog/search?q={search_term_string}`,
-          },
-          "query-input":
-            "required name=search_term_string",
-        },
       },
     ],
   };
@@ -352,12 +364,7 @@ export default async function HomePage() {
       {/* =====================================================
           SEO
       ===================================================== */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(jsonLd),
-        }}
-      />
+      <JsonLd data={jsonLd} />
 
       {/* =====================================================
           1. HERO

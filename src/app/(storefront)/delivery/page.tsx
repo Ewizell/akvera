@@ -6,49 +6,72 @@ import DeliveryPlanner from '@/components/DeliveryPlanner'
 import { HomeDelivery } from '@/components/HomeContentBlocks'
 import { HomeCta } from '@/components/HomeInfoBlocks'
 import { CONTACTS } from '@/lib/site-content'
-import { absoluteUrl } from '@/lib/seo'
+import { JsonLd } from '@/components/JsonLd'
+import { absoluteUrl, buildMetadata } from '@/lib/seo'
 
 const TITLE = 'Доставка и оплата'
 const DESCRIPTION =
   'Условия поставки промышленного оборудования Akvera: транспортные компании, самовывоз, безналичная оплата и документы.'
 
-export const metadata: Metadata = {
-  title: TITLE,
+export const metadata: Metadata = buildMetadata({
+  title: `${TITLE} оборудования — условия поставки | Akvera`,
   description: DESCRIPTION,
-  alternates: { canonical: absoluteUrl('/delivery') },
-  openGraph: {
-    title: `${TITLE} | Akvera`,
-    description: DESCRIPTION,
-    url: absoluteUrl('/delivery'),
-    type: 'website',
-  },
-}
+  path: '/delivery',
+})
 
 export default function DeliveryPage() {
+  const deliveryUrl = absoluteUrl('/delivery')
+  const homeUrl = absoluteUrl('/')
+
+  const crumbs = [{ label: 'Главная', href: '/' }, { label: TITLE }]
+
   const jsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'WebPage',
-    name: TITLE,
-    description: DESCRIPTION,
-    url: absoluteUrl('/delivery'),
-    isPartOf: {
-      '@type': 'WebSite',
-      name: 'Akvera',
-      url: absoluteUrl('/'),
-    },
+    '@graph': [
+      {
+        '@type': 'WebPage',
+        '@id': `${deliveryUrl}#webpage`,
+        url: deliveryUrl,
+        name: TITLE,
+        description: DESCRIPTION,
+        inLanguage: 'ru-RU',
+        isPartOf: {
+          '@type': 'WebSite',
+          '@id': `${homeUrl}#website`,
+          name: 'Akvera',
+          url: homeUrl,
+        },
+        about: { '@id': `${homeUrl}#organization` },
+        breadcrumb: { '@id': `${deliveryUrl}#breadcrumb` },
+      },
+      {
+        '@type': 'Organization',
+        '@id': `${homeUrl}#organization`,
+        name: 'Akvera',
+        alternateName: 'AKVERA',
+        url: homeUrl,
+        email: 'info@akvera.ru',
+        telephone: CONTACTS.phone.replace(/[^\d+]/g, ''),
+      },
+      {
+        '@type': 'BreadcrumbList',
+        '@id': `${deliveryUrl}#breadcrumb`,
+        itemListElement: crumbs.map((crumb, index) => ({
+          '@type': 'ListItem',
+          position: index + 1,
+          name: crumb.label,
+          ...(crumb.href ? { item: absoluteUrl(crumb.href) } : {}),
+        })),
+      },
+    ],
   }
 
   return (
     <main className="min-h-screen bg-[#f4f5f7]">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <JsonLd data={jsonLd} />
 
       <div className="mx-auto max-w-[1440px] px-4 pb-14 pt-4 sm:px-6 sm:pb-20 sm:pt-5 lg:px-12 lg:pt-6 xl:px-20">
-        <Breadcrumbs
-          items={[{ label: 'Главная', href: '/' }, { label: TITLE }]}
-        />
+        <Breadcrumbs items={crumbs} />
 
         {/* Вводный блок */}
         <section className="relative mt-5 overflow-hidden rounded-2xl bg-gradient-to-br from-[#28313d] to-[#3d5570] text-white sm:mt-6 lg:rounded-3xl">

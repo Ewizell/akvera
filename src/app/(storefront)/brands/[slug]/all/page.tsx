@@ -4,7 +4,7 @@ import CategoryProductListing from "@/components/CategoryProductListing";
 import BrandInfoBar from "@/components/BrandInfoBar";
 import { parseCatalogSearchParams, getBrandCategories } from "@/lib/catalog-query";
 import { getVisibleCategoryIds } from "@/lib/visibility";
-import { stripHtml, absoluteUrl } from "@/lib/seo";
+import { SITE_NAME, absoluteUrl, buildMetadata, stripHtml } from "@/lib/seo";
 import type { CategoryNavData } from "@/components/CategoryFilterSidebar";
 import type { Metadata } from "next";
 
@@ -23,22 +23,15 @@ export async function generateMetadata({
   });
   if (!brand) return {};
 
-  const title = `Все товары ${brand.name} — каталог | Akvera`;
+  const title = `Все товары ${brand.name} — каталог, цены, наличие | Akvera`;
   const description = `Все товары бренда ${brand.name}: цены, наличие, характеристики. Каталог Akvera.`;
-  const url = absoluteUrl(`/brands/${slug}/all`);
 
-  return {
+  return buildMetadata({
     title,
     description,
-    alternates: { canonical: url },
-    openGraph: {
-      title,
-      description,
-      url,
-      type: "website",
-      ...(brand.logoUrl ? { images: [{ url: brand.logoUrl }] } : {}),
-    },
-  };
+    path: `/brands/${slug}/all`,
+    image: brand.logoUrl,
+  });
 }
 
 export default async function BrandPage({
@@ -104,40 +97,58 @@ export default async function BrandPage({
       inStock={inStock}
       attrValues={attrValues}
       attrRanges={attrRanges}
-      jsonLd={({ cards }) => ({
-        "@context": "https://schema.org",
-        "@graph": [
-          {
-            "@type": "Brand",
-            name: brand.name,
-            url: absoluteUrl(`/brands/${slug}`),
-            ...(brand.logoUrl ? { logo: brand.logoUrl } : {}),
-            ...(brand.description ? { description: stripHtml(brand.description) } : {}),
-          },
-          {
-            "@type": "BreadcrumbList",
-            itemListElement: crumbs.map((c, i) => ({
-              "@type": "ListItem",
-              position: i + 1,
-              name: c.label,
-              ...(c.href ? { item: absoluteUrl(c.href) } : {}),
-            })),
-          },
-          {
-            "@type": "CollectionPage",
-            name: `Все товары бренда ${brand.name}`,
-            url: absoluteUrl(`/brands/${slug}/all`),
-            mainEntity: {
-              "@type": "ItemList",
-              itemListElement: cards.map((card, i) => ({
+      jsonLd={({ cards }) => {
+        const brandUrl = absoluteUrl(`/brands/${slug}`);
+        const pageUrl = absoluteUrl(`/brands/${slug}/all`);
+
+        return {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "CollectionPage",
+              "@id": `${pageUrl}#webpage`,
+              url: pageUrl,
+              name: `Все товары бренда ${brand.name}`,
+              inLanguage: "ru-RU",
+              isPartOf: {
+                "@type": "WebSite",
+                name: SITE_NAME,
+                url: absoluteUrl("/"),
+              },
+              about: { "@id": `${brandUrl}#brand` },
+              breadcrumb: { "@id": `${pageUrl}#breadcrumb` },
+              mainEntity: {
+                "@type": "ItemList",
+                itemListElement: cards.map((card, i) => ({
+                  "@type": "ListItem",
+                  position: i + 1,
+                  url: absoluteUrl(`/product/${card.slug}`),
+                })),
+              },
+            },
+            {
+              "@type": "Brand",
+              "@id": `${brandUrl}#brand`,
+              name: brand.name,
+              url: brandUrl,
+              ...(brand.logoUrl ? { logo: absoluteUrl(brand.logoUrl) } : {}),
+              ...(brand.description
+                ? { description: stripHtml(brand.description).slice(0, 5000) }
+                : {}),
+            },
+            {
+              "@type": "BreadcrumbList",
+              "@id": `${pageUrl}#breadcrumb`,
+              itemListElement: crumbs.map((c, i) => ({
                 "@type": "ListItem",
                 position: i + 1,
-                url: absoluteUrl(`/product/${card.slug}`),
+                name: c.label,
+                ...(c.href ? { item: absoluteUrl(c.href) } : {}),
               })),
             },
-          },
-        ],
-      })}
+          ],
+        };
+      }}
     />
   );
 }

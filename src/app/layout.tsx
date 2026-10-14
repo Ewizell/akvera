@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Maven_Pro, Montserrat, Manrope } from "next/font/google";
 import "./globals.css";
 import AuthSessionProvider from "@/components/AuthSessionProvider";
+import { SITE_URL } from "@/lib/seo";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,7 +34,7 @@ const manrope = Manrope({
 
 export const metadata: Metadata = {
   title: {
-    default: "Akvera — инженерное оборудование для бизнеса",
+    default: "Akvera — инженерное оборудование",
     template: "%s | Akvera",
   },
   description:
