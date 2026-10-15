@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 import { useEffect, useRef } from "react";
 
@@ -110,16 +111,23 @@ export default function HomeHero({
         className="
           absolute
           -inset-[2%]
-          bg-cover
-          bg-[center_center]
           will-change-transform
         "
         style={{
-          backgroundImage: "url('/hero-background.jpg')",
           transition:
             "transform 700ms cubic-bezier(0.22, 1, 0.36, 1)",
         }}
-      />
+      >
+        <Image
+          src="/hero-background.jpg"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          quality={70}
+          className="object-cover object-center"
+        />
+      </div>
 
       {/* Основное затемнение */}
       <div

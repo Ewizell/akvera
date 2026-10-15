@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowUpRight } from "lucide-react";
 
 export interface HomeCategoryTileItem {
@@ -51,11 +52,16 @@ export default function HomeCategoryTileGrid({
           >
             {/* Изображение */}
             {item.imageUrl ? (
-              <div
-                className="absolute inset-0 bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-105"
-                style={{
-                  backgroundImage: `url(${item.imageUrl})`,
-                }}
+              <Image
+                src={item.imageUrl}
+                alt=""
+                fill
+                sizes={
+                  isFeatured
+                    ? "(min-width: 1024px) 50vw, 100vw"
+                    : "(min-width: 1024px) 25vw, 50vw"
+                }
+                className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
               />
             ) : (
               // Плейсхолдер, если у категории нет картинки
