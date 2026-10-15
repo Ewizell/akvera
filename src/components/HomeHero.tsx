@@ -119,7 +119,7 @@ export default function HomeHero({
         }}
       >
         <Image
-          src="/hero-background.webp"
+          src="/hero-background.jpg"
           alt=""
           fill
           priority
@@ -284,10 +284,6 @@ export default function HomeHero({
                   duration-500
                   group-hover/button:scale-105
                 "
-                style={{
-                  backgroundImage:
-                    "url('/images/home/catalog-button.jpg')",
-                }}
               />
 
               <div
@@ -364,10 +360,6 @@ export default function HomeHero({
                   duration-500
                   group-hover/button:scale-105
                 "
-                style={{
-                  backgroundImage:
-                    "url('/images/home/brands-button.jpg')",
-                }}
               />
 
               <div

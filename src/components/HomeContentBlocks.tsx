@@ -1,4 +1,5 @@
 import Link from "next/link";
+import MapEmbed from "@/components/MapEmbed";
 import { ArrowRight } from "lucide-react";
 import { AboutRequisites } from "@/components/AboutBlocks";
 import {
@@ -416,11 +417,9 @@ export function HomeRequisites() {
       {/* Правая часть — карта */}
       {hasMap && (
         <div className="relative min-h-[300px] overflow-hidden rounded-2xl bg-gradient-to-br from-accent to-accent-end sm:min-h-[380px] lg:min-h-[420px]">
-          <iframe
-            src={CONTACTS.mapEmbedUrl}
+          <MapEmbed
+            src={CONTACTS.mapEmbedUrl as string}
             title="Карта проезда"
-            className="absolute inset-0 h-full w-full"
-            loading="lazy"
           />
 
           {/* Лёгкий градиент поверх карты */}
