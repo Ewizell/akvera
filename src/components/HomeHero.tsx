@@ -119,12 +119,12 @@ export default function HomeHero({
         }}
       >
         <Image
-          src="/hero-background.jpg"
+          src="/hero-background.webp"
           alt=""
           fill
           priority
           fetchPriority="high"
-          quality={60}
+          unoptimized
           sizes="100vw"
           className="object-cover object-center"
         />
