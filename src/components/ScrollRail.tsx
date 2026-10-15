@@ -35,7 +35,7 @@ export default function ScrollRail() {
       if (!frame) frame = requestAnimationFrame(update);
     }
 
-    update();
+    frame = requestAnimationFrame(update);
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
 
