@@ -23,12 +23,14 @@ export default function HomeSection({
   id,
   href,
   linkLabel = "Смотреть все",
+  lazy = true,
   children,
 }: {
   title: string;
   id?: string;
   href?: string;
   linkLabel?: string;
+  lazy?: boolean;
   children: React.ReactNode;
 }) {
   // Содержимое кнопки (текст + стрелка в квадрате) — одно для обеих версий
@@ -62,7 +64,9 @@ export default function HomeSection({
       id={id}
       // Отступ между секциями: компактнее на телефоне.
       // scroll-mt — запас под закреплённую шапку при переходе по якорям (/#faq и т.д.)
-      className="mt-10 scroll-mt-[76px] sm:mt-16 lg:mt-20 lg:scroll-mt-[132px]"
+      className={`mt-10 scroll-mt-[76px] sm:mt-16 lg:mt-20 lg:scroll-mt-[132px] ${
+        lazy ? "[content-visibility:auto] [contain-intrinsic-size:auto_480px]" : ""
+      }`}
     >
       <div className="mb-4 flex items-center justify-between gap-6 sm:mb-7">
         <h2 className="text-[22px] font-semibold leading-tight tracking-[-0.03em] text-[#28313d] sm:text-[30px] lg:text-[34px]">
