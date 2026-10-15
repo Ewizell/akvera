@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 import { useEffect, useRef } from "react";
 
@@ -118,15 +117,14 @@ export default function HomeHero({
             "transform 700ms cubic-bezier(0.22, 1, 0.36, 1)",
         }}
       >
-        <Image
-          src="/hero-background.webp"
-          alt=""
-          fill
-          priority
-          fetchPriority="high"
-          unoptimized
+        <img
+          src="/hero-background-1400.webp"
+          srcSet="/hero-background-800.webp 800w, /hero-background-1400.webp 1400w"
           sizes="100vw"
-          className="object-cover object-center"
+          alt=""
+          fetchPriority="high"
+          decoding="async"
+          className="absolute inset-0 h-full w-full object-cover object-center"
         />
       </div>
 
