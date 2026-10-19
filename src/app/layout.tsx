@@ -5,13 +5,14 @@ import AuthSessionProvider from "@/components/AuthSessionProvider";
 import { SITE_URL } from "@/lib/seo";
 
 const montserrat = Montserrat({
-  subsets: ["latin"],
+  subsets: ["latin", "cyrillic"],
   variable: "--font-montserrat",
   weight: ["400", "500", "600", "700"],
 });
 
 const manrope = Manrope({
   subsets: ["latin"],
+  preload: false,
   variable: "--font-manrope",
   weight: ["400", "500", "600", "700"],
 });
