@@ -56,7 +56,7 @@ export default function HomeCategoryTileGrid({
                 src={item.imageUrl}
                 alt=""
                 fill
-                quality={60}
+                quality={45}
                 sizes={
                   isFeatured
                     ? "(min-width: 1024px) 50vw, 100vw"

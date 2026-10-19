@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
     },
   },
   images: {
-    qualities: [60, 75],
+    qualities: [45, 60, 75],
     minimumCacheTTL: 2678400,
     remotePatterns: [
       {
