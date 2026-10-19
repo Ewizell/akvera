@@ -15,9 +15,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: "RubSymbol", var(--font-montserrat);
-  --font-maven-pro: var(--font-maven-pro);
-  --font-manrope: var(--font-manrope);
+  --font-sans: var(--font-montserrat);
 }
 
 body {
@@ -25,10 +23,12 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
 }
+
 @keyframes brands-marquee {
   from {
     transform: translateX(0);
   }
+
   to {
     transform: translateX(-50%);
   }
@@ -47,8 +47,7 @@ body {
     animation: none;
   }
 }
-/* Отступ для якорных ссылок (/#faq, /#delivery...) под закреплённой шапкой */
-/* Плавный скролл для якорных ссылок */
+
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 72px;
@@ -60,15 +59,8 @@ html {
   }
 }
 
-/* Уважаем системную настройку уменьшения анимации */
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
   }
-}
-
-@font-face {
-  font-family: "RubSymbol";
-  src: local("Arial"), local("Roboto"), local("Helvetica Neue"), local("Segoe UI");
-  unicode-range: U+20BD;
 }

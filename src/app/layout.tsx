@@ -1,21 +1,13 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Maven_Pro, Montserrat, Manrope } from "next/font/google";
+import { Montserrat } from "next/font/google";
 import "./globals.css";
 import { preconnect } from "react-dom";
 import AuthSessionProvider from "@/components/AuthSessionProvider";
-import { SITE_URL } from "@/lib/seo";
 
 const montserrat = Montserrat({
   subsets: ["latin", "cyrillic"],
   variable: "--font-montserrat",
-  weight: ["400", "500", "600", "700"],
-});
-
-const manrope = Manrope({
-  subsets: ["latin"],
-  preload: false,
-  variable: "--font-manrope",
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600"],
 });
 
 export const metadata: Metadata = {
@@ -36,7 +28,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="ru"
-      className={`${montserrat.variable} ${manrope.variable} h-full antialiased`}
+      className={`${montserrat.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans">
         <AuthSessionProvider>{children}</AuthSessionProvider>
