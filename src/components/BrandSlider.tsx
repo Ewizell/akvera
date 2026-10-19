@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowLeft, ArrowRight, ArrowUpRight } from "lucide-react";
 
 export interface BrandSliderItem {
@@ -112,17 +113,21 @@ export default function BrandSlider({
               <div
                 className="
                   absolute inset-x-5 bottom-[72px] top-5
-                  bg-contain bg-center bg-no-repeat
                   transition-transform
                   duration-500
                   ease-out
                   group-hover:scale-105
                   sm:bottom-20
                 "
-                style={{
-                  backgroundImage: `url(${item.logoUrl})`,
-                }}
-              />
+              >
+                <Image
+                  src={item.logoUrl}
+                  alt=""
+                  fill
+                  sizes="(min-width: 1280px) 16vw, (min-width: 1024px) 25vw, (min-width: 640px) 33vw, 45vw"
+                  className="object-contain"
+                />
+              </div>
             ) : (
               <>
                 <div className="absolute inset-0 bg-gradient-to-br from-accent to-accent-end" />

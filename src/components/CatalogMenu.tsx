@@ -512,7 +512,8 @@ export default function CatalogMenu({
                       <img
                         src={category.iconUrl}
                         alt=""
-                        className="h-4 w-4 object-contain"
+                        loading="lazy"
+className="h-4 w-4 object-contain"
                       />
                     </span>
                   ) : (

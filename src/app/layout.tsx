@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Maven_Pro, Montserrat, Manrope } from "next/font/google";
 import "./globals.css";
+import { preconnect } from "react-dom";
 import AuthSessionProvider from "@/components/AuthSessionProvider";
 import { SITE_URL } from "@/lib/seo";
 
@@ -30,6 +31,8 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
+  preconnect("https://s3.regru.cloud");
+
   return (
     <html
       lang="ru"
