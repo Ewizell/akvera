@@ -1,35 +1,15 @@
 "use client";
 
-import { useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import HomeProductCard, {
   type HomeCarouselVariant,
 } from "./HomeProductCard";
-import { ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 
 export type { HomeCarouselVariant };
 
-function ChevronIcon({
-  direction,
-}: {
-  direction: "left" | "right";
-}) {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 16 16"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={direction === "left" ? "rotate-180" : ""}
-    >
-      <path d="M6 3l5 5-5 5" />
-    </svg>
-  );
-}
+
 
 export function HomeProductCarousel({
   title,
@@ -43,6 +23,32 @@ export function HomeProductCarousel({
   linkLabel?: string;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const [canPrev, setCanPrev] = useState(false);
+  const [canNext, setCanNext] = useState(true);
+
+  const update = useCallback(() => {
+    const el = scrollRef.current;
+
+    if (!el) return;
+
+    setCanPrev(el.scrollLeft > 4);
+    setCanNext(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+  }, []);
+
+  useEffect(() => {
+    update();
+
+    const el = scrollRef.current;
+
+    if (!el) return;
+
+    const observer = new ResizeObserver(update);
+
+    observer.observe(el);
+
+    return () => observer.disconnect();
+  }, [update, variants.length]);
 
   if (variants.length === 0) return null;
 
@@ -120,12 +126,12 @@ export function HomeProductCarousel({
     type="button"
     onClick={() => scroll("left")}
     aria-label="Прокрутить влево"
-    className="
+    className={`
       group
       absolute
       left-2
       top-1/2
-      z-50
+      z-10
       hidden
       md:flex
       h-10
@@ -145,9 +151,14 @@ export function HomeProductCarousel({
       hover:to-accent-end
       hover:text-white
       hover:shadow-md
-    "
+      ${canPrev ? "opacity-100" : "pointer-events-none opacity-0"}
+    `}
   >
-    <ChevronIcon direction="left" />
+    <ArrowLeft
+      size={17}
+      strokeWidth={1.7}
+      className="transition-transform duration-200 group-hover:-translate-x-0.5"
+    />
   </button>
 
   {/* Правая кнопка */}
@@ -155,13 +166,14 @@ export function HomeProductCarousel({
     type="button"
     onClick={() => scroll("right")}
     aria-label="Прокрутить вправо"
-    className="
+    className={`
       group
       absolute
       right-2
       top-1/2
-      z-50
-      flex
+      z-10
+      hidden
+      md:flex
       h-10
       w-10
       -translate-y-1/2
@@ -179,14 +191,20 @@ export function HomeProductCarousel({
       hover:to-accent-end
       hover:text-white
       hover:shadow-md
-    "
+      ${canNext ? "opacity-100" : "pointer-events-none opacity-0"}
+    `}
   >
-    <ChevronIcon direction="right" />
+    <ArrowRight
+      size={17}
+      strokeWidth={1.7}
+      className="transition-transform duration-200 group-hover:translate-x-0.5"
+    />
   </button>
 
   {/* Карточки */}
   <div
     ref={scrollRef}
+    onScroll={update}
     className="
       -mx-5
       -my-4

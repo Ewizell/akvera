@@ -189,7 +189,7 @@ export default function BrandSlider({
         onClick={() => scrollByPage(-1)}
         className={[
           "group",
-          "absolute -left-5 top-1/2 z-10",
+          "absolute left-2 top-1/2 z-10",
           "hidden h-10 w-10",
           "-translate-y-1/2",
           "items-center justify-center",
@@ -223,7 +223,7 @@ export default function BrandSlider({
         onClick={() => scrollByPage(1)}
         className={[
           "group",
-          "absolute -right-5 top-1/2 z-10",
+          "absolute right-2 top-1/2 z-10",
           "hidden h-10 w-10",
           "-translate-y-1/2",
           "items-center justify-center",
